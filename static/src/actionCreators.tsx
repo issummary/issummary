@@ -5,6 +5,7 @@ export enum ActionType {
     INCREMENT       = 'INCREMENT',
     DECREMENT       = 'DECREMENT',
     TOGGLE_DRAWER   = 'TOGGLE_DRAWER',
+    UPDATE_TABLE   = 'UPDATE_TABLE',
 }
 
 export interface ICounterAmountPayload {
@@ -19,3 +20,8 @@ const actions: ActionMap<ICounterAmountPayload | undefined, undefined> = {
 };
 
 export const appActionCreator = createActions(actions);
+
+const issueTableActions: ActionMap<ICounterAmountPayload | undefined, undefined> = {
+};
+
+export const issueTableActionCreator = createActions(issueTableActions);
