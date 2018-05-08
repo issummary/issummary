@@ -32,7 +32,7 @@ func main() {
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/", fs)
 	http.HandleFunc("/json", createJsonHandleFunc(echoBodyFunc))
-	err := http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		panic(err)
 	}
