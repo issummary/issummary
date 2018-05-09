@@ -18,8 +18,8 @@ func New(token string) *Client{
 	}
 }
 
-func (c *Client) ListWorks(prefixClasses *Classes) (works []*Work, err error) {
-	issues, _, err := c.Issues.ListProjectIssues("your_project_pid", nil)
+func (c *Client) ListWorks(pid interface{}, prefixClasses *Classes) (works []*Work, err error) {
+	issues, _, err := c.Issues.ListProjectIssues(pid, nil)
 	return toWorks(issues, prefixClasses), err
 }
 
@@ -33,7 +33,7 @@ type Issue struct {
 type Work struct {
 	Issue        *Issue
 	Classes      *Classes
-	Dependencies []*gitlab.Issue
+	Dependencies []*Issue
 }
 
 type Classes struct {
@@ -66,7 +66,10 @@ func toWorks(issues []*gitlab.Issue, classPrefix *Classes) (works []*Work) {
 			if err != nil {
 				panic(err)
 			}
-			work.Dependencies = findIssuesByIIDs(issues, IIDs)
+
+			for _, issue := range findIssuesByIIDs(issues, IIDs) {
+				work.Dependencies = append(work.Dependencies, toIssue(issue))
+			}
 			works = append(works, work)
 		}
 	}

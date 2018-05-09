@@ -7,10 +7,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-
 	"github.com/joho/godotenv"
-	"github.com/mpppk/issummary/api"
+	"github.com/mpppk/issummary/gitlab"
+	"os"
 )
 
 func main() {
@@ -19,19 +18,27 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	client := api.NewClient(os.Getenv("GITLAB_TOKEN"), os.Getenv("GITLAB_PID"), []string{os.Getenv("GITLAB_TARGET_LABEL")})
-	issues, _, err := client.GetIssues()
+	fmt.Println(os.Getenv("GITLAB_TOKEN"))
+
+	client := gitlab.New(os.Getenv("GITLAB_TOKEN"))
+
+	if os.Getenv("GITLAB_BASEURL") != "" {
+		client.SetBaseURL(os.Getenv("GITLAB_BASEURL"))
+	}
+
+	works, err := client.ListWorks(os.Getenv("GITLAB_PID"), &gitlab.Classes{"LC", "MC", "SC"})
 	if err != nil {
 		panic(err)
 	}
 
-	for _, issue := range issues {
-		fmt.Printf("%#v", *issue)
+	worksBodyFunc := func(body []byte) (interface{}, error) {
+		fmt.Println("")
+		return works, nil
 	}
 
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/", fs)
-	http.HandleFunc("/json", createJsonHandleFunc(echoBodyFunc))
+	http.HandleFunc("/works", createJsonHandleFunc(worksBodyFunc))
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		panic(err)
@@ -51,14 +58,6 @@ type ErrorOutput struct {
 }
 
 type BodyFunc func(body []byte) (interface{}, error)
-
-func echoBodyFunc(body []byte) (interface{}, error) {
-	input := Input{}
-	if err := json.Unmarshal(body, &input); err != nil {
-		return nil, err
-	}
-	return input, nil
-}
 
 func createJsonHandleFunc(bodyFunc BodyFunc) http.HandlerFunc {
 	jsonHandleFunc := func(rw http.ResponseWriter, req *http.Request) {
