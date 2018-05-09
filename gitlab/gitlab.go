@@ -104,6 +104,11 @@ func getDependencyIIDs(issue *gitlab.Issue) ([]int, error) {
 
 		if childNode.Type == blackfriday.Heading && string(childNode.FirstChild.Literal) == "dependencies" {
 			nextChildNode := childNode.Next
+			if nextChildNode == nil {
+				log.Println("dependencies list not found")
+				return []int{}, nil
+			}
+
 			if nextChildNode.Type == blackfriday.Heading {
 				dependencyStrs := strings.Split(string(nextChildNode.FirstChild.Literal), " ")
 				var dependencies []int
