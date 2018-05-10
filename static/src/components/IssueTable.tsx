@@ -15,12 +15,17 @@ import {
   IIssueTableActionCreators,
   issueTableActionCreators
 } from '../actions/issueTable';
-import { Work } from '../models/work';
 import { CSSProperties } from 'react';
+import { Work } from '../models/work';
 
 export interface IIssueTableProps {
   works: Work[];
   actions: IIssueTableActionCreators;
+}
+
+export interface IIssueTableRowProps {
+  work: Work;
+  key: number;
 }
 
 const rowStyle: CSSProperties = {
@@ -28,18 +33,20 @@ const rowStyle: CSSProperties = {
   whiteSpace: 'normal'
 };
 
-const IssueTableRow = (props: Work) => (
-  <TableRow key={props.Issue.IID}>
-    <TableRowColumn>{props.Issue.IID}</TableRowColumn>
+const IssueTableRow = (props: IIssueTableRowProps) => (
+  <TableRow>
+    <TableRowColumn>{props.work.Issue.IID}</TableRowColumn>
     <TableRowColumn style={rowStyle}>
-      {props.Label && props.Label.Parent ? props.Label.Parent : '-'}
+      {props.work.Label && props.work.Label.Parent
+        ? props.work.Label.Parent.Name
+        : '-'}
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>
-      {props.Label ? props.Label : '-'}
+      {props.work.Label ? props.work.Label.Name : '-'}
     </TableRowColumn>
-    <TableRowColumn style={rowStyle}>{props.Issue.Title}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>{props.work.Issue.Title}</TableRowColumn>
     <TableRowColumn style={rowStyle}>
-      {props.Issue.Summary ? props.Issue.Summary : '-'}
+      {props.work.Issue.Summary ? props.work.Issue.Summary : '-'}
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>{0}</TableRowColumn>
     <TableRowColumn style={rowStyle}>{'-'}</TableRowColumn>
@@ -52,13 +59,14 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
   }
 
   render() {
+    console.log(this.props.works);
     return (
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
         <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
           <TableRow>
             <TableHeaderColumn>IID</TableHeaderColumn>
-            <TableHeaderColumn>Label</TableHeaderColumn>
             <TableHeaderColumn>Parent Label</TableHeaderColumn>
+            <TableHeaderColumn>Label</TableHeaderColumn>
             <TableHeaderColumn>Title</TableHeaderColumn>
             <TableHeaderColumn>Summary</TableHeaderColumn>
             <TableHeaderColumn>SP</TableHeaderColumn>
@@ -66,7 +74,10 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
           </TableRow>
         </TableHeader>
         <TableBody displayRowCheckbox={false}>
-          {this.props.works.map(rowProp => IssueTableRow(rowProp))}
+          {this.props.works.map(w => (
+            <IssueTableRow work={w} key={w.Issue.IID} />
+          ))}
+          {/*{this.props.works.map(rowProp => IssueTableRow(rowProp))}*/}
         </TableBody>
       </Table>
     );

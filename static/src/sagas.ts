@@ -32,9 +32,12 @@ function* watchIncrementAsync() {
 }
 
 function* fetchNewIssueTableData() {
-  yield delay(1000);
-  const works = yield call(Api.fetchWorks);
-  yield put(issueTableActionCreators.dataFetched(works));
+  try {
+    const works = yield call(Api.fetchWorks);
+    yield put(issueTableActionCreators.dataFetched(works));
+  } catch (e) {
+    console.log('fetchNewIssueTableData failed:', e);
+  }
 }
 
 const requestNewIssueTableData = bindAsyncAction(

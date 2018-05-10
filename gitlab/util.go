@@ -120,6 +120,7 @@ func parseLabelDescription(description string) *LabelDescription {
 		if strings.Contains(line, parentKey) {
 			parentLabelNamesStr := strings.TrimPrefix(line, parentKey)
 			ld.ParentName = strings.Split(parentLabelNamesStr, ",")[0] // FIXME
+			ld.ParentName = strings.Trim(ld.ParentName, "\"")
 		}
 	}
 	return ld

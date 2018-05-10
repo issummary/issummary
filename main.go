@@ -25,7 +25,7 @@ func main() {
 		client.SetBaseURL(os.Getenv("GITLAB_BASEURL"))
 	}
 
-	works, err := client.ListWorks(os.Getenv("GITLAB_PID"), "LC", "S")
+	works, err := client.ListWorks(os.Getenv("GITLAB_PID"), "MC", "S")
 	if err != nil {
 		panic(err)
 	}

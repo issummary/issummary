@@ -60,6 +60,8 @@
     "start": "webpack-dev-server --inline",
     "build": "webpack --config webpack.prod.js",
     "build-libs": "webpack --config webpack.libs.config.js",
+    "build-libs-dev":
+      "webpack --config webpack.libs.config.js --mode development",
     "watch-sandbox": "webpack --watch --config webpack.sandbox.config.js",
     "run-sandbox": "node dist/sandbox.bundle.js",
     "lint": "tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' 'test/**/*.ts'",
