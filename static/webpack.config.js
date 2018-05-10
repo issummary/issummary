@@ -1,4 +1,6 @@
+const path = require('path');
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -28,9 +30,18 @@ module.exports = {
       'material-ui': 'MaterialUI'
     }
   ],
-  plugins: [new webpack.HotModuleReplacementPlugin()],
+  plugins: [
+    new webpack.HotModuleReplacementPlugin(),
+    new HtmlWebpackPlugin({
+      template: 'index.html.tmpl',
+      templateParameters: {
+        title: 'Issummary'
+      }
+    })
+  ],
 
   devServer: {
+    contentBase: path.resolve(__dirname, 'dist'),
     hot: true,
     historyApiFallback: true
   }
