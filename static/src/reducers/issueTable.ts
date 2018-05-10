@@ -1,10 +1,17 @@
-import { IIssueTableProps } from '../components/IssueTable';
+import {
+  IIssueTableProps,
+  IIssueTableRowProps
+} from '../components/IssueTable';
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
+import { issueTableActionCreators } from '../actions/issueTable';
+import { Work } from '../models/work';
 
-export type IIssueTableState = IIssueTableProps;
+export interface IIssueTableState {
+  rows: IIssueTableRowProps[];
+}
 
 const issueTableInitialState: IIssueTableState = {
-  rowProps: [
+  rows: [
     {
       iid: 1,
       classes: { large: 'large', middle: 'middle', small: 'small' },
@@ -16,6 +23,17 @@ const issueTableInitialState: IIssueTableState = {
   ]
 };
 
+const toTableRow = (work: Work): IIssueTableRowProps => ({
+  iid: work.Issue.IID,
+  classes: { large: 'large', middle: 'middle', small: 'small' },
+  title: work.Issue.Title,
+  description: work.Issue.Description,
+  summary: work.Issue.Summary,
+  note: work.Issue.Note
+});
+
 export const issueTableReducer = reducerWithInitialState(
   issueTableInitialState
-);
+).case(issueTableActionCreators.dataFetched, (state, payload) => ({
+  rows: payload.map(toTableRow)
+}));

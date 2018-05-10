@@ -31,7 +31,6 @@ func main() {
 	}
 
 	worksBodyFunc := func(body []byte) (interface{}, error) {
-		fmt.Println("")
 		return works, nil
 	}
 

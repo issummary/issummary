@@ -11,7 +11,10 @@ import {
 import { connect, Dispatch } from 'react-redux';
 import { IRootState } from '../reducers/reducer';
 import { bindActionCreators } from 'redux';
-import { issueTableActionCreators } from '../actions/issueTable';
+import {
+  IIssueTableActionCreators,
+  issueTableActionCreators
+} from '../actions/issueTable';
 
 export interface IClasses {
   large: string;
@@ -29,7 +32,8 @@ export interface IIssueTableRowProps {
 }
 
 export interface IIssueTableProps {
-  rowProps: IIssueTableRowProps[];
+  rows: IIssueTableRowProps[];
+  actions: IIssueTableActionCreators;
 }
 
 const IssueTableRow = (props: IIssueTableRowProps) => (
@@ -48,24 +52,32 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
   </TableRow>
 );
 
-const IssueTable = (props: IIssueTableProps) => (
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHeaderColumn>IID</TableHeaderColumn>
-        <TableHeaderColumn>Large Class</TableHeaderColumn>
-        <TableHeaderColumn>Middle Class</TableHeaderColumn>
-        <TableHeaderColumn>Small Class</TableHeaderColumn>
-        <TableHeaderColumn>Title</TableHeaderColumn>
-        <TableHeaderColumn>Summary</TableHeaderColumn>
-        <TableHeaderColumn>Note</TableHeaderColumn>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      {props.rowProps.map(rowProp => IssueTableRow(rowProp))}
-    </TableBody>
-  </Table>
-);
+class IssueTable extends React.Component<IIssueTableProps, undefined> {
+  componentDidMount() {
+    this.props.actions.requestUpdate();
+  }
+
+  render() {
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHeaderColumn>IID</TableHeaderColumn>
+            <TableHeaderColumn>Large Class</TableHeaderColumn>
+            <TableHeaderColumn>Middle Class</TableHeaderColumn>
+            <TableHeaderColumn>Small Class</TableHeaderColumn>
+            <TableHeaderColumn>Title</TableHeaderColumn>
+            <TableHeaderColumn>Summary</TableHeaderColumn>
+            <TableHeaderColumn>Note</TableHeaderColumn>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {this.props.rows.map(rowProp => IssueTableRow(rowProp))}
+        </TableBody>
+      </Table>
+    );
+  }
+}
 
 function mapStateToProps(state: IRootState) {
   return state.issueTable;
