@@ -1,28 +1,31 @@
 package gitlab
 
 import (
-	"github.com/xanzy/go-gitlab"
-	"strings"
-	"gopkg.in/russross/blackfriday.v2"
+	"fmt"
 	"log"
 	"strconv"
-	"fmt"
+	"strings"
+	"time"
+
+	"github.com/xanzy/go-gitlab"
+	"gopkg.in/russross/blackfriday.v2"
 )
 
 func toIssue(gitlabIssue *gitlab.Issue) *Issue {
 	return &Issue{
-		ID: gitlabIssue.ID,
-		IID: gitlabIssue.IID,
-		Title: gitlabIssue.Title,
+		ID:          gitlabIssue.ID,
+		IID:         gitlabIssue.IID,
+		DueDate:     (*time.Time)(gitlabIssue.DueDate),
+		Title:       gitlabIssue.Title,
 		Description: gitlabIssue.Description,
-		URL: gitlabIssue.WebURL,
+		URL:         gitlabIssue.WebURL,
 	}
 }
 
 func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label) (label *Label, err error) {
 	label = &Label{
-		ID: gitlabLabel.ID,
-		Name: gitlabLabel.Name,
+		ID:          gitlabLabel.ID,
+		Name:        gitlabLabel.Name,
 		Description: parseLabelDescription(gitlabLabel.Description),
 	}
 
@@ -58,7 +61,7 @@ func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label) (label *Lab
 func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, prefix string) (works []*Work, err error) {
 	for _, issue := range issues {
 		work := &Work{
-			Issue: toIssue(issue),
+			Issue:        toIssue(issue),
 			Dependencies: &Dependencies{},
 		}
 
@@ -88,9 +91,9 @@ func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, prefix string) (wor
 	return
 }
 
-func parseLabelDescription(description string) (*LabelDescription){
+func parseLabelDescription(description string) *LabelDescription {
 	ld := &LabelDescription{Raw: description}
-	depsKey := "deps: " // TODO: 別の場所で定義したほうがいい気がする
+	depsKey := "deps: "     // TODO: 別の場所で定義したほうがいい気がする
 	parentKey := "parent: " // TODO: 別の場所で定義したほうがいい気がする
 	lines := strings.Split(description, ";")
 	for _, line := range lines {
@@ -108,7 +111,7 @@ func parseLabelDescription(description string) (*LabelDescription){
 	return ld
 }
 
-func findLabelByName(labels []*gitlab.Label, name string) (*gitlab.Label, bool){
+func findLabelByName(labels []*gitlab.Label, name string) (*gitlab.Label, bool) {
 	for _, label := range labels {
 		if label.Name == name {
 			return label, true

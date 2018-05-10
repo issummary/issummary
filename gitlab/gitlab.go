@@ -1,26 +1,27 @@
 package gitlab
 
 import (
-	"github.com/xanzy/go-gitlab"
 	"strings"
 	"time"
+
+	"github.com/xanzy/go-gitlab"
 )
 
 type Client struct {
 	*gitlab.Client
 }
 
-func New(token string) *Client{
+func New(token string) *Client {
 	return &Client{
-		 Client: gitlab.NewClient(nil, token),
+		Client: gitlab.NewClient(nil, token),
 	}
 }
 
 type Label struct {
-	ID int
-	Name        string
-	Description *LabelDescription
-	Parent      *Label
+	ID           int
+	Name         string
+	Description  *LabelDescription
+	Parent       *Label
 	Dependencies []*Label
 }
 
@@ -31,19 +32,19 @@ type LabelDescription struct {
 }
 
 type Issue struct {
-	ID       int
-	IID       int
-	DueDate          *time.Time
+	ID          int
+	IID         int
+	DueDate     *time.Time
 	Title       string
 	Description string
 	Summary     string
 	Note        string
-	URL string
+	URL         string
 }
 
 type Work struct {
 	Issue        *Issue
-	Label *Label
+	Label        *Label
 	Dependencies *Dependencies
 }
 
@@ -55,7 +56,7 @@ type Dependencies struct {
 func (c *Client) ListWorks(pid interface{}, prefix string) (works []*Work, err error) {
 	allIssues, err := c.listAllIssuesByLabel(pid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
 	if err != nil {
-		return nil ,err
+		return nil, err
 	}
 
 	labels, err := c.listAllLabels(pid)
@@ -64,7 +65,7 @@ func (c *Client) ListWorks(pid interface{}, prefix string) (works []*Work, err e
 	return toWorks(allIssues, labels, prefix)
 }
 
-func (c *Client) listLabelsByPrefix(pid interface{}, prefix string) (prefixLabels []*gitlab.Label, err error){
+func (c *Client) listLabelsByPrefix(pid interface{}, prefix string) (prefixLabels []*gitlab.Label, err error) {
 	labels, err := c.listAllLabels(pid)
 	if err != nil {
 		return nil, err
@@ -78,10 +79,10 @@ func (c *Client) listLabelsByPrefix(pid interface{}, prefix string) (prefixLabel
 	return prefixLabels, nil
 }
 
-func (c *Client) listAllIssuesByLabel(pid interface{}, labels gitlab.Labels) ([]*gitlab.Issue, error){
+func (c *Client) listAllIssuesByLabel(pid interface{}, labels gitlab.Labels) ([]*gitlab.Issue, error) {
 	issueOpt := &gitlab.ListProjectIssuesOptions{
 		ListOptions: gitlab.ListOptions{
-			Page: 1,
+			Page:    1,
 			PerPage: 100,
 		},
 		Labels: labels,
@@ -107,7 +108,7 @@ func (c *Client) listAllIssuesByLabel(pid interface{}, labels gitlab.Labels) ([]
 
 func (c *Client) listAllLabels(pid interface{}) ([]*gitlab.Label, error) {
 	opt := &gitlab.ListLabelsOptions{
-		Page: 1,
+		Page:    1,
 		PerPage: 100,
 	}
 
