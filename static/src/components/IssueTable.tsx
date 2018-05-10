@@ -9,7 +9,7 @@ import {
   TableRowColumn
 } from 'material-ui/Table';
 import { connect, Dispatch } from 'react-redux';
-import { IRootState } from '../reducer';
+import { IRootState } from '../reducers/reducer';
 import { bindActionCreators } from 'redux';
 import { issueTableActionCreators } from '../actions/issueTable';
 

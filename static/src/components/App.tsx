@@ -5,7 +5,7 @@ import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { BrowserRouter as Router, Link, Route } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
-import { IRootState } from '../reducer';
+import { IRootState } from '../reducers/reducer';
 import { About } from './About';
 import { ConnectedCounter } from './Counter';
 import { Home } from './Home';
