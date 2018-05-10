@@ -1,11 +1,8 @@
 import { combineReducers } from 'redux';
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
-import { appActionCreators, counterActionCreators } from './actionCreators';
-import {
-  IClasses,
-  IIssueTableProps,
-  IIssueTableRowProps
-} from './components/IssueTable';
+import { IIssueTableProps } from './components/IssueTable';
+import { counterActionCreators } from './actions/counter';
+import { appActionCreators } from './actions/app';
 
 export interface IRootState {
   app: IAppState;

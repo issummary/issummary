@@ -6,7 +6,7 @@ import {
   counterActionCreators,
   counterAsyncActionCreators,
   ICounterAmountPayload
-} from './actionCreators';
+} from './actions/counter';
 
 function* incrementAsync(payload: ICounterAmountPayload) {
   yield delay(1000);
