@@ -19,8 +19,40 @@ func New(token string) *Client{
 }
 
 func (c *Client) ListWorks(pid interface{}, prefixClasses *Classes) (works []*Work, err error) {
-	issues, _, err := c.Issues.ListProjectIssues(pid, nil)
-	return toWorks(issues, prefixClasses), err
+	issueOpt := &gitlab.ListProjectIssuesOptions{
+		ListOptions: gitlab.ListOptions{
+			Page: 1,
+			PerPage: 100,
+		},
+		Labels: gitlab.Labels{
+			"W",
+		},
+	}
+
+	var allIssues []*gitlab.Issue
+
+	for {
+		issues, _, err := c.Issues.ListProjectIssues(pid, issueOpt)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(issues) == 0 {
+			break
+		}
+
+		allIssues = append(allIssues, issues...)
+		issueOpt.Page = issueOpt.Page + 1
+	}
+
+	// TODO: worksをオプティカルソート
+	return toWorks(allIssues, prefixClasses), err
+}
+
+type Label struct {
+	Title string
+	Description string
+	Parent *Label
 }
 
 type Issue struct {
@@ -32,6 +64,7 @@ type Issue struct {
 
 type Work struct {
 	Issue        *Issue
+	Label *Label
 	Classes      *Classes
 	Dependencies []*Issue
 }
@@ -70,9 +103,12 @@ func toWorks(issues []*gitlab.Issue, classPrefix *Classes) (works []*Work) {
 			for _, issue := range findIssuesByIIDs(issues, IIDs) {
 				work.Dependencies = append(work.Dependencies, toIssue(issue))
 			}
+
 			works = append(works, work)
 		}
 	}
+
+	// TODO: 親を設定
 	return
 }
 
