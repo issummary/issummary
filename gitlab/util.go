@@ -15,6 +15,7 @@ func toIssue(gitlabIssue *gitlab.Issue) *Issue {
 		IID: gitlabIssue.IID,
 		Title: gitlabIssue.Title,
 		Description: gitlabIssue.Description,
+		URL: gitlabIssue.WebURL,
 	}
 }
 

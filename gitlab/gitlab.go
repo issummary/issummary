@@ -3,6 +3,7 @@ package gitlab
 import (
 	"github.com/xanzy/go-gitlab"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -32,10 +33,12 @@ type LabelDescription struct {
 type Issue struct {
 	ID       int
 	IID       int
+	DueDate          *time.Time
 	Title       string
 	Description string
 	Summary     string
 	Note        string
+	URL string
 }
 
 type Work struct {
