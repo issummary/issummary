@@ -38,7 +38,11 @@ const IssueTableRow = (props: Work) => (
       {props.Label ? props.Label : '-'}
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>{props.Issue.Title}</TableRowColumn>
-    <TableRowColumn style={rowStyle}>{props.Issue.Summary}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>
+      {props.Issue.Summary ? props.Issue.Summary : '-'}
+    </TableRowColumn>
+    <TableRowColumn style={rowStyle}>{0}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>{'-'}</TableRowColumn>
   </TableRow>
 );
 
@@ -49,14 +53,16 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
 
   render() {
     return (
-      <Table>
+      <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
         <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
           <TableRow>
             <TableHeaderColumn>IID</TableHeaderColumn>
-            <TableHeaderColumn>Large Class</TableHeaderColumn>
-            <TableHeaderColumn>Middle Class</TableHeaderColumn>
+            <TableHeaderColumn>Label</TableHeaderColumn>
+            <TableHeaderColumn>Parent Label</TableHeaderColumn>
             <TableHeaderColumn>Title</TableHeaderColumn>
             <TableHeaderColumn>Summary</TableHeaderColumn>
+            <TableHeaderColumn>SP</TableHeaderColumn>
+            <TableHeaderColumn>Start Date</TableHeaderColumn>
           </TableRow>
         </TableHeader>
         <TableBody displayRowCheckbox={false}>
