@@ -16,6 +16,7 @@ func New(token string) *Client{
 }
 
 type Label struct {
+	ID int
 	Name        string
 	Description *LabelDescription
 	Parent      *Label
@@ -29,6 +30,8 @@ type LabelDescription struct {
 }
 
 type Issue struct {
+	ID       int
+	IID       int
 	Title       string
 	Description string
 	Summary     string

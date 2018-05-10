@@ -11,6 +11,8 @@ import (
 
 func toIssue(gitlabIssue *gitlab.Issue) *Issue {
 	return &Issue{
+		ID: gitlabIssue.ID,
+		IID: gitlabIssue.IID,
 		Title: gitlabIssue.Title,
 		Description: gitlabIssue.Description,
 	}
@@ -18,6 +20,7 @@ func toIssue(gitlabIssue *gitlab.Issue) *Issue {
 
 func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label) (label *Label, err error) {
 	label = &Label{
+		ID: gitlabLabel.ID,
 		Name: gitlabLabel.Name,
 		Description: parseLabelDescription(gitlabLabel.Description),
 	}
