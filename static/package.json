@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/main.bundle.js",
   "dependencies": {
+    "husky": "^0.14.3",
     "material-ui": "^0.20.0",
     "react": "^16.1.1",
     "react-dom": "^16.1.1",
@@ -11,8 +12,12 @@
     "react-router-dom": "^4.1.2",
     "react-tap-event-plugin": "^3.0.2",
     "redux": "^3.7.2",
-    "redux-actions": "^2.2.1",
-    "redux-saga": "^0.16.0"
+    "redux-saga": "^0.16.0",
+    "ts-loader": "^4.3.0",
+    "tslint-config-prettier": "^1.12.0",
+    "typescript-fsa": "^3.0.0-beta-1",
+    "typescript-fsa-reducers": "^0.4.5",
+    "typescript-fsa-redux-saga": "^1.0.3"
   },
   "devDependencies": {
     "@types/enzyme": "^3.1.0",
@@ -26,20 +31,21 @@
     "@types/react-router-dom": "^4.2.1",
     "@types/react-tap-event-plugin": "0.0.30",
     "@types/redux": "^3.6.31",
-    "@types/redux-actions": "^2.2.2",
     "@types/redux-saga": "^0.10.5",
     "@types/webpack-env": "^1.13.3",
     "css-loader": "^0.28.8",
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
+    "html-webpack-plugin": "^3.2.0",
     "jest": "^22.0.0",
     "mini-css-extract-plugin": "^0.4.0",
+    "prettier": "^1.12.1",
+    "pretty-quick": "^1.4.1",
     "react-hot-loader": "^3.1.3",
     "react-test-renderer": "^16.1.1",
     "source-map-loader": "^0.2.3",
     "style-loader": "^0.19.1",
     "ts-jest": "^22.0.1",
-    "ts-loader": "^4.2.0",
     "tslint": "^5.8.0",
     "tslint-react": "^3.3.3",
     "typescript": "^2.6.1",
@@ -56,7 +62,9 @@
     "watch-sandbox": "webpack --watch --config webpack.sandbox.config.js",
     "run-sandbox": "node dist/sandbox.bundle.js",
     "lint": "tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' 'test/**/*.ts'",
-    "test-circleci": "circleci build"
+    "test-circleci": "circleci build",
+    "pretty-quick": "pretty-quick",
+    "precommit": "pretty-quick --staged"
   },
   "keywords": [],
   "author": "mpppk",
@@ -66,10 +74,6 @@
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/test/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ]
+    "moduleFileExtensions": ["ts", "tsx", "js"]
   }
 }
