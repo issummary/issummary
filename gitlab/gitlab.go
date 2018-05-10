@@ -46,6 +46,7 @@ type Work struct {
 	Issue        *Issue
 	Label        *Label
 	Dependencies *Dependencies
+	StoryPoint   int
 }
 
 type Dependencies struct {
@@ -53,7 +54,7 @@ type Dependencies struct {
 	Labels []*Label
 }
 
-func (c *Client) ListWorks(pid interface{}, prefix string) (works []*Work, err error) {
+func (c *Client) ListWorks(pid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {
 	allIssues, err := c.listAllIssuesByLabel(pid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
 	if err != nil {
 		return nil, err
@@ -62,7 +63,7 @@ func (c *Client) ListWorks(pid interface{}, prefix string) (works []*Work, err e
 	labels, err := c.listAllLabels(pid)
 
 	// TODO: worksをオプティカルソート
-	return toWorks(allIssues, labels, prefix)
+	return toWorks(allIssues, labels, prefix, spLabelPrefix)
 }
 
 func (c *Client) listLabelsByPrefix(pid interface{}, prefix string) (prefixLabels []*gitlab.Label, err error) {

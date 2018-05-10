@@ -58,7 +58,7 @@ func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label) (label *Lab
 	return label, nil
 }
 
-func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, prefix string) (works []*Work, err error) {
+func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
 	for _, issue := range issues {
 		work := &Work{
 			Issue:        toIssue(issue),
@@ -75,7 +75,7 @@ func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, prefix string) (wor
 		}
 
 		for _, labelName := range issue.Labels {
-			if strings.HasPrefix(labelName, prefix) {
+			if strings.HasPrefix(labelName, targetLabelPrefix) {
 				if l, ok := findLabelByName(labels, labelName); ok {
 					work.Label, err = toLabel(l, labels)
 					if err != nil {
@@ -85,6 +85,20 @@ func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, prefix string) (wor
 				break
 			}
 		}
+
+		for _, labelName := range issue.Labels {
+			if strings.HasPrefix(labelName, spLabelPrefix) {
+				spStr := strings.TrimPrefix(labelName, spLabelPrefix)
+				fmt.Println(spStr)
+				sp, err := strconv.Atoi(spStr)
+				if err != nil {
+					return nil, err
+				}
+				work.StoryPoint = sp
+				break
+			}
+		}
+
 		works = append(works, work)
 	}
 
