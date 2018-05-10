@@ -1,27 +1,27 @@
 module.exports = {
-  entry: "./src/sandbox.ts",
+  entry: './src/sandbox.ts',
   output: {
-    filename: "sandbox.bundle.js",
-    path: __dirname + "/dist"
+    filename: 'sandbox.bundle.js',
+    path: __dirname + '/dist'
   },
 
   // Enable sourcemaps for debugging webpack's output.
-  devtool: "source-map",
+  devtool: 'source-map',
 
   resolve: {
     // Add '.ts' and '.tsx' as resolvable extensions.
-    extensions: [".ts", ".tsx", ".js", ".json"]
+    extensions: ['.ts', '.tsx', '.js', '.json']
   },
 
   node: {
     __dirname: false,
-    __filename: false,
+    __filename: false
   },
 
   module: {
     rules: [
       // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
-      { test: /\.tsx?$/, loader: "awesome-typescript-loader" },
+      { test: /\.tsx?$/, loader: 'awesome-typescript-loader' }
     ]
   }
 };
