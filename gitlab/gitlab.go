@@ -17,8 +17,15 @@ func New(token string) *Client{
 
 type Label struct {
 	Name        string
-	Description string
+	Description *LabelDescription
 	Parent      *Label
+	Dependencies []*Label
+}
+
+type LabelDescription struct {
+	Raw              string
+	DependLabelNames []string
+	ParentName       string // TODO: 複数の親を持てるようにする
 }
 
 type Issue struct {
@@ -31,21 +38,25 @@ type Issue struct {
 type Work struct {
 	Issue        *Issue
 	Label *Label
-	Dependencies []*Issue
+	Dependencies *Dependencies
+}
+
+type Dependencies struct {
+	Issues []*Issue
+	Labels []*Label
 }
 
 func (c *Client) ListWorks(pid interface{}, prefix string) (works []*Work, err error) {
-	allIssues, err := c.listAllIssuesByLabel(pid, gitlab.Labels{"W"})
+	allIssues, err := c.listAllIssuesByLabel(pid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
 	if err != nil {
 		return nil ,err
 	}
 
-	prefixLabels, err := c.listLabelsByPrefix(pid, prefix)
+	labels, err := c.listAllLabels(pid)
 
 	// TODO: worksをオプティカルソート
-	return toWorks(allIssues, prefixLabels, prefix), err
+	return toWorks(allIssues, labels, prefix)
 }
-
 
 func (c *Client) listLabelsByPrefix(pid interface{}, prefix string) (prefixLabels []*gitlab.Label, err error){
 	labels, err := c.listAllLabels(pid)
@@ -110,6 +121,4 @@ func (c *Client) listAllLabels(pid interface{}) ([]*gitlab.Label, error) {
 		opt.Page = opt.Page + 1
 	}
 	return allLabels, nil
-
-
 }

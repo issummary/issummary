@@ -6,6 +6,7 @@ import (
 	"gopkg.in/russross/blackfriday.v2"
 	"log"
 	"strconv"
+	"fmt"
 )
 
 func toIssue(gitlabIssue *gitlab.Issue) *Issue {
@@ -15,9 +16,47 @@ func toIssue(gitlabIssue *gitlab.Issue) *Issue {
 	}
 }
 
-func toWorks(issues []*gitlab.Issue, prefixLabels []*gitlab.Label, prefix string) (works []*Work) {
+func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label) (label *Label, err error) {
+	label = &Label{
+		Name: gitlabLabel.Name,
+		Description: parseLabelDescription(gitlabLabel.Description),
+	}
+
+	if label.Description.ParentName != "" {
+		parentGitLabLabel, ok := findLabelByName(otherLabels, label.Description.ParentName)
+		if !ok {
+			return nil, fmt.Errorf("parent(%s) not found\n", label.Description.ParentName)
+		}
+		parentLabel, err := toLabel(parentGitLabLabel, otherLabels)
+		if err != nil {
+			return nil, err
+		}
+		label.Parent = parentLabel
+	}
+
+	if len(label.Description.DependLabelNames) > 0 {
+		for _, dependLabelName := range label.Description.DependLabelNames {
+			dependGitLabLabel, ok := findLabelByName(otherLabels, dependLabelName)
+			if !ok {
+				return nil, fmt.Errorf("depend label(%s) not found\n", dependLabelName)
+			}
+			dependLabel, err := toLabel(dependGitLabLabel, otherLabels)
+			if err != nil {
+				return nil, err
+			}
+			label.Dependencies = append(label.Dependencies, dependLabel)
+		}
+	}
+
+	return label, nil
+}
+
+func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, prefix string) (works []*Work, err error) {
 	for _, issue := range issues {
-		work := &Work{Issue: toIssue(issue)}
+		work := &Work{
+			Issue: toIssue(issue),
+			Dependencies: &Dependencies{},
+		}
 
 		IIDs, err := getDependencyIIDs(issue)
 		if err != nil {
@@ -25,27 +64,44 @@ func toWorks(issues []*gitlab.Issue, prefixLabels []*gitlab.Label, prefix string
 		}
 
 		for _, issue := range findIssuesByIIDs(issues, IIDs) {
-			work.Dependencies = append(work.Dependencies, toIssue(issue))
+			work.Dependencies.Issues = append(work.Dependencies.Issues, toIssue(issue))
 		}
 
 		for _, labelName := range issue.Labels {
 			if strings.HasPrefix(labelName, prefix) {
-				if l, ok := findLabelByName(prefixLabels, labelName); ok {
-					work.Label = &Label {
-						Name: l.Name,
-						Description: l.Description,
-						// TODO: parentを設定
+				if l, ok := findLabelByName(labels, labelName); ok {
+					work.Label, err = toLabel(l, labels)
+					if err != nil {
+						return nil, err
 					}
 				}
 				break
 			}
-
 		}
 		works = append(works, work)
 	}
 
-	// TODO: 親を設定
 	return
+}
+
+func parseLabelDescription(description string) (*LabelDescription){
+	ld := &LabelDescription{Raw: description}
+	depsKey := "deps: " // TODO: 別の場所で定義したほうがいい気がする
+	parentKey := "parent: " // TODO: 別の場所で定義したほうがいい気がする
+	lines := strings.Split(description, ";")
+	for _, line := range lines {
+		if strings.Contains(line, depsKey) {
+			depLabelNamesStr := strings.TrimPrefix(line, depsKey)
+			depLabelNamesStr = strings.Trim(depLabelNamesStr, "\"")
+			ld.DependLabelNames = strings.Split(depLabelNamesStr, ",")
+		}
+
+		if strings.Contains(line, parentKey) {
+			parentLabelNamesStr := strings.TrimPrefix(line, parentKey)
+			ld.ParentName = strings.Split(parentLabelNamesStr, ",")[0] // FIXME
+		}
+	}
+	return ld
 }
 
 func findLabelByName(labels []*gitlab.Label, name string) (*gitlab.Label, bool){
