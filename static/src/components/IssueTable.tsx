@@ -15,39 +15,22 @@ import {
   IIssueTableActionCreators,
   issueTableActionCreators
 } from '../actions/issueTable';
-
-export interface IClasses {
-  large: string;
-  middle: string;
-  small: string;
-}
-
-export interface IIssueTableRowProps {
-  iid: number;
-  classes: IClasses;
-  title: string;
-  description: string;
-  summary: string;
-  note: string;
-}
+import { Work } from '../models/work';
 
 export interface IIssueTableProps {
-  rows: IIssueTableRowProps[];
+  works: Work[];
   actions: IIssueTableActionCreators;
 }
 
-const IssueTableRow = (props: IIssueTableRowProps) => (
-  <TableRow key={props.iid}>
-    <TableRowColumn>{props.iid}</TableRowColumn>
-    <TableRowColumn>{props.classes.large}</TableRowColumn>
-    <TableRowColumn>{props.classes.middle}</TableRowColumn>
-    <TableRowColumn>{props.classes.small}</TableRowColumn>
-    <TableRowColumn>{props.title}</TableRowColumn>
+const IssueTableRow = (props: Work) => (
+  <TableRow key={props.Issue.IID}>
+    <TableRowColumn>{props.Issue.IID}</TableRowColumn>
+    <TableRowColumn>{props.Issue.Title}</TableRowColumn>
     <TableRowColumn style={{ wordWrap: 'break-word', whiteSpace: 'normal' }}>
-      {props.summary}
+      {props.Issue.Summary}
     </TableRowColumn>
     <TableRowColumn style={{ wordWrap: 'break-word', whiteSpace: 'normal' }}>
-      {props.note}
+      {props.Issue.Note}
     </TableRowColumn>
   </TableRow>
 );
@@ -72,7 +55,7 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {this.props.rows.map(rowProp => IssueTableRow(rowProp))}
+          {this.props.works.map(rowProp => IssueTableRow(rowProp))}
         </TableBody>
       </Table>
     );

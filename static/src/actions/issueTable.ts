@@ -1,5 +1,4 @@
 import actionCreatorFactory, { ActionCreator } from 'typescript-fsa';
-import { IIssueTableRowProps } from '../components/IssueTable';
 import { Work } from '../models/work';
 
 const actionCreator = actionCreatorFactory('ISSUE_TABLE');
