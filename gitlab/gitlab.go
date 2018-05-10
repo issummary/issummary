@@ -19,32 +19,10 @@ func New(token string) *Client{
 }
 
 func (c *Client) ListWorks(pid interface{}, prefixClasses *Classes) (works []*Work, err error) {
-	issueOpt := &gitlab.ListProjectIssuesOptions{
-		ListOptions: gitlab.ListOptions{
-			Page: 1,
-			PerPage: 100,
-		},
-		Labels: gitlab.Labels{
-			"W",
-		},
+	allIssues, err := c.listAllIssuesByLabel(pid, gitlab.Labels{"W"})
+	if err != nil {
+		return nil ,err
 	}
-
-	var allIssues []*gitlab.Issue
-
-	for {
-		issues, _, err := c.Issues.ListProjectIssues(pid, issueOpt)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(issues) == 0 {
-			break
-		}
-
-		allIssues = append(allIssues, issues...)
-		issueOpt.Page = issueOpt.Page + 1
-	}
-
 	// TODO: worksをオプティカルソート
 	return toWorks(allIssues, prefixClasses), err
 }
@@ -110,6 +88,33 @@ func toWorks(issues []*gitlab.Issue, classPrefix *Classes) (works []*Work) {
 
 	// TODO: 親を設定
 	return
+}
+
+func (c *Client) listAllIssuesByLabel(pid interface{}, labels gitlab.Labels) ([]*gitlab.Issue, error){
+	issueOpt := &gitlab.ListProjectIssuesOptions{
+		ListOptions: gitlab.ListOptions{
+			Page: 1,
+			PerPage: 100,
+		},
+		Labels: labels,
+	}
+
+	var allIssues []*gitlab.Issue
+
+	for {
+		issues, _, err := c.Issues.ListProjectIssues(pid, issueOpt)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(issues) == 0 {
+			break
+		}
+
+		allIssues = append(allIssues, issues...)
+		issueOpt.Page = issueOpt.Page + 1
+	}
+	return allIssues, nil
 }
 
 func findIssuesByIIDs(issues []*gitlab.Issue, iidList []int) (filteredIssues []*gitlab.Issue) {
