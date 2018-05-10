@@ -48,7 +48,7 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
     <TableRowColumn style={rowStyle}>
       {props.work.Issue.Summary ? props.work.Issue.Summary : '-'}
     </TableRowColumn>
-    <TableRowColumn style={rowStyle}>{0}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>{props.work.StoryPoint}</TableRowColumn>
     <TableRowColumn style={rowStyle}>{'-'}</TableRowColumn>
   </TableRow>
 );
