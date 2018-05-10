@@ -16,22 +16,29 @@ import {
   issueTableActionCreators
 } from '../actions/issueTable';
 import { Work } from '../models/work';
+import { CSSProperties } from 'react';
 
 export interface IIssueTableProps {
   works: Work[];
   actions: IIssueTableActionCreators;
 }
 
+const rowStyle: CSSProperties = {
+  wordWrap: 'break-word',
+  whiteSpace: 'normal'
+};
+
 const IssueTableRow = (props: Work) => (
   <TableRow key={props.Issue.IID}>
     <TableRowColumn>{props.Issue.IID}</TableRowColumn>
-    <TableRowColumn>{props.Issue.Title}</TableRowColumn>
-    <TableRowColumn style={{ wordWrap: 'break-word', whiteSpace: 'normal' }}>
-      {props.Issue.Summary}
+    <TableRowColumn style={rowStyle}>
+      {props.Label && props.Label.Parent ? props.Label.Parent : '-'}
     </TableRowColumn>
-    <TableRowColumn style={{ wordWrap: 'break-word', whiteSpace: 'normal' }}>
-      {props.Issue.Note}
+    <TableRowColumn style={rowStyle}>
+      {props.Label ? props.Label : '-'}
     </TableRowColumn>
+    <TableRowColumn style={rowStyle}>{props.Issue.Title}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>{props.Issue.Summary}</TableRowColumn>
   </TableRow>
 );
 
@@ -43,18 +50,16 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
   render() {
     return (
       <Table>
-        <TableHeader>
+        <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
           <TableRow>
             <TableHeaderColumn>IID</TableHeaderColumn>
             <TableHeaderColumn>Large Class</TableHeaderColumn>
             <TableHeaderColumn>Middle Class</TableHeaderColumn>
-            <TableHeaderColumn>Small Class</TableHeaderColumn>
             <TableHeaderColumn>Title</TableHeaderColumn>
             <TableHeaderColumn>Summary</TableHeaderColumn>
-            <TableHeaderColumn>Note</TableHeaderColumn>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody displayRowCheckbox={false}>
           {this.props.works.map(rowProp => IssueTableRow(rowProp))}
         </TableBody>
       </Table>
