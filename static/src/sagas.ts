@@ -7,6 +7,11 @@ import {
   counterAsyncActionCreators,
   ICounterAmountPayload
 } from './actions/counter';
+import {
+  issueTableActionCreators,
+  issueTableAsyncActionCreators
+} from './actions/issueTable';
+import { Api } from './services/api';
 
 function* incrementAsync(payload: ICounterAmountPayload) {
   yield delay(1000);
@@ -26,7 +31,26 @@ function* watchIncrementAsync() {
   );
 }
 
+function* fetchNewIssueTableData() {
+  yield delay(1000);
+  const works = yield call(Api.fetchWorks);
+  yield put(issueTableActionCreators.dataFetched(works));
+}
+
+const requestNewIssueTableData = bindAsyncAction(
+  issueTableAsyncActionCreators.requestNewDataFetching
+)(function*(): SagaIterator {
+  yield call(fetchNewIssueTableData);
+});
+
+function* watchUpdateIssueTable() {
+  yield takeEvery(
+    issueTableActionCreators.requestUpdate.type,
+    (a: Action<ICounterAmountPayload>) => requestNewIssueTableData(a.payload)
+  );
+}
+
 // single entry point to start all Sagas at once
 export default function* rootSaga() {
-  yield all([watchIncrementAsync()]);
+  yield all([watchIncrementAsync(), watchUpdateIssueTable()]);
 }

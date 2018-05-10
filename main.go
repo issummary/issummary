@@ -7,9 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+
 	"github.com/joho/godotenv"
 	"github.com/mpppk/issummary/gitlab"
-	"os"
 )
 
 func main() {
@@ -18,21 +19,18 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	fmt.Println(os.Getenv("GITLAB_TOKEN"))
-
 	client := gitlab.New(os.Getenv("GITLAB_TOKEN"))
 
 	if os.Getenv("GITLAB_BASEURL") != "" {
 		client.SetBaseURL(os.Getenv("GITLAB_BASEURL"))
 	}
 
-	works, err := client.ListWorks(os.Getenv("GITLAB_PID"), &gitlab.Classes{"LC", "MC", "SC"})
+	works, err := client.ListWorks(os.Getenv("GITLAB_PID"), "LC", "S")
 	if err != nil {
 		panic(err)
 	}
 
 	worksBodyFunc := func(body []byte) (interface{}, error) {
-		fmt.Println("")
 		return works, nil
 	}
 

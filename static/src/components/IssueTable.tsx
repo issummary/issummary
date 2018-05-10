@@ -11,61 +11,67 @@ import {
 import { connect, Dispatch } from 'react-redux';
 import { IRootState } from '../reducers/reducer';
 import { bindActionCreators } from 'redux';
-import { issueTableActionCreators } from '../actions/issueTable';
-
-export interface IClasses {
-  large: string;
-  middle: string;
-  small: string;
-}
-
-export interface IIssueTableRowProps {
-  iid: number;
-  classes: IClasses;
-  title: string;
-  description: string;
-  summary: string;
-  note: string;
-}
+import {
+  IIssueTableActionCreators,
+  issueTableActionCreators
+} from '../actions/issueTable';
+import { Work } from '../models/work';
+import { CSSProperties } from 'react';
 
 export interface IIssueTableProps {
-  rowProps: IIssueTableRowProps[];
+  works: Work[];
+  actions: IIssueTableActionCreators;
 }
 
-const IssueTableRow = (props: IIssueTableRowProps) => (
-  <TableRow key={props.iid}>
-    <TableRowColumn>{props.iid}</TableRowColumn>
-    <TableRowColumn>{props.classes.large}</TableRowColumn>
-    <TableRowColumn>{props.classes.middle}</TableRowColumn>
-    <TableRowColumn>{props.classes.small}</TableRowColumn>
-    <TableRowColumn>{props.title}</TableRowColumn>
-    <TableRowColumn style={{ wordWrap: 'break-word', whiteSpace: 'normal' }}>
-      {props.summary}
+const rowStyle: CSSProperties = {
+  wordWrap: 'break-word',
+  whiteSpace: 'normal'
+};
+
+const IssueTableRow = (props: Work) => (
+  <TableRow key={props.Issue.IID}>
+    <TableRowColumn>{props.Issue.IID}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>
+      {props.Label && props.Label.Parent ? props.Label.Parent : '-'}
     </TableRowColumn>
-    <TableRowColumn style={{ wordWrap: 'break-word', whiteSpace: 'normal' }}>
-      {props.note}
+    <TableRowColumn style={rowStyle}>
+      {props.Label ? props.Label : '-'}
     </TableRowColumn>
+    <TableRowColumn style={rowStyle}>{props.Issue.Title}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>
+      {props.Issue.Summary ? props.Issue.Summary : '-'}
+    </TableRowColumn>
+    <TableRowColumn style={rowStyle}>{0}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>{'-'}</TableRowColumn>
   </TableRow>
 );
 
-const IssueTable = (props: IIssueTableProps) => (
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHeaderColumn>IID</TableHeaderColumn>
-        <TableHeaderColumn>Large Class</TableHeaderColumn>
-        <TableHeaderColumn>Middle Class</TableHeaderColumn>
-        <TableHeaderColumn>Small Class</TableHeaderColumn>
-        <TableHeaderColumn>Title</TableHeaderColumn>
-        <TableHeaderColumn>Summary</TableHeaderColumn>
-        <TableHeaderColumn>Note</TableHeaderColumn>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      {props.rowProps.map(rowProp => IssueTableRow(rowProp))}
-    </TableBody>
-  </Table>
-);
+class IssueTable extends React.Component<IIssueTableProps, undefined> {
+  componentDidMount() {
+    this.props.actions.requestUpdate();
+  }
+
+  render() {
+    return (
+      <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
+        <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
+          <TableRow>
+            <TableHeaderColumn>IID</TableHeaderColumn>
+            <TableHeaderColumn>Label</TableHeaderColumn>
+            <TableHeaderColumn>Parent Label</TableHeaderColumn>
+            <TableHeaderColumn>Title</TableHeaderColumn>
+            <TableHeaderColumn>Summary</TableHeaderColumn>
+            <TableHeaderColumn>SP</TableHeaderColumn>
+            <TableHeaderColumn>Start Date</TableHeaderColumn>
+          </TableRow>
+        </TableHeader>
+        <TableBody displayRowCheckbox={false}>
+          {this.props.works.map(rowProp => IssueTableRow(rowProp))}
+        </TableBody>
+      </Table>
+    );
+  }
+}
 
 function mapStateToProps(state: IRootState) {
   return state.issueTable;
