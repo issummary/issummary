@@ -61,8 +61,11 @@ func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label) (label *Lab
 func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
 	for _, issue := range issues {
 		work := &Work{
-			Issue:        toIssue(issue),
-			Dependencies: &Dependencies{},
+			Issue: toIssue(issue),
+			Dependencies: &Dependencies{
+				Issues: []*Issue{},
+				Labels: []*Label{},
+			},
 		}
 
 		IIDs, err := getDependencyIIDs(issue)

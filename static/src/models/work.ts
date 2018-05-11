@@ -30,4 +30,7 @@ export interface Issue {
   URL: string;
 }
 
-export interface Dependencies {}
+export interface Dependencies {
+  Issues: Issue[];
+  Labels: Label[];
+}

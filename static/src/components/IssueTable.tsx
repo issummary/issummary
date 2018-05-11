@@ -16,7 +16,7 @@ import {
   issueTableActionCreators
 } from '../actions/issueTable';
 import { CSSProperties } from 'react';
-import { Work } from '../models/work';
+import { Dependencies, Work } from '../models/work';
 
 export interface IIssueTableProps {
   works: Work[];
@@ -31,6 +31,26 @@ export interface IIssueTableRowProps {
 const rowStyle: CSSProperties = {
   wordWrap: 'break-word',
   whiteSpace: 'normal'
+};
+
+const IssueDependencies = (props: { deps: Dependencies }) => {
+  // TODO: show label dependencies
+  // const labels = props.deps.Labels;
+  // const labelLinks = labels.map((l) => '~' + l.ID).join('->');
+
+  const issues = props.deps.Issues;
+  const issueLinks = issues.map(i => <a href={i.URL}>{'#' + i.IID}</a>);
+  const lastLink = issueLinks.pop();
+  return (
+    <span>
+      {issueLinks.map(a => (
+        <span>
+          a<span>-></span>
+        </span>
+      ))}
+      {lastLink}
+    </span>
+  );
 };
 
 const IssueTableRow = (props: IIssueTableRowProps) => (
@@ -50,6 +70,10 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>{props.work.StoryPoint}</TableRowColumn>
     <TableRowColumn style={rowStyle}>{'-'}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>
+      <IssueDependencies deps={props.work.Dependencies} />
+      {/*{toIssueDependenciesStr(props.work.Dependencies)}*/}
+    </TableRowColumn>
   </TableRow>
 );
 
@@ -71,13 +95,13 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
             <TableHeaderColumn>Summary</TableHeaderColumn>
             <TableHeaderColumn>SP</TableHeaderColumn>
             <TableHeaderColumn>Start Date</TableHeaderColumn>
+            <TableHeaderColumn>Deps</TableHeaderColumn>
           </TableRow>
         </TableHeader>
         <TableBody displayRowCheckbox={false}>
           {this.props.works.map(w => (
             <IssueTableRow work={w} key={w.Issue.IID} />
           ))}
-          {/*{this.props.works.map(rowProp => IssueTableRow(rowProp))}*/}
         </TableBody>
       </Table>
     );
