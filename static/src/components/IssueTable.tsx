@@ -59,7 +59,8 @@ const IssueDependencies = (props: { deps: Dependencies }) => {
     <span>
       {issueLinks.map((a, i) => (
         <span key={i}>
-          a<span>-></span>
+          {a}
+          <span> </span>
         </span>
       ))}
       {lastLink}
