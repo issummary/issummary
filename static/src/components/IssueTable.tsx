@@ -46,7 +46,13 @@ const IssueDependencies = (props: { deps: Dependencies }) => {
 
   const issues = props.deps.Issues;
   const issueLinks = issues.map(i => <IssueIID issue={i} />);
+
+  if (issueLinks.length == 0) {
+    return <span>-</span>;
+  }
+
   const lastLink = issueLinks.pop();
+
   return (
     <span>
       {issueLinks.map(a => (
@@ -73,14 +79,15 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
       {props.work.Label ? props.work.Label.Name : '-'}
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>{props.work.Issue.Title}</TableRowColumn>
-    <TableRowColumn style={rowStyle}>
-      {props.work.Issue.Summary ? props.work.Issue.Summary : '-'}
+    <TableRowColumn style={{ ...rowStyle, width: 250 }}>
+      {props.work.Issue.Description.Summary
+        ? props.work.Issue.Description.Summary
+        : '-'}
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>{props.work.StoryPoint}</TableRowColumn>
     <TableRowColumn style={rowStyle}>{'-'}</TableRowColumn>
     <TableRowColumn style={rowStyle}>
       <IssueDependencies deps={props.work.Dependencies} />
-      {/*{toIssueDependenciesStr(props.work.Dependencies)}*/}
     </TableRowColumn>
   </TableRow>
 );

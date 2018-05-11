@@ -24,10 +24,18 @@ export interface Issue {
   IID: number;
   DueDate: string;
   Title: string;
-  Description: string;
+  Description: IssueDescription;
   Summary: string;
   Note: string;
   URL: string;
+}
+
+export interface IssueDescription {
+  Raw: string;
+  DependencyIIDs: number[];
+  Summary: string;
+  Note: string;
+  Details: string;
 }
 
 export interface Dependencies {

@@ -36,10 +36,16 @@ type Issue struct {
 	IID         int
 	DueDate     *time.Time
 	Title       string
-	Description string
-	Summary     string
-	Note        string
+	Description *IssueDescription
 	URL         string
+}
+
+type IssueDescription struct {
+	Raw            string
+	DependencyIIDs []int
+	Summary        string
+	Note           string
+	Details        string
 }
 
 type Work struct {

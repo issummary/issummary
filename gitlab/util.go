@@ -11,15 +11,20 @@ import (
 	"gopkg.in/russross/blackfriday.v2"
 )
 
-func toIssue(gitlabIssue *gitlab.Issue) *Issue {
+func toIssue(gitlabIssue *gitlab.Issue) (*Issue, error) {
+	issueDescription, err := parseIssueDescription(gitlabIssue.Description)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Issue{
 		ID:          gitlabIssue.ID,
 		IID:         gitlabIssue.IID,
 		DueDate:     (*time.Time)(gitlabIssue.DueDate),
 		Title:       gitlabIssue.Title,
-		Description: gitlabIssue.Description,
+		Description: issueDescription,
 		URL:         gitlabIssue.WebURL,
-	}
+	}, nil
 }
 
 func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label) (label *Label, err error) {
@@ -59,25 +64,29 @@ func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label) (label *Lab
 }
 
 func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
-	for _, issue := range issues {
+	for _, gitlabIssue := range issues {
+		issue, err := toIssue(gitlabIssue)
+		if err != nil {
+			return nil, err
+		}
+
 		work := &Work{
-			Issue: toIssue(issue),
+			Issue: issue,
 			Dependencies: &Dependencies{
 				Issues: []*Issue{},
 				Labels: []*Label{},
 			},
 		}
 
-		IIDs, err := getDependencyIIDs(issue)
-		if err != nil {
-			panic(err)
+		for _, issue := range findIssuesByIIDs(issues, issue.Description.DependencyIIDs) {
+			is, err := toIssue(issue)
+			if err != nil {
+				return nil, err
+			}
+			work.Dependencies.Issues = append(work.Dependencies.Issues, is)
 		}
 
-		for _, issue := range findIssuesByIIDs(issues, IIDs) {
-			work.Dependencies.Issues = append(work.Dependencies.Issues, toIssue(issue))
-		}
-
-		for _, labelName := range issue.Labels {
+		for _, labelName := range gitlabIssue.Labels {
 			if strings.HasPrefix(labelName, targetLabelPrefix) {
 				if l, ok := findLabelByName(labels, labelName); ok {
 					work.Label, err = toLabel(l, labels)
@@ -89,7 +98,7 @@ func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, targetLabelPrefix, 
 			}
 		}
 
-		for _, labelName := range issue.Labels {
+		for _, labelName := range gitlabIssue.Labels {
 			if strings.HasPrefix(labelName, spLabelPrefix) {
 				spStr := strings.TrimPrefix(labelName, spLabelPrefix)
 				fmt.Println(spStr)
@@ -156,10 +165,75 @@ func findIssueByIID(issues []*gitlab.Issue, iid int) (*gitlab.Issue, bool) {
 	return nil, false
 }
 
-func getDependencyIIDs(issue *gitlab.Issue) ([]int, error) {
-	description := issue.Description
+func parseIssueDescription(description string) (*IssueDescription, error) {
+	issueDescription := &IssueDescription{Raw: description}
+
 	md := blackfriday.New()
 	node := md.Parse([]byte(description))
+
+	depIIDs, err := getDependencyIIDsFromMDNodes(node)
+	if err != nil {
+		return nil, err
+	}
+	issueDescription.DependencyIIDs = depIIDs
+	summary, err := getMDContentByHeader(node, "Summary")
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("summary")
+	fmt.Println(summary)
+	issueDescription.Summary = summary
+
+	note, err := getMDContentByHeader(node, "Note")
+	if err != nil {
+		return nil, err
+	}
+	issueDescription.Note = note
+
+	detail, err := getMDContentByHeader(node, "Details")
+	if err != nil {
+		return nil, err
+	}
+	issueDescription.Details = detail
+
+	return issueDescription, nil
+}
+
+func getMDContentByHeader(node *blackfriday.Node, header string) (string, error) {
+	childNode := node.FirstChild
+	for {
+		if childNode == nil {
+			log.Printf("header(%s) not found\n", header)
+			return "", nil
+		}
+
+		if childNode.Type == blackfriday.Heading && string(childNode.FirstChild.Literal) == header {
+			break
+		}
+		childNode = childNode.Next
+	}
+
+	childNode = childNode.Next
+
+	strs := ""
+	for {
+
+		if childNode == nil || childNode.Type == blackfriday.Heading {
+			fmt.Println("strs")
+
+			return strs, nil
+		}
+
+		if header == "Summary" {
+			fmt.Println(childNode.String(), string(childNode.FirstChild.Literal))
+		}
+
+		strs = strs + string(childNode.FirstChild.Literal)
+		childNode = childNode.Next
+	}
+}
+
+func getDependencyIIDsFromMDNodes(node *blackfriday.Node) ([]int, error) {
 	childNode := node.FirstChild
 	for {
 		if childNode == nil {
