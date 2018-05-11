@@ -9,7 +9,6 @@ export class Home extends React.Component<{}, any> {
   public render() {
     return (
       <div>
-        <h2>Home</h2>
         <ConnectedIssueTable />
       </div>
     );

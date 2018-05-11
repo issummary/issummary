@@ -33,7 +33,7 @@ class App extends React.Component<IAppProps, undefined> {
       <Router>
         <div>
           <AppBar
-            title="Title"
+            title="Issummary"
             iconClassNameRight="muidocs-icon-navigation-expand-more"
             onLeftIconButtonClick={this.handleLeftIconButtonTouchTap}
           />
