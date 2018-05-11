@@ -85,7 +85,11 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
         : '-'}
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>{props.work.StoryPoint}</TableRowColumn>
-    <TableRowColumn style={rowStyle}>{'-'}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>
+      {props.work.Issue.DueDate
+        ? props.work.Issue.DueDate.format('YYYY/MM/DD')
+        : '-'}
+    </TableRowColumn>
     <TableRowColumn style={rowStyle}>
       <IssueDependencies deps={props.work.Dependencies} />
     </TableRowColumn>
@@ -109,7 +113,7 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
             <TableHeaderColumn>Title</TableHeaderColumn>
             <TableHeaderColumn>Summary</TableHeaderColumn>
             <TableHeaderColumn>SP</TableHeaderColumn>
-            <TableHeaderColumn>Start Date</TableHeaderColumn>
+            <TableHeaderColumn>Due Date</TableHeaderColumn>
             <TableHeaderColumn>Deps</TableHeaderColumn>
           </TableRow>
         </TableHeader>

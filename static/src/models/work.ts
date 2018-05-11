@@ -1,3 +1,5 @@
+import { Moment } from 'moment';
+
 export interface Work {
   Issue: Issue;
   Label: Label;
@@ -22,11 +24,9 @@ export interface LabelDescription {
 export interface Issue {
   ID: number;
   IID: number;
-  DueDate: string;
+  DueDate: Moment;
   Title: string;
   Description: IssueDescription;
-  Summary: string;
-  Note: string;
   URL: string;
 }
 
