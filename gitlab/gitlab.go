@@ -69,7 +69,14 @@ func (c *Client) ListWorks(pid interface{}, prefix, spLabelPrefix string) (works
 	labels, err := c.listAllLabels(pid)
 
 	// TODO: worksをオプティカルソート
-	return toWorks(allIssues, labels, prefix, spLabelPrefix)
+	works, err = toWorks(allIssues, labels, prefix, spLabelPrefix)
+	if err != nil {
+		return nil, err
+	}
+	workManager := NewWorkManager()
+	workManager.AddWorks(works)
+	workManager.ConnectByDependencies()
+	return workManager.GetSortedWorks()
 }
 
 func (c *Client) listLabelsByPrefix(pid interface{}, prefix string) (prefixLabels []*gitlab.Label, err error) {

@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"sort"
 
+	"io/ioutil"
+
 	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/graph/encoding/dot"
 	"gonum.org/v1/gonum/graph/simple"
 	"gonum.org/v1/gonum/graph/topo"
 )
@@ -22,39 +25,34 @@ type Dependency struct {
 type WorkManager struct {
 	g           *simple.DirectedGraph
 	gMap        map[int64]*WorkNode
-	workMap     map[int]*WorkNode
-	depIIDQueue []*Dependency
+	workNodeMap map[int]*WorkNode
 }
 
 func NewWorkManager() *WorkManager {
 	return &WorkManager{
-		g:    simple.NewDirectedGraph(),
-		gMap: map[int64]*WorkNode{},
+		g:           simple.NewDirectedGraph(),
+		gMap:        map[int64]*WorkNode{},
+		workNodeMap: map[int]*WorkNode{},
 	}
 }
 
 func (wg *WorkManager) AddWork(work *Work) {
 	node := wg.g.NewNode()
+	wg.g.AddNode(node)
 	wg.gMap[node.ID()] = &WorkNode{node: node, work: work}
-	wg.workMap[work.Issue.IID] = &WorkNode{node: node, work: work}
-	// 依存関係をqueueに入れておく
-	for _, issue := range work.Dependencies.Issues {
-		wg.depIIDQueue = append(wg.depIIDQueue, &Dependency{fromIID: work.Issue.IID, toIID: issue.IID})
-	}
+	wg.workNodeMap[work.Issue.IID] = &WorkNode{node: node, work: work}
 }
 
 func (wg *WorkManager) ConnectByDependencies() error {
-	for _, dep := range wg.depIIDQueue {
-		fromWorkNode, ok := wg.workMap[dep.fromIID]
-		if !ok {
-			return fmt.Errorf("dependency (from: %s) cant resolve\n", dep) // FIXME
+	for _, fromWorkNode := range wg.workNodeMap {
+		for _, issue := range fromWorkNode.work.Dependencies.Issues {
+			toIID := issue.IID
+			toWorkNode, ok := wg.workNodeMap[toIID]
+			if !ok {
+				return fmt.Errorf("dependency (to: %s) cant resolve\n", toWorkNode.work) // FIXME
+			}
+			wg.g.SetEdge(wg.g.NewEdge(fromWorkNode.node, toWorkNode.node))
 		}
-		toWorkNode, ok := wg.workMap[dep.toIID]
-		if !ok {
-			return fmt.Errorf("dependency (to: %s) cant resolve\n", dep) // FIXME
-		}
-
-		wg.g.Edge(fromWorkNode.node.ID(), toWorkNode.node.ID())
 	}
 	return nil
 }
@@ -77,7 +75,21 @@ func (wg *WorkManager) ListSortedWorksByDueDate() (workNodes []*WorkNode) {
 }
 
 func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
-	nodes, err := topo.Sort(wg.g)
+
+	marshalGraph, err := dot.Marshal(wg.g, "name", "prefix", "  ", false)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = ioutil.WriteFile("test.dot", marshalGraph, 0777); err != nil {
+		return nil, err
+	}
+
+	nodes, err := topo.SortStabilized(wg.g, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +98,7 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 		works = append(works, wg.gMap[node.ID()].work)
 	}
 
-	return
+	return reverseWorks(works), nil
 
 	//workNodeFlags := map[int64]struct{}{}
 	//// TODO: 締め切りが設定されているworkを短い順に取り出す
@@ -107,4 +119,11 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 	//}
 	//
 	//return
+}
+
+func reverseWorks(works []*Work) []*Work {
+	if len(works) == 0 {
+		return works
+	}
+	return append(reverseWorks(works[1:]), works[0])
 }

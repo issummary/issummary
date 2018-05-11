@@ -2,7 +2,6 @@ package gitlab
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -101,7 +100,6 @@ func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, targetLabelPrefix, 
 		for _, labelName := range gitlabIssue.Labels {
 			if strings.HasPrefix(labelName, spLabelPrefix) {
 				spStr := strings.TrimPrefix(labelName, spLabelPrefix)
-				fmt.Println(spStr)
 				sp, err := strconv.Atoi(spStr)
 				if err != nil {
 					return nil, err
@@ -180,8 +178,6 @@ func parseIssueDescription(description string) (*IssueDescription, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("summary")
-	fmt.Println(summary)
 	issueDescription.Summary = summary
 
 	note, err := getMDContentByHeader(node, "Note")
@@ -203,7 +199,6 @@ func getMDContentByHeader(node *blackfriday.Node, header string) (string, error)
 	childNode := node.FirstChild
 	for {
 		if childNode == nil {
-			log.Printf("header(%s) not found\n", header)
 			return "", nil
 		}
 
@@ -219,13 +214,7 @@ func getMDContentByHeader(node *blackfriday.Node, header string) (string, error)
 	for {
 
 		if childNode == nil || childNode.Type == blackfriday.Heading {
-			fmt.Println("strs")
-
 			return strs, nil
-		}
-
-		if header == "Summary" {
-			fmt.Println(childNode.String(), string(childNode.FirstChild.Literal))
 		}
 
 		strs = strs + string(childNode.FirstChild.Literal)
@@ -237,14 +226,12 @@ func getDependencyIIDsFromMDNodes(node *blackfriday.Node) ([]int, error) {
 	childNode := node.FirstChild
 	for {
 		if childNode == nil {
-			log.Println("dependencies header not found")
 			return []int{}, nil
 		}
 
 		if childNode.Type == blackfriday.Heading && string(childNode.FirstChild.Literal) == "dependencies" {
 			nextChildNode := childNode.Next
 			if nextChildNode == nil {
-				log.Println("dependencies list not found")
 				return []int{}, nil
 			}
 
@@ -262,7 +249,6 @@ func getDependencyIIDsFromMDNodes(node *blackfriday.Node) ([]int, error) {
 
 				return dependencies, nil
 			} else {
-				log.Println("dependencies list not found")
 				return []int{}, nil
 			}
 		}
