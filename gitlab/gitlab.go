@@ -60,15 +60,14 @@ type Dependencies struct {
 	Labels []*Label
 }
 
-func (c *Client) ListWorks(pid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {
-	allIssues, err := c.listAllIssuesByLabel(pid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
+func (c *Client) ListGroupWorks(pid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {
+	allIssues, err := c.listAllGroupIssuesByLabel(pid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
 	if err != nil {
 		return nil, err
 	}
 
 	labels, err := c.listAllLabels(pid)
 
-	// TODO: worksをオプティカルソート
 	works, err = toWorks(allIssues, labels, prefix, spLabelPrefix)
 	if err != nil {
 		return nil, err
@@ -93,7 +92,34 @@ func (c *Client) listLabelsByPrefix(pid interface{}, prefix string) (prefixLabel
 	return prefixLabels, nil
 }
 
-func (c *Client) listAllIssuesByLabel(pid interface{}, labels gitlab.Labels) ([]*gitlab.Issue, error) {
+func (c *Client) listAllGroupIssuesByLabel(pid interface{}, labels gitlab.Labels) ([]*gitlab.Issue, error) {
+	issueOpt := &gitlab.ListGroupIssuesOptions{
+		ListOptions: gitlab.ListOptions{
+			Page:    1,
+			PerPage: 100,
+		},
+		Labels: labels,
+	}
+
+	var allIssues []*gitlab.Issue
+
+	for {
+		issues, _, err := c.Issues.ListGroupIssues(pid, issueOpt)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(issues) == 0 {
+			break
+		}
+
+		allIssues = append(allIssues, issues...)
+		issueOpt.Page = issueOpt.Page + 1
+	}
+	return allIssues, nil
+}
+
+func (c *Client) listAllProjectIssuesByLabel(pid interface{}, labels gitlab.Labels) ([]*gitlab.Issue, error) {
 	issueOpt := &gitlab.ListProjectIssuesOptions{
 		ListOptions: gitlab.ListOptions{
 			Page:    1,
