@@ -40,16 +40,16 @@ func (wg *WorkManager) AddWork(work *Work) {
 	node := wg.g.NewNode()
 	wg.g.AddNode(node)
 	wg.gMap[node.ID()] = &WorkNode{node: node, work: work}
-	wg.workNodeMap[work.Issue.IID] = &WorkNode{node: node, work: work}
+	wg.workNodeMap[work.Issue.ID] = &WorkNode{node: node, work: work}
 }
 
 func (wg *WorkManager) ConnectByDependencies() error {
 	for _, fromWorkNode := range wg.workNodeMap {
 		for _, issue := range fromWorkNode.work.Dependencies.Issues {
-			toIID := issue.IID
-			toWorkNode, ok := wg.workNodeMap[toIID]
+			toID := issue.ID
+			toWorkNode, ok := wg.workNodeMap[toID]
 			if !ok {
-				return fmt.Errorf("dependency (to: %s) cant resolve\n", toWorkNode.work) // FIXME
+				return fmt.Errorf("dependency (to: %v) cant resolve\n", toWorkNode.work) // FIXME
 			}
 			wg.g.SetEdge(wg.g.NewEdge(fromWorkNode.node, toWorkNode.node))
 		}
@@ -85,7 +85,34 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 		return nil, err
 	}
 
-	nodes, err := topo.SortStabilized(wg.g, nil)
+	nodes, err := topo.SortStabilized(wg.g, func(nodes []graph.Node) {
+		sort.Slice(nodes, func(i, j int) bool {
+			aWork := wg.gMap[nodes[i].ID()]
+			bWork := wg.gMap[nodes[j].ID()]
+			return aWork.work.Label.Name < bWork.work.Label.Name
+		})
+
+		sort.SliceStable(nodes, func(i, j int) bool {
+			aWork := wg.gMap[nodes[i].ID()]
+			bWork := wg.gMap[nodes[j].ID()]
+
+			if aWork.work.Label.Parent == nil {
+				return true
+			}
+
+			if bWork.work.Label.Parent == nil {
+				return false
+			}
+
+			return aWork.work.Label.Parent.Name < bWork.work.Label.Parent.Name
+		})
+
+		sort.SliceStable(nodes, func(i, j int) bool {
+			aWork := wg.gMap[nodes[i].ID()]
+			bWork := wg.gMap[nodes[j].ID()]
+			return aWork.work.Issue.ProjectName+string(aWork.work.Issue.IID) > bWork.work.Issue.ProjectName+string(bWork.work.Issue.IID)
+		})
+	})
 	if err != nil {
 		return nil, err
 	}
