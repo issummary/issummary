@@ -16,7 +16,7 @@ import {
   issueTableActionCreators
 } from '../actions/issueTable';
 import { CSSProperties } from 'react';
-import { Dependencies, Work } from '../models/work';
+import { Dependencies, Issue, Work } from '../models/work';
 
 export interface IIssueTableProps {
   works: Work[];
@@ -33,13 +33,19 @@ const rowStyle: CSSProperties = {
   whiteSpace: 'normal'
 };
 
+const IssueIID = (props: { issue: Issue }) => (
+  <a href={props.issue.URL} target="_blank">
+    #{props.issue.IID}
+  </a>
+);
+
 const IssueDependencies = (props: { deps: Dependencies }) => {
   // TODO: show label dependencies
   // const labels = props.deps.Labels;
   // const labelLinks = labels.map((l) => '~' + l.ID).join('->');
 
   const issues = props.deps.Issues;
-  const issueLinks = issues.map(i => <a href={i.URL}>{'#' + i.IID}</a>);
+  const issueLinks = issues.map(i => <IssueIID issue={i} />);
   const lastLink = issueLinks.pop();
   return (
     <span>
@@ -55,7 +61,9 @@ const IssueDependencies = (props: { deps: Dependencies }) => {
 
 const IssueTableRow = (props: IIssueTableRowProps) => (
   <TableRow>
-    <TableRowColumn>{props.work.Issue.IID}</TableRowColumn>
+    <TableRowColumn>
+      <IssueIID issue={props.work.Issue} />
+    </TableRowColumn>
     <TableRowColumn style={rowStyle}>
       {props.work.Label && props.work.Label.Parent
         ? props.work.Label.Parent.Name
