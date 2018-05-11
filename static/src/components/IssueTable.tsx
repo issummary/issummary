@@ -25,7 +25,7 @@ export interface IIssueTableProps {
 
 export interface IIssueTableRowProps {
   work: Work;
-  key: number;
+  key: string;
 }
 
 const rowStyle: CSSProperties = {
@@ -33,9 +33,9 @@ const rowStyle: CSSProperties = {
   whiteSpace: 'normal'
 };
 
-const IssueIID = (props: { issue: Issue }) => (
+const IssueIIDAndProjectName = (props: { issue: Issue }) => (
   <a href={props.issue.URL} target="_blank">
-    #{props.issue.IID}
+    {props.issue.ProjectName + ' #' + props.issue.IID}
   </a>
 );
 
@@ -45,7 +45,9 @@ const IssueDependencies = (props: { deps: Dependencies }) => {
   // const labelLinks = labels.map((l) => '~' + l.ID).join('->');
 
   const issues = props.deps.Issues;
-  const issueLinks = issues.map(i => <IssueIID issue={i} />);
+  const issueLinks = issues.map(i => (
+    <IssueIIDAndProjectName issue={i} key={i.ProjectName + i.IID} />
+  ));
 
   if (issueLinks.length == 0) {
     return <span>-</span>;
@@ -55,8 +57,8 @@ const IssueDependencies = (props: { deps: Dependencies }) => {
 
   return (
     <span>
-      {issueLinks.map(a => (
-        <span>
+      {issueLinks.map((a, i) => (
+        <span key={i}>
           a<span>-></span>
         </span>
       ))}
@@ -66,9 +68,9 @@ const IssueDependencies = (props: { deps: Dependencies }) => {
 };
 
 const IssueTableRow = (props: IIssueTableRowProps) => (
-  <TableRow>
+  <TableRow key={props.key}>
     <TableRowColumn>
-      <IssueIID issue={props.work.Issue} />
+      <IssueIIDAndProjectName issue={props.work.Issue} />
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>
       {props.work.Label && props.work.Label.Parent
@@ -107,7 +109,7 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
         <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
           <TableRow>
-            <TableHeaderColumn>IID</TableHeaderColumn>
+            <TableHeaderColumn>Project+IID</TableHeaderColumn>
             <TableHeaderColumn>Parent Label</TableHeaderColumn>
             <TableHeaderColumn>Label</TableHeaderColumn>
             <TableHeaderColumn>Title</TableHeaderColumn>
@@ -119,7 +121,7 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
         </TableHeader>
         <TableBody displayRowCheckbox={false}>
           {this.props.works.map(w => (
-            <IssueTableRow work={w} key={w.Issue.IID} />
+            <IssueTableRow work={w} key={w.Issue.ProjectName + w.Issue.IID} />
           ))}
         </TableBody>
       </Table>

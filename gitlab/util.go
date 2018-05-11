@@ -62,11 +62,15 @@ func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label) (label *Lab
 	return label, nil
 }
 
-func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
+func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitlab.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
 	for _, gitlabIssue := range issues {
 		issue, err := toIssue(gitlabIssue)
 		if err != nil {
 			return nil, err
+		}
+
+		if project, ok := findProjectByID(projects, gitlabIssue.ProjectID); ok {
+			issue.ProjectName = project.Name
 		}
 
 		work := &Work{
@@ -107,6 +111,13 @@ func toWorks(issues []*gitlab.Issue, labels []*gitlab.Label, targetLabelPrefix, 
 				work.StoryPoint = sp
 				break
 			}
+		}
+
+		for _, project := range projects {
+			if project.ID == gitlabIssue.ProjectID {
+				work.Issue.ProjectName = project.Name
+			}
+			break
 		}
 
 		works = append(works, work)

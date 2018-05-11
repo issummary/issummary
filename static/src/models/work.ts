@@ -28,6 +28,7 @@ export interface Issue {
   Title: string;
   Description: IssueDescription;
   URL: string;
+  ProjectName: string;
 }
 
 export interface IssueDescription {

@@ -38,6 +38,7 @@ type Issue struct {
 	Title       string
 	Description *IssueDescription
 	URL         string
+	ProjectName string
 }
 
 type IssueDescription struct {
@@ -66,9 +67,17 @@ func (c *Client) ListGroupWorks(pid interface{}, prefix, spLabelPrefix string) (
 		return nil, err
 	}
 
-	labels, err := c.listAllLabels(pid)
+	projects, err := c.listAllProjects(pid)
+	if err != nil {
+		return nil, err
+	}
 
-	works, err = toWorks(allIssues, labels, prefix, spLabelPrefix)
+	labels, err := c.listAllProjectsLabels(projects)
+	if err != nil {
+		return nil, err
+	}
+
+	works, err = toWorks(allIssues, projects, labels, prefix, spLabelPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +155,29 @@ func (c *Client) listAllProjectIssuesByLabel(pid interface{}, labels gitlab.Labe
 	return allIssues, nil
 }
 
+func (c *Client) listAllProjectsLabels(projects []*gitlab.Project) (allLabels []*gitlab.Label, err error) {
+	labelMap := map[int]*gitlab.Label{}
+
+	for _, project := range projects {
+		labels, err := c.listAllLabels(project.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, label := range labels {
+			labelMap[label.ID] = label
+		}
+	}
+	return labelMapToSlice(labelMap), nil
+}
+
+func labelMapToSlice(labelMap map[int]*gitlab.Label) (labels []*gitlab.Label) {
+	for _, label := range labelMap {
+		labels = append(labels, label)
+	}
+	return labels
+}
+
 func (c *Client) listAllLabels(pid interface{}) ([]*gitlab.Label, error) {
 	opt := &gitlab.ListLabelsOptions{
 		Page:    1,
@@ -168,4 +200,38 @@ func (c *Client) listAllLabels(pid interface{}) ([]*gitlab.Label, error) {
 		opt.Page = opt.Page + 1
 	}
 	return allLabels, nil
+}
+
+func findProjectByID(projects []*gitlab.Project, id int) (*gitlab.Project, bool) {
+	for _, project := range projects {
+		if project.ID == id {
+			return project, true
+		}
+	}
+
+	return nil, false
+}
+
+func (c *Client) listAllProjects(gid interface{}) ([]*gitlab.Project, error) {
+	opt := &gitlab.ListGroupProjectsOptions{
+		Page:    1,
+		PerPage: 100,
+	}
+
+	var allProjects []*gitlab.Project
+
+	for {
+		labels, _, err := c.Groups.ListGroupProjects(gid, opt)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(labels) == 0 {
+			break
+		}
+
+		allProjects = append(allProjects, labels...)
+		opt.Page = opt.Page + 1
+	}
+	return allProjects, nil
 }
