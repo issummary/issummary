@@ -8,13 +8,7 @@ import {
   TableRow,
   TableRowColumn
 } from 'material-ui/Table';
-import { connect, Dispatch } from 'react-redux';
-import { IRootState } from '../reducers/reducer';
-import { bindActionCreators } from 'redux';
-import {
-  IIssueTableActionCreators,
-  issueTableActionCreators
-} from '../actions/issueTable';
+import { IIssueTableActionCreators } from '../actions/issueTable';
 import { CSSProperties } from 'react';
 import { Dependencies, Issue, Work } from '../models/work';
 
@@ -99,13 +93,12 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
   </TableRow>
 );
 
-class IssueTable extends React.Component<IIssueTableProps, undefined> {
+export class IssueTable extends React.Component<IIssueTableProps, any> {
   componentDidMount() {
     this.props.actions.requestUpdate();
   }
 
   render() {
-    console.log(this.props.works);
     return (
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
         <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
@@ -129,18 +122,3 @@ class IssueTable extends React.Component<IIssueTableProps, undefined> {
     );
   }
 }
-
-function mapStateToProps(state: IRootState) {
-  return state.issueTable;
-}
-
-function mapDispatchToProps(dispatch: Dispatch<any>) {
-  return {
-    actions: bindActionCreators(issueTableActionCreators as {}, dispatch)
-  };
-}
-
-// tslint:disable-next-line variable-name
-export const ConnectedIssueTable = connect(mapStateToProps, mapDispatchToProps)(
-  IssueTable as any
-);

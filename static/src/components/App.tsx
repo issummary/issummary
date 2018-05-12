@@ -8,7 +8,7 @@ import { bindActionCreators } from 'redux';
 import { IRootState } from '../reducers/reducer';
 import { About } from './About';
 import { ConnectedCounter } from './Counter';
-import { Home } from './Home';
+import { ConnectedHome } from './Home';
 import { appActionCreators, IAppActionCreators } from '../actions/app';
 
 export interface IAppProps {
@@ -61,7 +61,7 @@ class App extends React.Component<IAppProps, undefined> {
             </MenuItem>
           </Drawer>
 
-          <Route exact={true} path="/" component={Home} />
+          <Route exact={true} path="/" component={ConnectedHome} />
           <Route path="/about" component={About} />
           <Route path="/counter" component={ConnectedCounter} />
         </div>

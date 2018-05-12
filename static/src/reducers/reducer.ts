@@ -7,11 +7,17 @@ import { issueTableReducer } from './issueTable';
 export interface IRootState {
   app: IAppState;
   counter: ICounterState;
-  issueTable: IIssueTableProps;
+  home: {
+    issueTable: IIssueTableProps;
+  };
 }
+
+const homeReducer = combineReducers({
+  issueTable: issueTableReducer
+});
 
 export const reducer = combineReducers({
   app: appReducer,
   counter: counterReducer,
-  issueTable: issueTableReducer
+  home: homeReducer
 });
