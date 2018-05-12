@@ -2,9 +2,8 @@ package gitlab
 
 import (
 	"fmt"
-	"sort"
-
 	"io/ioutil"
+	"sort"
 
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding/dot"
@@ -89,12 +88,29 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 		sort.Slice(nodes, func(i, j int) bool {
 			aWork := wg.gMap[nodes[i].ID()]
 			bWork := wg.gMap[nodes[j].ID()]
+
+			if aWork.work.Label == nil {
+				return true
+			}
+
+			if bWork.work.Label == nil {
+				return false
+			}
+
 			return aWork.work.Label.Name < bWork.work.Label.Name
 		})
 
 		sort.SliceStable(nodes, func(i, j int) bool {
 			aWork := wg.gMap[nodes[i].ID()]
 			bWork := wg.gMap[nodes[j].ID()]
+
+			if aWork.work.Label == nil {
+				return true
+			}
+
+			if bWork.work.Label == nil {
+				return false
+			}
 
 			if aWork.work.Label.Parent == nil {
 				return true
