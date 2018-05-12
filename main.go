@@ -26,7 +26,7 @@ func main() {
 	}
 
 	worksBodyFunc := func(body []byte) (interface{}, error) {
-		works, err := client.ListWorks(os.Getenv("GITLAB_PID"), "MC", "S")
+		works, err := client.ListGroupWorks(os.Getenv("GITLAB_PID"), "MC", "S")
 		if err != nil {
 			panic(err)
 		}

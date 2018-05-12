@@ -1,10 +1,12 @@
 package gitlab
 
 import (
+	"log"
 	"strings"
 	"time"
 
 	"github.com/xanzy/go-gitlab"
+	"golang.org/x/sync/errgroup"
 )
 
 type Client struct {
@@ -62,22 +64,35 @@ type Dependencies struct {
 }
 
 func (c *Client) ListGroupWorks(pid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {
-	allIssues, err := c.listAllGroupIssuesByLabel(pid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
-	if err != nil {
-		return nil, err
+	eg := errgroup.Group{}
+	issuesChan := make(chan []*gitlab.Issue, 1)
+	projectsChan := make(chan []*gitlab.Project, 1)
+	labelsChan := make(chan []*gitlab.Label, 1)
+
+	eg.Go(func() error {
+		allIssues, err := c.listAllGroupIssuesByLabel(pid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
+		issuesChan <- allIssues
+		return err
+	})
+
+	eg.Go(func() error {
+		projects, err := c.listAllProjects(pid)
+		if err != nil {
+			return err
+		}
+
+		projectsChan <- projects
+
+		labels, err := c.listAllProjectsLabels(projects)
+		labelsChan <- labels
+		return err
+	})
+
+	if err := eg.Wait(); err != nil {
+		log.Fatal(err)
 	}
 
-	projects, err := c.listAllProjects(pid)
-	if err != nil {
-		return nil, err
-	}
-
-	labels, err := c.listAllProjectsLabels(projects)
-	if err != nil {
-		return nil, err
-	}
-
-	works, err = toWorks(allIssues, projects, labels, prefix, spLabelPrefix)
+	works, err = toWorks(<-issuesChan, <-projectsChan, <-labelsChan, prefix, spLabelPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -156,18 +171,41 @@ func (c *Client) listAllProjectIssuesByLabel(pid interface{}, labels gitlab.Labe
 }
 
 func (c *Client) listAllProjectsLabels(projects []*gitlab.Project) (allLabels []*gitlab.Label, err error) {
-	labelMap := map[int]*gitlab.Label{}
+	labelChan := make(chan *gitlab.Label, 100)
+	eg := errgroup.Group{}
+
+	if err := eg.Wait(); err != nil {
+		log.Fatal(err)
+	}
 
 	for _, project := range projects {
-		labels, err := c.listAllLabels(project.ID)
-		if err != nil {
-			return nil, err
-		}
+		eg.Go(func() error {
+			labels, err := c.listAllLabels(project.ID)
+			if err != nil {
+				return err
+			}
 
-		for _, label := range labels {
-			labelMap[label.ID] = label
-		}
+			for _, label := range labels {
+				labelChan <- label
+			}
+
+			return nil
+		})
 	}
+
+	go func() {
+		if err := eg.Wait(); err != nil {
+			log.Fatal(err)
+		} else {
+			close(labelChan)
+		}
+	}()
+
+	labelMap := map[int]*gitlab.Label{}
+	for label := range labelChan {
+		labelMap[label.ID] = label
+	}
+
 	return labelMapToSlice(labelMap), nil
 }
 
