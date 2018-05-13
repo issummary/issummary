@@ -20,6 +20,7 @@ export interface IIssueTableProps {
 export interface IIssueTableRowProps {
   work: Work;
   key: string;
+  totalSP: number;
 }
 
 const rowStyle: CSSProperties = {
@@ -82,6 +83,7 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
         : '-'}
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>{props.work.StoryPoint}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>{props.totalSP}</TableRowColumn>
     <TableRowColumn style={rowStyle}>
       {props.work.Issue.DueDate
         ? props.work.Issue.DueDate.format('YYYY/MM/DD')
@@ -99,6 +101,7 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
   }
 
   render() {
+    const totalSPs = eachSum(this.props.works.map(w => w.StoryPoint));
     return (
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
         <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
@@ -109,16 +112,30 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
             <TableHeaderColumn>Title</TableHeaderColumn>
             <TableHeaderColumn>Summary</TableHeaderColumn>
             <TableHeaderColumn>SP</TableHeaderColumn>
+            <TableHeaderColumn>Total SP</TableHeaderColumn>
             <TableHeaderColumn>Due Date</TableHeaderColumn>
             <TableHeaderColumn>Deps</TableHeaderColumn>
           </TableRow>
         </TableHeader>
         <TableBody displayRowCheckbox={false}>
-          {this.props.works.map(w => (
-            <IssueTableRow work={w} key={w.Issue.ProjectName + w.Issue.IID} />
+          {this.props.works.map((w, i) => (
+            <IssueTableRow
+              work={w}
+              key={w.Issue.ProjectName + w.Issue.IID}
+              totalSP={totalSPs[i]}
+            />
           ))}
         </TableBody>
       </Table>
     );
   }
 }
+
+const sum = (arr: number[]): number => arr.reduce((a, b) => a + b, 0);
+
+const eachSum = (arr: number[]): number[] => {
+  return arr.reduce((newArr: number[], e: number) => {
+    newArr.push(sum(newArr) + e);
+    return newArr;
+  }, []);
+};
