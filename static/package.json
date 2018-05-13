@@ -58,7 +58,7 @@
   },
   "scripts": {
     "test": "jest",
-    "start": "webpack-dev-server --inline",
+    "start": "webpack-dev-server --inline --port 8081",
     "build": "webpack --config webpack.prod.js",
     "build-libs": "webpack --config webpack.libs.config.js",
     "build-libs-dev":
