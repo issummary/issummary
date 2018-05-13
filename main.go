@@ -25,12 +25,11 @@ func main() {
 		client.SetBaseURL(os.Getenv("GITLAB_BASEURL"))
 	}
 
-	works, err := client.ListWorks(os.Getenv("GITLAB_PID"), "LC", "S")
-	if err != nil {
-		panic(err)
-	}
-
 	worksBodyFunc := func(body []byte) (interface{}, error) {
+		works, err := client.ListGroupWorks(os.Getenv("GITLAB_PID"), "MC", "S")
+		if err != nil {
+			panic(err)
+		}
 		return works, nil
 	}
 

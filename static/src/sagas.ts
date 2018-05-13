@@ -31,16 +31,10 @@ function* watchIncrementAsync() {
   );
 }
 
-function* fetchNewIssueTableData() {
-  yield delay(1000);
-  const works = yield call(Api.fetchWorks);
-  yield put(issueTableActionCreators.dataFetched(works));
-}
-
 const requestNewIssueTableData = bindAsyncAction(
   issueTableAsyncActionCreators.requestNewDataFetching
 )(function*(): SagaIterator {
-  yield call(fetchNewIssueTableData);
+  return yield call(Api.fetchWorks);
 });
 
 function* watchUpdateIssueTable() {
