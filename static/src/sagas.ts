@@ -31,19 +31,10 @@ function* watchIncrementAsync() {
   );
 }
 
-function* fetchNewIssueTableData() {
-  try {
-    const works = yield call(Api.fetchWorks);
-    yield put(issueTableActionCreators.dataFetched(works));
-  } catch (e) {
-    console.log('fetchNewIssueTableData failed:', e);
-  }
-}
-
 const requestNewIssueTableData = bindAsyncAction(
   issueTableAsyncActionCreators.requestNewDataFetching
 )(function*(): SagaIterator {
-  yield call(fetchNewIssueTableData);
+  return yield call(Api.fetchWorks);
 });
 
 function* watchUpdateIssueTable() {

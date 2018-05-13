@@ -4,7 +4,10 @@ import { appReducer, IAppState } from './app';
 import { counterReducer, ICounterState } from './counter';
 import { issueTableReducer } from './issueTable';
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
-import { issueTableActionCreators } from '../actions/issueTable';
+import {
+  issueTableActionCreators,
+  issueTableAsyncActionCreators
+} from '../actions/issueTable';
 
 export interface IRootState {
   app: IAppState;
@@ -25,7 +28,7 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
     ...state,
     isFetchingData: true
   }))
-  .case(issueTableActionCreators.dataFetched, state => ({
+  .case(issueTableAsyncActionCreators.requestNewDataFetching.done, state => ({
     ...state,
     isFetchingData: false
   }));
