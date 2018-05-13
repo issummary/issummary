@@ -9,7 +9,7 @@ import {
   issueTableActionCreators
 } from '../actions/issueTable';
 import { connect, Dispatch } from 'react-redux';
-import { IRootState } from '../reducers/reducer';
+import { IHomeState, IRootState } from '../reducers/reducer';
 
 const style: CSSProperties = {
   margin: 0,
@@ -20,13 +20,23 @@ const style: CSSProperties = {
   position: 'fixed'
 };
 
-const Refresh = () => (
-  <FloatingActionButton style={style}>
+interface RefreshProps {
+  onClick: React.MouseEventHandler<JSX.Element | HTMLElement>;
+  isFetching: boolean;
+}
+
+const Refresh = (props: RefreshProps) => (
+  <FloatingActionButton
+    style={style}
+    onClick={props.onClick}
+    disabled={props.isFetching}
+  >
     <AutoRenew />
   </FloatingActionButton>
 );
 
 interface IHomeProps {
+  global: IHomeState;
   issueTable: IIssueTableProps;
   actions: {
     issueTable: IIssueTableActionCreators;
@@ -36,12 +46,20 @@ interface IHomeProps {
 class Home extends React.Component<IHomeProps, any> {
   constructor(props: IHomeProps) {
     super(props);
+    this.onClickRefreshButton = this.onClickRefreshButton.bind(this);
+  }
+
+  onClickRefreshButton() {
+    this.props.actions.issueTable.requestUpdate();
   }
 
   public render() {
     return (
       <div>
-        <Refresh />
+        <Refresh
+          onClick={this.onClickRefreshButton}
+          isFetching={this.props.global.isFetchingData}
+        />
         <IssueTable
           works={this.props.issueTable.works}
           actions={this.props.actions.issueTable}
