@@ -34,21 +34,15 @@ const IssueIIDAndProjectName = (props: { issue: Issue }) => (
   </a>
 );
 
-const IssueDependencies = (props: { deps: Dependencies }) => {
-  // TODO: show label dependencies
-  // const labels = props.deps.Labels;
-  // const labelLinks = labels.map((l) => '~' + l.ID).join('->');
-
-  const issues = props.deps.Issues;
-  const issueLinks = issues.map(i => (
+const IssueDependencies = (props: { issues: Issue[] }) => {
+  const issueLinks = props.issues.map(i => (
     <IssueIIDAndProjectName issue={i} key={i.ProjectName + i.IID} />
   ));
+  const lastLink = issueLinks.pop();
 
   if (issueLinks.length == 0) {
-    return <span>-</span>;
+    return null;
   }
-
-  const lastLink = issueLinks.pop();
 
   return (
     <span>
@@ -59,6 +53,20 @@ const IssueDependencies = (props: { deps: Dependencies }) => {
         </span>
       ))}
       {lastLink}
+      <span> </span>
+    </span>
+  );
+};
+
+const IssueAndLabelDependencies = (props: { deps: Dependencies }) => {
+  if (props.deps.Issues.length == 0 && props.deps.Labels.length == 0) {
+    return <span>-</span>;
+  }
+
+  return (
+    <span>
+      <IssueDependencies issues={props.deps.Issues} />
+      {props.deps.Labels.map(l => '~' + l.Name).join(' ')}
     </span>
   );
 };
@@ -90,7 +98,7 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
         : '-'}
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>
-      <IssueDependencies deps={props.work.Dependencies} />
+      <IssueAndLabelDependencies deps={props.work.Dependencies} />
     </TableRowColumn>
   </TableRow>
 );

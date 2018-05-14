@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"errors"
+
 	"github.com/xanzy/go-gitlab"
 	"gopkg.in/russross/blackfriday.v2"
 )
@@ -81,12 +83,24 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 			},
 		}
 
-		for _, issue := range findIssuesByIIDs(issues, issue.Description.DependencyIIDs) {
+		for _, issue := range findIssuesByIIDs(issues, issue.Description.DependencyIDs.IssueIIDs) {
 			is, err := toIssue(issue)
 			if err != nil {
 				return nil, err
 			}
 			work.Dependencies.Issues = append(work.Dependencies.Issues, is)
+		}
+
+		for _, labelName := range issue.Description.DependencyIDs.LabelNames {
+			if l, ok := findLabelByName(labels, labelName); ok {
+				label, err := toLabel(l, labels)
+				if err != nil {
+					return nil, err
+				}
+				work.Dependencies.Labels = append(work.Dependencies.Labels, label)
+			} else {
+				return nil, errors.New("invalid label name: " + labelName)
+			}
 		}
 
 		for _, labelName := range gitlabIssue.Labels {
@@ -180,11 +194,12 @@ func parseIssueDescription(description string) (*IssueDescription, error) {
 	md := blackfriday.New()
 	node := md.Parse([]byte(description))
 
-	depIIDs, err := getDependencyIIDsFromMDNodes(node)
+	dependencyIDs, err := getDependencyIDsFromMDNodes(node)
 	if err != nil {
 		return nil, err
 	}
-	issueDescription.DependencyIIDs = depIIDs
+
+	issueDescription.DependencyIDs = dependencyIDs
 	summary, err := getMDContentByHeader(node, "Summary")
 	if err != nil {
 		return nil, err
@@ -233,34 +248,50 @@ func getMDContentByHeader(node *blackfriday.Node, header string) (string, error)
 	}
 }
 
-func getDependencyIIDsFromMDNodes(node *blackfriday.Node) ([]int, error) {
+func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error) {
+	dependencyIDs := &DependencyIDs{}
 	childNode := node.FirstChild
 	for {
 		if childNode == nil {
-			return []int{}, nil
+			return dependencyIDs, nil
 		}
 
 		if childNode.Type == blackfriday.Heading && string(childNode.FirstChild.Literal) == "dependencies" {
 			nextChildNode := childNode.Next
 			if nextChildNode == nil {
-				return []int{}, nil
+				return dependencyIDs, nil
 			}
 
-			if nextChildNode.Type == blackfriday.Heading {
-				dependencyStrs := strings.Split(string(nextChildNode.FirstChild.Literal), " ")
-				var dependencies []int
-				for _, depStr := range dependencyStrs {
+			dependencyStrs := strings.Split(string(nextChildNode.FirstChild.Literal), " ")
+			for i, depStr := range dependencyStrs {
+				if strings.HasPrefix(depStr, "#") {
 					trimmedDep := strings.TrimLeft(depStr, "#")
 					depNum, err := strconv.Atoi(trimmedDep)
 					if err != nil {
 						return nil, err
 					}
-					dependencies = append(dependencies, depNum)
+					dependencyIDs.IssueIIDs = append(dependencyIDs.IssueIIDs, depNum)
+					continue
 				}
 
-				return dependencies, nil
-			} else {
-				return []int{}, nil
+				if strings.HasPrefix(depStr, "~") {
+					j := i
+					for {
+						if strings.Count(depStr, `"`) == 2 {
+							break
+						}
+						j++
+						if len(dependencyStrs) <= j {
+							return nil, errors.New("invalid label syntax in dependencies header")
+						}
+						depStr += " " + dependencyStrs[j]
+					}
+
+					trimmedDep := strings.TrimLeft(depStr, "~")
+					labelName := strings.Trim(trimmedDep, `"`)
+					dependencyIDs.LabelNames = append(dependencyIDs.LabelNames, labelName)
+					continue
+				}
 			}
 		}
 		childNode = childNode.Next

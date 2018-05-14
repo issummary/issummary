@@ -44,11 +44,16 @@ type Issue struct {
 }
 
 type IssueDescription struct {
-	Raw            string
-	DependencyIIDs []int
-	Summary        string
-	Note           string
-	Details        string
+	Raw           string
+	DependencyIDs *DependencyIDs
+	Summary       string
+	Note          string
+	Details       string
+}
+
+type DependencyIDs struct {
+	IssueIIDs  []int
+	LabelNames []string
 }
 
 type Work struct {
@@ -179,6 +184,7 @@ func (c *Client) listAllProjectsLabels(projects []*gitlab.Project) (allLabels []
 	}
 
 	for _, project := range projects {
+		project := project
 		eg.Go(func() error {
 			labels, err := c.listAllLabels(project.ID)
 			if err != nil {

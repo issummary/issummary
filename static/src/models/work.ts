@@ -33,10 +33,15 @@ export interface Issue {
 
 export interface IssueDescription {
   Raw: string;
-  DependencyIIDs: number[];
+  DependencyIDs: DependencyIDs;
   Summary: string;
   Note: string;
   Details: string;
+}
+
+export interface DependencyIDs {
+  issueIIDs: number[];
+  labelNames: string[];
 }
 
 export interface Dependencies {
