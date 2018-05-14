@@ -128,7 +128,7 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
     <TableRowColumn style={rowStyle}>
       <IssueAndLabelDependencies
         deps={props.work.Dependencies}
-        labelDeps={props.work.Label.Dependencies}
+        labelDeps={props.work.Label ? props.work.Label.Dependencies : []}
       />
     </TableRowColumn>
   </TableRow>
