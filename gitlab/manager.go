@@ -44,14 +44,22 @@ func (wg *WorkManager) AddWork(work *Work) {
 
 func (wg *WorkManager) ConnectByDependencies() error {
 	for _, fromWorkNode := range wg.workNodeMap {
-		for _, issue := range fromWorkNode.work.Dependencies.Issues {
-			toID := issue.ID
-			toWorkNode, ok := wg.workNodeMap[toID]
-			if !ok {
-				return fmt.Errorf("dependency (to: %v) cant resolve\n", toWorkNode.work) // FIXME
-			}
-			wg.g.SetEdge(wg.g.NewEdge(fromWorkNode.node, toWorkNode.node))
+		wg.setEdgesByDependIssues(fromWorkNode, fromWorkNode.work.Dependencies.Issues)
+		for _, dependLabel := range fromWorkNode.work.Dependencies.Labels {
+			wg.setEdgesByDependIssues(fromWorkNode, dependLabel.RelatedIssues)
 		}
+	}
+	return nil
+}
+
+func (wg *WorkManager) setEdgesByDependIssues(workNode *WorkNode, issues []*Issue) error {
+	for _, issue := range issues {
+		toID := issue.ID
+		toWorkNode, ok := wg.workNodeMap[toID]
+		if !ok {
+			return fmt.Errorf("dependency (to: %v) cant resolve\n", toWorkNode.work) // FIXME
+		}
+		wg.g.SetEdge(wg.g.NewEdge(workNode.node, toWorkNode.node))
 	}
 	return nil
 }
