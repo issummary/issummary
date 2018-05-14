@@ -95,8 +95,9 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 			},
 		}
 
-		for _, issue := range findIssuesByIIDs(issues, issue.Description.DependencyIDs.IssueIIDs) {
-			is, err := toIssue(issue)
+		for _, is := range findIssuesByIIDs(issues, issue.Description.DependencyIDs.IssueIIDs) {
+			is, err := toIssue(is)
+
 			if err != nil {
 				return nil, err
 			}
@@ -299,6 +300,10 @@ func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error)
 
 			dependencyStrs := strings.Split(string(nextChildNode.FirstChild.Literal), " ")
 			for i, depStr := range dependencyStrs {
+				if i == 0 && nextChildNode.Type == blackfriday.Heading {
+					depStr = "#" + depStr
+				}
+
 				if strings.HasPrefix(depStr, "#") {
 					trimmedDep := strings.TrimLeft(depStr, "#")
 					depNum, err := strconv.Atoi(trimmedDep)
