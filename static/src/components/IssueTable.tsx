@@ -10,7 +10,7 @@ import {
 } from 'material-ui/Table';
 import { IIssueTableActionCreators } from '../actions/issueTable';
 import { CSSProperties } from 'react';
-import { Dependencies, Issue, Work } from '../models/work';
+import { Dependencies, DependLabel, Issue, Label, Work } from '../models/work';
 
 export interface IIssueTableProps {
   works: Work[];
@@ -30,7 +30,9 @@ const rowStyle: CSSProperties = {
 
 const IssueIIDAndProjectName = (props: { issue: Issue }) => (
   <a href={props.issue.URL} target="_blank">
-    {props.issue.ProjectName + ' #' + props.issue.IID}
+    {props.issue.ProjectName
+      ? props.issue.ProjectName + ' #' + props.issue.IID
+      : '#' + props.issue.IID}
   </a>
 );
 
@@ -38,11 +40,12 @@ const IssueDependencies = (props: { issues: Issue[] }) => {
   const issueLinks = props.issues.map(i => (
     <IssueIIDAndProjectName issue={i} key={i.ProjectName + i.IID} />
   ));
-  const lastLink = issueLinks.pop();
 
   if (issueLinks.length == 0) {
     return null;
   }
+
+  const lastLink = issueLinks.pop();
 
   return (
     <span>
@@ -53,7 +56,20 @@ const IssueDependencies = (props: { issues: Issue[] }) => {
         </span>
       ))}
       {lastLink}
-      <span> </span>
+    </span>
+  );
+};
+
+const LabelDependencies = (props: { dependLabel: DependLabel }) => {
+  if (props.dependLabel.RelatedIssues.length > 0) {
+    console.log(props.dependLabel.RelatedIssues);
+  }
+
+  return (
+    <span>
+      {props.dependLabel.Label.Name}(
+      <IssueDependencies issues={props.dependLabel.RelatedIssues} />
+      )
     </span>
   );
 };
@@ -66,7 +82,7 @@ const IssueAndLabelDependencies = (props: { deps: Dependencies }) => {
   return (
     <span>
       <IssueDependencies issues={props.deps.Issues} />
-      {props.deps.Labels.map(l => '~' + l.Name).join(' ')}
+      {props.deps.Labels.map(l => <LabelDependencies dependLabel={l} />)}
     </span>
   );
 };
@@ -109,6 +125,7 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
   }
 
   render() {
+    console.log(this.props.works);
     const totalSPs = eachSum(this.props.works.map(w => w.StoryPoint));
     return (
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>

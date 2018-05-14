@@ -12,6 +12,18 @@ import (
 	"gopkg.in/russross/blackfriday.v2"
 )
 
+func toIssues(gitlabIssues []*gitlab.Issue) (issues []*Issue, err error) {
+	for _, gitlabIssue := range gitlabIssues {
+		issue, err := toIssue(gitlabIssue)
+		if err != nil {
+			return nil, err
+		}
+		issues = append(issues, issue)
+	}
+
+	return issues, nil
+}
+
 func toIssue(gitlabIssue *gitlab.Issue) (*Issue, error) {
 	issueDescription, err := parseIssueDescription(gitlabIssue.Description)
 	if err != nil {
@@ -79,7 +91,7 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 			Issue: issue,
 			Dependencies: &Dependencies{
 				Issues: []*Issue{},
-				Labels: []*Label{},
+				Labels: []*DependLabel{},
 			},
 		}
 
@@ -97,7 +109,18 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 				if err != nil {
 					return nil, err
 				}
-				work.Dependencies.Labels = append(work.Dependencies.Labels, label)
+
+				relatedGitLabIssues := findIssuesByLabelName(issues, labelName)
+
+				relatedIssues, err := toIssues(relatedGitLabIssues)
+				if err != nil {
+					return nil, err
+				}
+
+				work.Dependencies.Labels = append(work.Dependencies.Labels, &DependLabel{
+					RelatedIssues: relatedIssues,
+					Label:         label,
+				})
 			} else {
 				return nil, errors.New("invalid label name: " + labelName)
 			}
@@ -168,6 +191,18 @@ func findLabelByName(labels []*gitlab.Label, name string) (*gitlab.Label, bool) 
 		}
 	}
 	return nil, false
+}
+
+func findIssuesByLabelName(issues []*gitlab.Issue, labelName string) (filteredIssues []*gitlab.Issue) {
+	for _, issue := range issues {
+		for _, issueLabelName := range issue.Labels {
+			if issueLabelName == labelName {
+				filteredIssues = append(filteredIssues, issue)
+				break
+			}
+		}
+	}
+	return
 }
 
 func findIssuesByIIDs(issues []*gitlab.Issue, iidList []int) (filteredIssues []*gitlab.Issue) {

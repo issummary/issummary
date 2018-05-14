@@ -46,5 +46,10 @@ export interface DependencyIDs {
 
 export interface Dependencies {
   Issues: Issue[];
-  Labels: Label[];
+  Labels: DependLabel[];
+}
+
+export interface DependLabel {
+  Label: Label;
+  RelatedIssues: Issue[];
 }

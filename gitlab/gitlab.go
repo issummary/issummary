@@ -63,9 +63,14 @@ type Work struct {
 	StoryPoint   int
 }
 
+type DependLabel struct {
+	Label         *Label
+	RelatedIssues []*Issue
+}
+
 type Dependencies struct {
 	Issues []*Issue
-	Labels []*Label
+	Labels []*DependLabel
 }
 
 func (c *Client) ListGroupWorks(pid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {
@@ -213,6 +218,13 @@ func (c *Client) listAllProjectsLabels(projects []*gitlab.Project) (allLabels []
 	}
 
 	return labelMapToSlice(labelMap), nil
+}
+
+func issueMapToSlice(issueMap map[int]*gitlab.Issue) (issues []*gitlab.Issue) {
+	for _, issue := range issueMap {
+		issues = append(issues, issue)
+	}
+	return issues
 }
 
 func labelMapToSlice(labelMap map[int]*gitlab.Label) (labels []*gitlab.Label) {
