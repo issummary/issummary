@@ -160,6 +160,17 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 		works = append(works, work)
 	}
 
+	// TODO: Set work properties
+	totalStoryPoint := 0
+	for _, work := range works {
+		totalStoryPoint += work.StoryPoint
+		work.TotalStoryPoint = totalStoryPoint
+		//work.ManDay = totalStoryPoint / velocity
+		//work.TotalManDay = totalStoryPoint / velocity
+		// work.CompletionDate = timeNow.Add(work.TotalManDay)
+		//work.RemainManDays = date.CountBusinessDay(time.Now(), work.CompletionDate)
+	}
+
 	return
 }
 

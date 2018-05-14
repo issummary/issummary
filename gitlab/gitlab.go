@@ -57,10 +57,14 @@ type DependencyIDs struct {
 }
 
 type Work struct {
-	Issue        *Issue
-	Label        *Label
-	Dependencies *Dependencies
-	StoryPoint   int
+	Issue           *Issue
+	Label           *Label
+	Dependencies    *Dependencies
+	StoryPoint      int
+	TotalStoryPoint int
+	ManDay          int
+	TotalManDay     int
+	RemainManDays   int
 }
 
 type DependLabel struct {
