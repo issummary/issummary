@@ -116,8 +116,9 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 			},
 		}
 
-		for _, issue := range findIssuesByIIDs(issues, issue.Description.DependencyIDs.IssueIIDs) {
-			is, err := toIssue(issue)
+		for _, is := range findIssuesByIIDs(issues, issue.Description.DependencyIDs.IssueIIDs) {
+			is, err := toIssue(is)
+
 			if err != nil {
 				return nil, err
 			}
@@ -164,6 +165,17 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 		}
 
 		works = append(works, work)
+	}
+
+	// TODO: Set work properties
+	totalStoryPoint := 0
+	for _, work := range works {
+		totalStoryPoint += work.StoryPoint
+		work.TotalStoryPoint = totalStoryPoint
+		//work.ManDay = totalStoryPoint / velocity
+		//work.TotalManDay = totalStoryPoint / velocity
+		// work.CompletionDate = timeNow.Add(work.TotalManDay)
+		//work.RemainManDays = date.CountBusinessDay(time.Now(), work.CompletionDate)
 	}
 
 	return
@@ -305,6 +317,10 @@ func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error)
 
 			dependencyStrs := strings.Split(string(nextChildNode.FirstChild.Literal), " ")
 			for i, depStr := range dependencyStrs {
+				if i == 0 && nextChildNode.Type == blackfriday.Heading {
+					depStr = "#" + depStr
+				}
+
 				if strings.HasPrefix(depStr, "#") {
 					trimmedDep := strings.TrimLeft(depStr, "#")
 					depNum, err := strconv.Atoi(trimmedDep)

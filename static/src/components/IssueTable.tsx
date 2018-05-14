@@ -89,7 +89,12 @@ const IssueAndLabelDependencies = (props: {
   return (
     <span>
       <IssueDependencies issues={props.deps.Issues} />
-      {uniqueLabels.map(l => <LabelDependencies dependLabel={l} />)}
+      {uniqueLabels.map(l => (
+        <LabelDependencies
+          dependLabel={l}
+          key={'LabelDependencies' + l.Label.ID}
+        />
+      ))}
     </span>
   );
 };
