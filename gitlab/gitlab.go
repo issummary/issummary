@@ -24,7 +24,7 @@ type Label struct {
 	Name         string
 	Description  *LabelDescription
 	Parent       *Label
-	Dependencies []*Label
+	Dependencies []*DependLabel
 }
 
 type LabelDescription struct {

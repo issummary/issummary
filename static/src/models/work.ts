@@ -12,7 +12,7 @@ export interface Label {
   Name: string;
   Description: LabelDescription;
   Parent: Label;
-  Dependencies: Label[];
+  Dependencies: DependLabel[];
 }
 
 export interface LabelDescription {

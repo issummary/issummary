@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { CSSProperties } from 'react';
 
 import {
   Table,
@@ -9,8 +10,8 @@ import {
   TableRowColumn
 } from 'material-ui/Table';
 import { IIssueTableActionCreators } from '../actions/issueTable';
-import { CSSProperties } from 'react';
-import { Dependencies, DependLabel, Issue, Label, Work } from '../models/work';
+import { Dependencies, DependLabel, Issue, Work } from '../models/work';
+import * as _ from 'lodash';
 
 export interface IIssueTableProps {
   works: Work[];
@@ -61,10 +62,6 @@ const IssueDependencies = (props: { issues: Issue[] }) => {
 };
 
 const LabelDependencies = (props: { dependLabel: DependLabel }) => {
-  if (props.dependLabel.RelatedIssues.length > 0) {
-    console.log(props.dependLabel.RelatedIssues);
-  }
-
   return (
     <span>
       {props.dependLabel.Label.Name}(
@@ -74,15 +71,25 @@ const LabelDependencies = (props: { dependLabel: DependLabel }) => {
   );
 };
 
-const IssueAndLabelDependencies = (props: { deps: Dependencies }) => {
-  if (props.deps.Issues.length == 0 && props.deps.Labels.length == 0) {
+const IssueAndLabelDependencies = (props: {
+  deps: Dependencies;
+  labelDeps: DependLabel[];
+}) => {
+  if (
+    props.deps.Issues.length == 0 &&
+    props.deps.Labels.length == 0 &&
+    props.labelDeps.length == 0
+  ) {
     return <span>-</span>;
   }
+
+  const labels = props.deps.Labels.concat(props.labelDeps);
+  const uniqueLabels = _.uniqBy(labels, l => l.Label.Name);
 
   return (
     <span>
       <IssueDependencies issues={props.deps.Issues} />
-      {props.deps.Labels.map(l => (
+      {uniqueLabels.map(l => (
         <LabelDependencies
           dependLabel={l}
           key={'LabelDependencies' + l.Label.ID}
@@ -119,7 +126,10 @@ const IssueTableRow = (props: IIssueTableRowProps) => (
         : '-'}
     </TableRowColumn>
     <TableRowColumn style={rowStyle}>
-      <IssueAndLabelDependencies deps={props.work.Dependencies} />
+      <IssueAndLabelDependencies
+        deps={props.work.Dependencies}
+        labelDeps={props.work.Label.Dependencies}
+      />
     </TableRowColumn>
   </TableRow>
 );
