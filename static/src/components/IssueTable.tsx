@@ -132,10 +132,4 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
 }
 
 const sum = (arr: number[]): number => arr.reduce((a, b) => a + b, 0);
-
-const eachSum = (arr: number[]): number[] => {
-  return arr.reduce((newArr: number[], e: number) => {
-    newArr.push(sum(newArr) + e);
-    return newArr;
-  }, []);
-};
+const eachSum = (arr: number[]) => arr.map((e, i) => sum(arr.slice(0, i + 1)));
