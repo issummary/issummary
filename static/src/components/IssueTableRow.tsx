@@ -12,6 +12,7 @@ export interface IIssueTableRowProps {
   work: Work;
   key: string;
   totalSP: number;
+  velocityPerManPerDay: number;
   showManDayColumn: boolean;
   showTotalManDayColumn: boolean;
   showSPColumn: boolean;
@@ -42,8 +43,12 @@ export const IssueTableRow = (props: IIssueTableRowProps) => (
         ? props.work.Issue.Description.Summary
         : '-'}
     </TableRowColumn>
-    <TableRowColumn style={rowStyle}>{props.work.StoryPoint}</TableRowColumn>
-    <TableRowColumn style={rowStyle}>{props.totalSP}</TableRowColumn>
+    <TableRowColumn style={rowStyle}>
+      {props.work.StoryPoint / props.velocityPerManPerDay}
+    </TableRowColumn>
+    <TableRowColumn style={rowStyle}>
+      {props.totalSP / props.velocityPerManPerDay}
+    </TableRowColumn>
     <TableRowColumn style={rowStyle}>
       {props.work.Issue.DueDate
         ? props.work.Issue.DueDate.format('YYYY/MM/DD')

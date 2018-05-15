@@ -13,6 +13,7 @@ export interface IHomeState {
   showTotalManDayColumn: boolean;
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
+  velocityPerManPerDay: number;
 }
 
 const homeInitialState: IHomeState = {
@@ -20,7 +21,8 @@ const homeInitialState: IHomeState = {
   showManDayColumn: false,
   showTotalManDayColumn: false,
   showSPColumn: true,
-  showTotalSPColumn: true
+  showTotalSPColumn: true,
+  velocityPerManPerDay: 1
 };
 
 const homeGlobalReducer = reducerWithInitialState(homeInitialState)
@@ -37,14 +39,16 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
     showManDayColumn: true,
     showTotalManDayColumn: true,
     showSPColumn: false,
-    showTotalSPColumn: false
+    showTotalSPColumn: false,
+    velocityPerManPerDay: 2 // FIXME
   }))
   .case(homeActionCreators.disableManDay, state => ({
     ...state,
     showManDayColumn: false,
     showTotalManDayColumn: false,
     showSPColumn: true,
-    showTotalSPColumn: true
+    showTotalSPColumn: true,
+    velocityPerManPerDay: 1
   }));
 
 export const homeReducer = combineReducers({

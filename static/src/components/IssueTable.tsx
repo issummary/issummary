@@ -13,6 +13,7 @@ export interface IIssueTableProps {
   showTotalManDayColumn: boolean;
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
+  velocityPerManPerDay: number;
   actions: IIssueTableActionCreators;
 }
 
@@ -45,6 +46,7 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
               showTotalManDayColumn={this.props.showTotalManDayColumn}
               showSPColumn={this.props.showSPColumn}
               showTotalSPColumn={this.props.showTotalSPColumn}
+              velocityPerManPerDay={this.props.velocityPerManPerDay}
             />
           ))}
         </TableBody>

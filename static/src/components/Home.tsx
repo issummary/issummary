@@ -80,6 +80,7 @@ class Home extends React.Component<IHomeProps, any> {
           showTotalManDayColumn={this.props.global.showTotalManDayColumn}
           showSPColumn={this.props.global.showSPColumn}
           showTotalSPColumn={this.props.global.showTotalSPColumn}
+          velocityPerManPerDay={this.props.global.velocityPerManPerDay}
         />
       </div>
     );
