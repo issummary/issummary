@@ -1,8 +1,5 @@
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
-import {
-  issueTableActionCreators,
-  issueTableAsyncActionCreators
-} from '../actions/issueTable';
+import { issueTableAsyncActionCreators } from '../actions/issueTable';
 import { Work } from '../models/work';
 
 export interface IIssueTableState {

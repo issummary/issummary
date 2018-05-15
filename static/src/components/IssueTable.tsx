@@ -15,6 +15,10 @@ import * as _ from 'lodash';
 
 export interface IIssueTableProps {
   works: Work[];
+  showManDayColumn: boolean;
+  showTotalManDayColumn: boolean;
+  showSPColumn: boolean;
+  showTotalSPColumn: boolean;
   actions: IIssueTableActionCreators;
 }
 
@@ -151,8 +155,18 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
             <TableHeaderColumn>Label</TableHeaderColumn>
             <TableHeaderColumn>Title</TableHeaderColumn>
             <TableHeaderColumn>Summary</TableHeaderColumn>
-            <TableHeaderColumn>SP</TableHeaderColumn>
-            <TableHeaderColumn>Total SP</TableHeaderColumn>
+            {this.props.showManDayColumn ? (
+              <TableHeaderColumn>ManDay</TableHeaderColumn>
+            ) : null}
+            {this.props.showTotalManDayColumn ? (
+              <TableHeaderColumn>Total MD</TableHeaderColumn>
+            ) : null}
+            {this.props.showSPColumn ? (
+              <TableHeaderColumn>SP</TableHeaderColumn>
+            ) : null}
+            {this.props.showSPColumn ? (
+              <TableHeaderColumn>Total SP</TableHeaderColumn>
+            ) : null}
             <TableHeaderColumn>Due Date</TableHeaderColumn>
             <TableHeaderColumn>Deps</TableHeaderColumn>
           </TableRow>
