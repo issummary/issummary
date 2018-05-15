@@ -1,17 +1,12 @@
 import * as React from 'react';
 import { CSSProperties } from 'react';
 
-import {
-  Table,
-  TableBody,
-  TableHeader,
-  TableHeaderColumn,
-  TableRow,
-  TableRowColumn
-} from 'material-ui/Table';
+import { Table, TableBody, TableRow, TableRowColumn } from 'material-ui/Table';
 import { IIssueTableActionCreators } from '../actions/issueTable';
 import { Dependencies, DependLabel, Issue, Work } from '../models/work';
 import * as _ from 'lodash';
+import { IssueTableHeadersRow } from './IssueTableHeadersRow';
+import TableHeader from 'material-ui/Table/TableHeader';
 
 export interface IIssueTableProps {
   works: Work[];
@@ -149,28 +144,14 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
     return (
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
         <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
-          <TableRow>
-            <TableHeaderColumn>Project+IID</TableHeaderColumn>
-            <TableHeaderColumn>Parent Label</TableHeaderColumn>
-            <TableHeaderColumn>Label</TableHeaderColumn>
-            <TableHeaderColumn>Title</TableHeaderColumn>
-            <TableHeaderColumn>Summary</TableHeaderColumn>
-            {this.props.showManDayColumn ? (
-              <TableHeaderColumn>ManDay</TableHeaderColumn>
-            ) : null}
-            {this.props.showTotalManDayColumn ? (
-              <TableHeaderColumn>Total MD</TableHeaderColumn>
-            ) : null}
-            {this.props.showSPColumn ? (
-              <TableHeaderColumn>SP</TableHeaderColumn>
-            ) : null}
-            {this.props.showSPColumn ? (
-              <TableHeaderColumn>Total SP</TableHeaderColumn>
-            ) : null}
-            <TableHeaderColumn>Due Date</TableHeaderColumn>
-            <TableHeaderColumn>Deps</TableHeaderColumn>
-          </TableRow>
+          <IssueTableHeadersRow
+            showManDayColumn={this.props.showManDayColumn}
+            showTotalManDayColumn={this.props.showTotalManDayColumn}
+            showSPColumn={this.props.showSPColumn}
+            showTotalSPColumn={this.props.showTotalSPColumn}
+          />
         </TableHeader>
+
         <TableBody displayRowCheckbox={false}>
           {this.props.works.map((w, i) => (
             <IssueTableRow
