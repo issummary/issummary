@@ -41,6 +41,10 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
               work={w}
               key={w.Issue.ProjectName + w.Issue.IID}
               totalSP={totalSPs[i]}
+              showManDayColumn={this.props.showManDayColumn}
+              showTotalManDayColumn={this.props.showTotalManDayColumn}
+              showSPColumn={this.props.showSPColumn}
+              showTotalSPColumn={this.props.showTotalSPColumn}
             />
           ))}
         </TableBody>
