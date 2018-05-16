@@ -9,7 +9,10 @@ import {
   issueTableActionCreators
 } from '../actions/issueTable';
 import { connect, Dispatch } from 'react-redux';
-import { IHomeState, IRootState } from '../reducers/reducer';
+import { IRootState } from '../reducers/reducer';
+import { IssueTableConfig } from './IssueTableConfig';
+import { IHomeState } from '../reducers/home';
+import { homeActionCreators, IHomeActionCreators } from '../actions/home';
 
 const style: CSSProperties = {
   margin: 0,
@@ -18,6 +21,10 @@ const style: CSSProperties = {
   bottom: 20,
   left: 'auto',
   position: 'fixed'
+};
+
+const issueTableConfigStyle: CSSProperties = {
+  margin: 10
 };
 
 interface RefreshProps {
@@ -39,6 +46,7 @@ interface IHomeProps {
   global: IHomeState;
   issueTable: IIssueTableProps;
   actions: {
+    home: IHomeActionCreators;
     issueTable: IIssueTableActionCreators;
   };
 }
@@ -56,6 +64,11 @@ class Home extends React.Component<IHomeProps, any> {
   public render() {
     return (
       <div>
+        <IssueTableConfig
+          style={issueTableConfigStyle}
+          onEnableManDay={this.props.actions.home.enableManDay}
+          onDisableManDay={this.props.actions.home.disableManDay}
+        />
         <Refresh
           onClick={this.onClickRefreshButton}
           isFetching={this.props.global.isFetchingData}
@@ -63,6 +76,11 @@ class Home extends React.Component<IHomeProps, any> {
         <IssueTable
           works={this.props.issueTable.works}
           actions={this.props.actions.issueTable}
+          showManDayColumn={this.props.global.showManDayColumn}
+          showTotalManDayColumn={this.props.global.showTotalManDayColumn}
+          showSPColumn={this.props.global.showSPColumn}
+          showTotalSPColumn={this.props.global.showTotalSPColumn}
+          velocityPerManPerDay={this.props.global.velocityPerManPerDay}
         />
       </div>
     );
@@ -76,6 +94,7 @@ function mapStateToProps(state: IRootState) {
 function mapDispatchToProps(dispatch: Dispatch<any>) {
   return {
     actions: {
+      home: bindActionCreators(homeActionCreators as {}, dispatch),
       issueTable: bindActionCreators(issueTableActionCreators as {}, dispatch)
     }
   };
