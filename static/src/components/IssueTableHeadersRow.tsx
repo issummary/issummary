@@ -22,6 +22,9 @@ export const IssueTableHeadersRow = (props: IIssueTableHeadersProps) => (
     {props.showTotalManDayColumn ? (
       <TableHeaderColumn>Total MD</TableHeaderColumn>
     ) : null}
+    {props.showTotalManDayColumn ? (
+      <TableHeaderColumn>Est. Date</TableHeaderColumn>
+    ) : null}
     {props.showSPColumn ? <TableHeaderColumn>SP</TableHeaderColumn> : null}
     {props.showSPColumn ? (
       <TableHeaderColumn>Total SP</TableHeaderColumn>
