@@ -136,6 +136,21 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 			bWork := wg.gMap[nodes[j].ID()]
 			return aWork.work.Issue.ProjectName+string(aWork.work.Issue.IID) > bWork.work.Issue.ProjectName+string(bWork.work.Issue.IID)
 		})
+
+		sort.SliceStable(nodes, func(i, j int) bool {
+			aWork := wg.gMap[nodes[i].ID()]
+			bWork := wg.gMap[nodes[j].ID()]
+
+			if bWork.work.Issue.DueDate == nil {
+				return false
+			}
+
+			if aWork.work.Issue.DueDate == nil {
+				return true
+			}
+
+			return aWork.work.Issue.DueDate.After(*bWork.work.Issue.DueDate)
+		})
 	})
 	if err != nil {
 		return nil, err
