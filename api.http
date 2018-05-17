@@ -1,1 +1,7 @@
 POST http://localhost:8080/works
+
+###
+
+POST http://localhost:8080/milestones
+
+###
