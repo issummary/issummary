@@ -33,9 +33,19 @@ func main() {
 		return works, nil
 	}
 
+	milestonesBodyFunc := func(body []byte) (interface{}, error) {
+		milestones, err := client.ListGroupMilestones(os.Getenv("GITLAB_PID"))
+		if err != nil {
+			panic(err)
+		}
+
+		return milestones, nil
+	}
+
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/", fs)
 	http.HandleFunc("/works", createJsonHandleFunc(worksBodyFunc))
+	http.HandleFunc("/milestones", createJsonHandleFunc(milestonesBodyFunc))
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		panic(err)

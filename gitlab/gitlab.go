@@ -295,3 +295,30 @@ func (c *Client) listAllProjects(gid interface{}) ([]*gitlab.Project, error) {
 	}
 	return allProjects, nil
 }
+
+func (c *Client) ListGroupMilestones(gid string) ([]*Milestone, error) {
+	opt := &gitlab.ListGroupMilestonesOptions{
+		ListOptions: gitlab.ListOptions{
+			Page:    1,
+			PerPage: 100,
+		},
+	}
+
+	var allMilestones []*gitlab.GroupMilestone
+
+	for {
+		milestones, _, err := c.GroupMilestones.ListGroupMilestones(gid, opt)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(milestones) == 0 {
+			break
+		}
+
+		allMilestones = append(allMilestones, milestones...)
+		opt.Page = opt.Page + 1
+	}
+
+	return toMilestones(allMilestones), nil
+}
