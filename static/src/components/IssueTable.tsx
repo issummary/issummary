@@ -6,9 +6,11 @@ import { Work } from '../models/work';
 import { IssueTableHeadersRow } from './IssueTableHeadersRow';
 import TableHeader from 'material-ui/Table/TableHeader';
 import { IssueTableRow } from './IssueTableRow';
+import { Milestone } from '../models/milestone';
 
 export interface IIssueTableProps {
   works: Work[];
+  milestones: Milestone[];
   showManDayColumn: boolean;
   showTotalManDayColumn: boolean;
   showSPColumn: boolean;
