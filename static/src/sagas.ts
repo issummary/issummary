@@ -34,13 +34,14 @@ function* watchIncrementAsync() {
 const requestNewIssueTableData = bindAsyncAction(
   issueTableAsyncActionCreators.requestNewDataFetching
 )(function*(): SagaIterator {
-  return yield call(Api.fetchWorks);
+  const milestones = yield call(Api.fetchMilestones);
+  const works = yield call(Api.fetchWorks);
+  return { milestones, works };
 });
 
 function* watchUpdateIssueTable() {
-  yield takeEvery(
-    issueTableActionCreators.requestUpdate.type,
-    (a: Action<ICounterAmountPayload>) => requestNewIssueTableData(a.payload)
+  yield takeEvery(issueTableActionCreators.requestUpdate.type, () =>
+    requestNewIssueTableData(null)
   );
 }
 

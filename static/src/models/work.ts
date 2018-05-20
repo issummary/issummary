@@ -24,7 +24,7 @@ export interface LabelDescription {
 export interface Issue {
   ID: number;
   IID: number;
-  DueDate: Moment;
+  DueDate?: Moment;
   Title: string;
   Description: IssueDescription;
   URL: string;

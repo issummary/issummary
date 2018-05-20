@@ -13,6 +13,7 @@ import { IRootState } from '../reducers/reducer';
 import { IssueTableConfig } from './IssueTableConfig';
 import { IHomeState } from '../reducers/home';
 import { homeActionCreators, IHomeActionCreators } from '../actions/home';
+import { MilestoneTable } from './milestoneTable';
 
 const style: CSSProperties = {
   margin: 0,
@@ -75,6 +76,7 @@ class Home extends React.Component<IHomeProps, any> {
         />
         <IssueTable
           works={this.props.issueTable.works}
+          milestones={this.props.issueTable.milestones}
           actions={this.props.actions.issueTable}
           showManDayColumn={this.props.global.showManDayColumn}
           showTotalManDayColumn={this.props.global.showTotalManDayColumn}
@@ -82,6 +84,7 @@ class Home extends React.Component<IHomeProps, any> {
           showTotalSPColumn={this.props.global.showTotalSPColumn}
           velocityPerManPerDay={this.props.global.velocityPerManPerDay}
         />
+        <MilestoneTable milestones={this.props.issueTable.milestones} />
       </div>
     );
   }
