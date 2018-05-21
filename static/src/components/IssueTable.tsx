@@ -16,6 +16,7 @@ export interface IIssueTableProps {
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
   velocityPerManPerDay: number;
+  parallels: number;
   actions: IIssueTableActionCreators;
 }
 
@@ -49,6 +50,7 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
               showSPColumn={this.props.showSPColumn}
               showTotalSPColumn={this.props.showTotalSPColumn}
               velocityPerManPerDay={this.props.velocityPerManPerDay}
+              parallels={this.props.parallels}
             />
           ))}
         </TableBody>

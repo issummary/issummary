@@ -8,7 +8,7 @@ import {
   IssueTableIssueAndLabelDependenciesRow
 } from './IssueTableIssueAndLabelDependenciesRow';
 import koyomi = require('koyomi');
-import moment from 'moment';
+import * as moment from 'moment';
 export interface IIssueTableRowProps {
   work: Work;
   key: string;
@@ -18,6 +18,7 @@ export interface IIssueTableRowProps {
   showTotalManDayColumn: boolean;
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
+  parallels: number;
 }
 
 const rowStyle: CSSProperties = {
@@ -29,7 +30,8 @@ const today = moment().format('YYYY-MM-DD');
 
 export const IssueTableRow = (props: IIssueTableRowProps) => {
   const totalManDay = props.totalSP / props.velocityPerManPerDay;
-  const bizRawDay = koyomi.addBiz(today, Math.ceil(totalManDay));
+  const totalParallelManDay = Math.ceil(totalManDay / props.parallels);
+  const bizRawDay = koyomi.addBiz(today, totalParallelManDay);
 
   const bizDay = bizRawDay
     ? moment(bizRawDay).format('YYYY-MM-DD')

@@ -69,6 +69,7 @@ class Home extends React.Component<IHomeProps, any> {
           style={issueTableConfigStyle}
           onEnableManDay={this.props.actions.home.enableManDay}
           onDisableManDay={this.props.actions.home.disableManDay}
+          onChangeParallels={this.props.actions.home.changeParallels}
         />
         <Refresh
           onClick={this.onClickRefreshButton}
@@ -83,6 +84,7 @@ class Home extends React.Component<IHomeProps, any> {
           showSPColumn={this.props.global.showSPColumn}
           showTotalSPColumn={this.props.global.showTotalSPColumn}
           velocityPerManPerDay={this.props.global.velocityPerManPerDay}
+          parallels={this.props.global.parallels}
         />
         <MilestoneTable milestones={this.props.issueTable.milestones} />
       </div>
