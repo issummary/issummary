@@ -15,6 +15,7 @@ export interface IHomeState {
   showTotalSPColumn: boolean;
   velocityPerManPerDay: number;
   parallels: number;
+  selectedProjectName: string;
 }
 
 const homeInitialState: IHomeState = {
@@ -24,7 +25,8 @@ const homeInitialState: IHomeState = {
   showSPColumn: true,
   showTotalSPColumn: true,
   velocityPerManPerDay: 1,
-  parallels: 2
+  parallels: 2,
+  selectedProjectName: 'all'
 };
 
 const homeGlobalReducer = reducerWithInitialState(homeInitialState)
@@ -55,6 +57,10 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
   .case(homeActionCreators.changeParallels, (state, payload) => ({
     ...state,
     parallels: payload
+  }))
+  .case(homeActionCreators.changeProjectTextField, (state, payload) => ({
+    ...state,
+    selectedProjectName: payload
   }));
 
 export const homeReducer = combineReducers({

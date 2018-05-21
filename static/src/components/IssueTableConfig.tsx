@@ -2,12 +2,16 @@ import * as React from 'react';
 import Toggle from 'material-ui/Toggle';
 import { CSSProperties } from 'react';
 import TextField from 'material-ui/TextField';
+import MenuItem from 'material-ui/MenuItem';
+import SelectField from 'material-ui/SelectField';
+import { ProjectSelectField } from './ProjectSelectField';
 
 interface IIssueTableConfigProps {
   style: CSSProperties;
   onEnableManDay: () => void;
   onDisableManDay: () => void;
   onChangeParallels: (parallels: number) => void;
+  onChangeProjectSelectField: (p: string) => void;
 }
 
 export const IssueTableConfig = (props: IIssueTableConfigProps) => {
@@ -35,6 +39,7 @@ export const IssueTableConfig = (props: IIssueTableConfigProps) => {
       />
       <br />
       <Toggle label="ManDay" onToggle={handleToggle} />
+      <ProjectSelectField onChange={props.onChangeProjectSelectField} />
     </div>
   );
 };
