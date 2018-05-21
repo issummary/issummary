@@ -4,12 +4,11 @@
     "sourceMap": true,
     "strict": true,
     "module": "commonjs",
-    "target": "es5",
+    "target": "es2015",
     "lib": ["es5", "es6", "dom"],
-    "jsx": "react"
-//    "types": ["webpack-env"]
+    "jsx": "react",
+    "allowSyntheticDefaultImports": true
+    //    "types": ["webpack-env"]
   },
-  "include": [
-    "./src/**/*"
-  ]
+  "include": ["./src/**/*"]
 }

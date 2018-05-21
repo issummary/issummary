@@ -7,9 +7,8 @@ import {
   IssueIIDAndProjectName,
   IssueTableIssueAndLabelDependenciesRow
 } from './IssueTableIssueAndLabelDependenciesRow';
-import moment = require('moment');
 import koyomi = require('koyomi');
-
+import moment from 'moment';
 export interface IIssueTableRowProps {
   work: Work;
   key: string;
