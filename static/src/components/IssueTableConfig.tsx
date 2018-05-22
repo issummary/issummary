@@ -11,6 +11,7 @@ interface IIssueTableConfigProps {
   onEnableManDay: () => void;
   onDisableManDay: () => void;
   onChangeParallels: (parallels: number) => void;
+  projectNames: string[];
   onChangeProjectSelectField: (p: string) => void;
 }
 
@@ -39,7 +40,10 @@ export const IssueTableConfig = (props: IIssueTableConfigProps) => {
       />
       <br />
       <Toggle label="ManDay" onToggle={handleToggle} />
-      <ProjectSelectField onChange={props.onChangeProjectSelectField} />
+      <ProjectSelectField
+        projectNames={props.projectNames}
+        onChange={props.onChangeProjectSelectField}
+      />
     </div>
   );
 };

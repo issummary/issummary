@@ -70,6 +70,9 @@ class Home extends React.Component<IHomeProps, any> {
           onEnableManDay={this.props.actions.home.enableManDay}
           onDisableManDay={this.props.actions.home.disableManDay}
           onChangeParallels={this.props.actions.home.changeParallels}
+          projectNames={this.props.issueTable.works
+            .map(w => w.Issue.ProjectName)
+            .filter((pn, i, self) => self.indexOf(pn) === i)}
           onChangeProjectSelectField={
             this.props.actions.home.changeProjectTextField
           }
