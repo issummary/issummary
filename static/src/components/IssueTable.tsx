@@ -16,6 +16,8 @@ export interface IIssueTableProps {
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
   velocityPerManPerDay: number;
+  parallels: number;
+  selectedProjectName: string;
   actions: IIssueTableActionCreators;
 }
 
@@ -39,18 +41,26 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
         </TableHeader>
 
         <TableBody displayRowCheckbox={false}>
-          {this.props.works.map((w, i) => (
-            <IssueTableRow
-              work={w}
-              key={w.Issue.ProjectName + w.Issue.IID}
-              totalSP={totalSPs[i]}
-              showManDayColumn={this.props.showManDayColumn}
-              showTotalManDayColumn={this.props.showTotalManDayColumn}
-              showSPColumn={this.props.showSPColumn}
-              showTotalSPColumn={this.props.showTotalSPColumn}
-              velocityPerManPerDay={this.props.velocityPerManPerDay}
-            />
-          ))}
+          {this.props.works
+            .filter(w => {
+              return (
+                this.props.selectedProjectName === 'all' ||
+                w.Issue.ProjectName === this.props.selectedProjectName
+              );
+            })
+            .map((w, i) => (
+              <IssueTableRow
+                work={w}
+                key={w.Issue.ProjectName + w.Issue.IID}
+                totalSP={totalSPs[i]}
+                showManDayColumn={this.props.showManDayColumn}
+                showTotalManDayColumn={this.props.showTotalManDayColumn}
+                showSPColumn={this.props.showSPColumn}
+                showTotalSPColumn={this.props.showTotalSPColumn}
+                velocityPerManPerDay={this.props.velocityPerManPerDay}
+                parallels={this.props.parallels}
+              />
+            ))}
         </TableBody>
       </Table>
     );
