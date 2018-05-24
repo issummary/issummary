@@ -48,6 +48,17 @@ func (wg *WorkManager) ConnectByDependencies() error {
 		for _, dependLabel := range fromWorkNode.work.Dependencies.Labels {
 			wg.setEdgesByDependIssues(fromWorkNode, dependLabel.RelatedIssues)
 		}
+
+		if fromWorkNode.work.Label == nil {
+			continue
+		}
+
+		for _, label := range fromWorkNode.work.Label.Dependencies {
+			for _, issue := range label.RelatedIssues {
+				fmt.Println(issue.Title)
+			}
+			wg.setEdgesByDependIssues(fromWorkNode, label.RelatedIssues)
+		}
 	}
 	return nil
 }
