@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 
+	"strings"
+
 	"github.com/joho/godotenv"
 	"github.com/mpppk/issummary/gitlab"
 )
@@ -25,21 +27,42 @@ func main() {
 		client.SetBaseURL(os.Getenv("GITLAB_BASEURL"))
 	}
 
+	gidList := strings.Split(os.Getenv("GITLAB_PID"), ",")
+
 	worksBodyFunc := func(body []byte) (interface{}, error) {
-		works, err := client.ListGroupWorks(os.Getenv("GITLAB_PID"), "MC", "S")
+		workManager := gitlab.NewWorkManager()
+		for _, gid := range gidList {
+			works, err := client.ListGroupWorks(gid, "LC", "S")
+
+			if err != nil {
+				panic(err)
+			}
+
+			workManager.AddWorks(works)
+		}
+
+		workManager.ConnectByDependencies()
+		sortedWorks, err := workManager.GetSortedWorks()
+
 		if err != nil {
 			panic(err)
 		}
-		return works, nil
+		return sortedWorks, nil
 	}
 
 	milestonesBodyFunc := func(body []byte) (interface{}, error) {
-		milestones, err := client.ListGroupMilestones(os.Getenv("GITLAB_PID"))
-		if err != nil {
-			panic(err)
+		var allMilestones []*gitlab.Milestone
+		for _, gid := range gidList {
+			milestones, err := client.ListGroupMilestones(gid)
+
+			if err != nil {
+				panic(err)
+			}
+
+			allMilestones = append(allMilestones, milestones...)
 		}
 
-		return milestones, nil
+		return allMilestones, nil
 	}
 
 	fs := http.FileServer(http.Dir("static"))

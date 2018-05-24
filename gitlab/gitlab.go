@@ -77,20 +77,20 @@ type Dependencies struct {
 	Labels []*DependLabel
 }
 
-func (c *Client) ListGroupWorks(pid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {
+func (c *Client) ListGroupWorks(gid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {
 	eg := errgroup.Group{}
 	issuesChan := make(chan []*gitlab.Issue, 1)
 	projectsChan := make(chan []*gitlab.Project, 1)
 	labelsChan := make(chan []*gitlab.Label, 1)
 
 	eg.Go(func() error {
-		allIssues, err := c.listAllGroupIssuesByLabel(pid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
+		allIssues, err := c.listAllGroupIssuesByLabel(gid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
 		issuesChan <- allIssues
 		return err
 	})
 
 	eg.Go(func() error {
-		projects, err := c.listAllProjects(pid)
+		projects, err := c.listAllProjects(gid)
 		if err != nil {
 			return err
 		}
@@ -110,10 +110,7 @@ func (c *Client) ListGroupWorks(pid interface{}, prefix, spLabelPrefix string) (
 	if err != nil {
 		return nil, err
 	}
-	workManager := NewWorkManager()
-	workManager.AddWorks(works)
-	workManager.ConnectByDependencies()
-	return workManager.GetSortedWorks()
+	return works, nil
 }
 
 func (c *Client) listLabelsByPrefix(pid interface{}, prefix string) (prefixLabels []*gitlab.Label, err error) {
