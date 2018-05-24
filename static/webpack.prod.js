@@ -1,4 +1,4 @@
-const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'production',
@@ -17,5 +17,14 @@ module.exports = {
         loader: ['ts-loader']
       }
     ]
-  }
+  },
+
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: 'index.html.tmpl',
+      templateParameters: {
+        title: 'Issummary'
+      }
+    })
+  ]
 };

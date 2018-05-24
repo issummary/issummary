@@ -52,6 +52,7 @@
     "lodash": "^4.17.10",
     "mini-css-extract-plugin": "^0.4.0",
     "npm": "^5.8.0",
+    "npm-run-all": "^4.1.3",
     "prettier": "^1.12.1",
     "pretty-quick": "^1.4.1",
     "react-test-renderer": "^16.1.1",
@@ -69,9 +70,12 @@
   "scripts": {
     "test": "jest",
     "start": "webpack-dev-server --inline --port 8081",
-    "build": "webpack --config webpack.prod.js",
-    "build-libs": "webpack --config webpack.libs.config.js",
-    "build-libs-dev":
+    "build:prod": "run-p build:prod:*",
+    "build:dev": "run-p build:dev:*",
+    "build:prod:main": "webpack --config webpack.prod.js",
+    "build:dev:main": "webpack --config webpack.config.js",
+    "build:prod:libs": "webpack --config webpack.libs.config.js",
+    "build:dev:libs":
       "webpack --config webpack.libs.config.js --mode development",
     "watch-sandbox": "webpack --watch --config webpack.sandbox.config.js",
     "run-sandbox": "node dist/sandbox.bundle.js",

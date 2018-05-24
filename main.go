@@ -65,7 +65,7 @@ func main() {
 		return allMilestones, nil
 	}
 
-	fs := http.FileServer(http.Dir("static"))
+	fs := http.FileServer(http.Dir("static/dist"))
 	http.Handle("/", fs)
 	http.HandleFunc("/api/works", createJsonHandleFunc(worksBodyFunc))
 	http.HandleFunc("/api/milestones", createJsonHandleFunc(milestonesBodyFunc))
