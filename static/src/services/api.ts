@@ -17,6 +17,11 @@ export class Api {
   static fetchMilestones(): Promise<Milestone[]> {
     return axios.post('/api/milestones').then(r => {
       const milestones = r.data;
+
+      if (!milestones) {
+        return [];
+      }
+
       return milestones.map((m: any) => {
         m.StartDate = m.StartDate ? moment(m.StartDate) : null;
         m.DueDate = m.DueDate ? moment(m.DueDate) : null;
