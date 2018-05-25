@@ -32,4 +32,4 @@ const RootApp = () => (
 
 const HotRootApp = hot(module)(RootApp);
 
-ReactDOM.render(<HotRootApp />, document.getElementById('example'));
+ReactDOM.render(<RootApp />, document.getElementById('example'));

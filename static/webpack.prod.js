@@ -19,9 +19,17 @@ module.exports = {
     ]
   },
 
+  externals: [
+    {
+      react: 'React',
+      'react-dom': 'ReactDOM',
+      'material-ui': 'MaterialUI'
+    }
+  ],
+
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'index.html.tmpl',
+      template: 'index.prod.html.tmpl',
       templateParameters: {
         title: 'Issummary'
       }
