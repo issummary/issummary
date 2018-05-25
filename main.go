@@ -1,3 +1,5 @@
+//go:generate statik -src=./static/dist
+
 package main
 
 import (
@@ -8,11 +10,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/mpppk/issummary/gitlab"
+	_ "github.com/mpppk/issummary/statik"
+	"github.com/rakyll/statik/fs"
 )
 
 func main() {
@@ -65,8 +68,13 @@ func main() {
 		return allMilestones, nil
 	}
 
-	fs := http.FileServer(http.Dir("static"))
-	http.Handle("/", fs)
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	http.Handle("/", http.FileServer(statikFS))
+
 	http.HandleFunc("/api/works", createJsonHandleFunc(worksBodyFunc))
 	http.HandleFunc("/api/milestones", createJsonHandleFunc(milestonesBodyFunc))
 	err = http.ListenAndServe(":8080", nil)
