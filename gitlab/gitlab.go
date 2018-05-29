@@ -134,6 +134,7 @@ func (c *Client) listAllGroupIssuesByLabel(pid interface{}, labels gitlab.Labels
 			PerPage: 100,
 		},
 		Labels: labels,
+		State:  gitlab.String("opened"), // FIXME
 	}
 
 	var allIssues []*gitlab.Issue

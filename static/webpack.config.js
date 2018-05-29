@@ -52,6 +52,7 @@ module.exports = {
     contentBase: path.resolve(__dirname, 'dist'),
     hot: true,
     historyApiFallback: true,
+    disableHostCheck: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8080'
