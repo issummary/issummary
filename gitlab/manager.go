@@ -44,9 +44,13 @@ func (wg *WorkManager) AddWork(work *Work) {
 
 func (wg *WorkManager) ConnectByDependencies() error {
 	for _, fromWorkNode := range wg.workNodeMap {
-		wg.setEdgesByDependIssues(fromWorkNode, fromWorkNode.work.Dependencies.Issues)
+		if err := wg.setEdgesByDependIssues(fromWorkNode, fromWorkNode.work.Dependencies.Issues); err != nil {
+			return fmt.Errorf("work edge setting is failed: %v", err) // FIXME
+		}
 		for _, dependLabel := range fromWorkNode.work.Dependencies.Labels {
-			wg.setEdgesByDependIssues(fromWorkNode, dependLabel.RelatedIssues)
+			if err := wg.setEdgesByDependIssues(fromWorkNode, dependLabel.RelatedIssues); err != nil {
+				return fmt.Errorf("depend label edge setting is failed: %v", err) // FIXME
+			}
 		}
 
 		if fromWorkNode.work.Label == nil {
@@ -57,7 +61,9 @@ func (wg *WorkManager) ConnectByDependencies() error {
 			for _, issue := range label.RelatedIssues {
 				fmt.Println(issue.Title)
 			}
-			wg.setEdgesByDependIssues(fromWorkNode, label.RelatedIssues)
+			if err := wg.setEdgesByDependIssues(fromWorkNode, label.RelatedIssues); err != nil {
+				return fmt.Errorf("label dependency edge setting is failed: %v", err) // FIXME
+			}
 		}
 	}
 	return nil
@@ -70,6 +76,11 @@ func (wg *WorkManager) setEdgesByDependIssues(workNode *WorkNode, issues []*Issu
 		if !ok {
 			return fmt.Errorf("dependency (to: %v) cant resolve\n", toWorkNode.work) // FIXME
 		}
+
+		if workNode.node.ID() == toWorkNode.node.ID() {
+			return fmt.Errorf("self edge: %s/%s", workNode.work.Issue.ProjectName, workNode.work.Issue.Title)
+		}
+
 		wg.g.SetEdge(wg.g.NewEdge(workNode.node, toWorkNode.node))
 	}
 	return nil
