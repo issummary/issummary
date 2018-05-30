@@ -44,7 +44,9 @@ func main() {
 			workManager.AddWorks(works)
 		}
 
-		workManager.ConnectByDependencies()
+		if err := workManager.ConnectByDependencies(); err != nil {
+			panic(err)
+		}
 		sortedWorks, err := workManager.GetSortedWorks()
 
 		if err != nil {
