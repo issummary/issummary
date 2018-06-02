@@ -125,6 +125,19 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 			work.Dependencies.Issues = append(work.Dependencies.Issues, is)
 		}
 
+		for _, otherIssue := range issue.Description.DependencyIDs.OtherProjectIssues {
+			if project, ok := findProjectByName(projects, otherIssue.ProjectName); ok {
+				if otherIssue, ok := findIssueByIIDAndProjectID(issues, otherIssue.IssueIID, project.ID); ok {
+					ois, err := toIssue(otherIssue)
+					if err != nil {
+						return nil, err
+					}
+
+					work.Dependencies.Issues = append(work.Dependencies.Issues, ois)
+				}
+			}
+		}
+
 		for _, labelName := range issue.Description.DependencyIDs.LabelNames {
 			dependLabel, err := toDependLabel(labelName, labels, issues)
 			if err != nil {
@@ -241,6 +254,16 @@ func findIssueByIID(issues []*gitlab.Issue, iid int) (*gitlab.Issue, bool) {
 	return nil, false
 }
 
+func findIssueByIIDAndProjectID(issues []*gitlab.Issue, iid, projectId int) (*gitlab.Issue, bool) {
+	for _, issue := range issues {
+		if issue.IID == iid && issue.ProjectID == projectId {
+			return issue, true
+		}
+	}
+	return nil, false
+
+}
+
 func parseIssueDescription(description string) (*IssueDescription, error) {
 	issueDescription := &IssueDescription{Raw: description}
 
@@ -321,6 +344,7 @@ func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error)
 					depStr = "#" + depStr
 				}
 
+				// Issue dependency
 				if strings.HasPrefix(depStr, "#") {
 					trimmedDep := strings.TrimLeft(depStr, "#")
 					depNum, err := strconv.Atoi(trimmedDep)
@@ -331,6 +355,7 @@ func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error)
 					continue
 				}
 
+				// Label dependency
 				if strings.HasPrefix(depStr, "~") {
 					j := i
 					for {
@@ -348,6 +373,27 @@ func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error)
 					labelName := strings.Trim(trimmedDep, `"`)
 					dependencyIDs.LabelNames = append(dependencyIDs.LabelNames, labelName)
 					continue
+				}
+
+				// Other project issue dependency: ex) awesome_group/awesome_project#3
+				if strings.Contains(depStr, "#") {
+					depStrList := strings.Split(depStr, "/")
+					projectNameAndIssueIIDStr := depStrList[len(depStrList)-1]
+					projectNameAndIssueIID := strings.Split(projectNameAndIssueIIDStr, "#")
+					projectName := projectNameAndIssueIID[0]
+					issueIID, err := strconv.Atoi(projectNameAndIssueIID[1])
+					if err != nil {
+						return nil, fmt.Errorf("failed to parse other issue project dependency(%s): %s",
+							depStr, err)
+					}
+
+					opIssue := &OtherProjectIssueDependency{
+						ProjectName: projectName,
+						IssueIID:    issueIID,
+						GroupName:   strings.Join(depStrList[:len(depStrList)-1], "/"),
+					}
+
+					dependencyIDs.OtherProjectIssues = append(dependencyIDs.OtherProjectIssues, opIssue)
 				}
 			}
 		}
