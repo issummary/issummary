@@ -41,6 +41,7 @@ type Issue struct {
 	Description *IssueDescription
 	URL         string
 	ProjectName string
+	GroupName   string
 }
 
 type IssueDescription struct {
@@ -80,8 +81,9 @@ type DependLabel struct {
 }
 
 type Dependencies struct {
-	Issues []*Issue
-	Labels []*DependLabel
+	OtherProjectIssues []*Issue
+	Issues             []*Issue
+	Labels             []*DependLabel
 }
 
 func (c *Client) ListGroupWorks(gid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {

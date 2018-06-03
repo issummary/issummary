@@ -125,14 +125,16 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 			work.Dependencies.Issues = append(work.Dependencies.Issues, is)
 		}
 
-		for _, otherIssue := range issue.Description.DependencyIDs.OtherProjectIssues {
-			if project, ok := findProjectByName(projects, otherIssue.ProjectName); ok {
-				if otherIssue, ok := findIssueByIIDAndProjectID(issues, otherIssue.IssueIID, project.ID); ok {
+		for _, otherIssueDep := range issue.Description.DependencyIDs.OtherProjectIssues {
+			if project, ok := findProjectByName(projects, otherIssueDep.ProjectName); ok {
+				if otherIssue, ok := findIssueByIIDAndProjectID(issues, otherIssueDep.IssueIID, project.ID); ok {
 					ois, err := toIssue(otherIssue)
 					if err != nil {
 						return nil, err
 					}
 
+					ois.ProjectName = otherIssueDep.ProjectName
+					ois.GroupName = otherIssueDep.GroupName
 					work.Dependencies.Issues = append(work.Dependencies.Issues, ois)
 				}
 			}
