@@ -2,17 +2,28 @@ import * as React from 'react';
 import { Dependencies, DependLabel, Issue } from '../models/work';
 import * as _ from 'lodash';
 
-export const IssueIIDAndProjectName = (props: { issue: Issue }) => (
+export const IssueIIDAndProjectName = (props: {
+  currentProjectName: string;
+  issue: Issue;
+}) => (
   <a href={props.issue.URL} target="_blank">
-    {props.issue.ProjectName
+    {props.issue.ProjectName &&
+    props.issue.ProjectName !== props.currentProjectName
       ? props.issue.ProjectName + ' #' + props.issue.IID
       : '#' + props.issue.IID}
   </a>
 );
 
-const IssueDependencies = (props: { issues: Issue[] }) => {
+const IssueDependencies = (props: {
+  currentProjectName: string;
+  issues: Issue[];
+}) => {
   const issueLinks = props.issues.map(i => (
-    <IssueIIDAndProjectName issue={i} key={i.ProjectName + i.IID} />
+    <IssueIIDAndProjectName
+      currentProjectName={props.currentProjectName}
+      issue={i}
+      key={i.ProjectName + i.IID}
+    />
   ));
 
   if (issueLinks.length == 0) {
@@ -34,17 +45,24 @@ const IssueDependencies = (props: { issues: Issue[] }) => {
   );
 };
 
-const LabelDependencies = (props: { dependLabel: DependLabel }) => {
+const LabelDependencies = (props: {
+  currentProjectName: string;
+  dependLabel: DependLabel;
+}) => {
   return (
     <span>
       {props.dependLabel.Label.Name}(
-      <IssueDependencies issues={props.dependLabel.RelatedIssues} />
+      <IssueDependencies
+        currentProjectName={props.currentProjectName}
+        issues={props.dependLabel.RelatedIssues}
+      />
       )
     </span>
   );
 };
 
 export const IssueTableIssueAndLabelDependenciesRow = (props: {
+  currentProjectName: string;
   deps: Dependencies;
   labelDeps: DependLabel[];
 }) => {
@@ -61,9 +79,13 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
 
   return (
     <span>
-      <IssueDependencies issues={props.deps.Issues} />
+      <IssueDependencies
+        currentProjectName={props.currentProjectName}
+        issues={props.deps.Issues}
+      />
       {uniqueLabels.map(l => (
         <LabelDependencies
+          currentProjectName={props.currentProjectName}
           dependLabel={l}
           key={'LabelDependencies' + l.Label.ID}
         />

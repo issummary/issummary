@@ -39,7 +39,10 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
   return (
     <TableRow key={props.key}>
       <TableRowColumn>
-        <IssueIIDAndProjectName issue={props.work.Issue} />
+        <a href={props.work.Issue.URL} target="_blank">
+          {props.work.Issue.ProjectName ? props.work.Issue.ProjectName : null}
+          #{props.work.Issue.IID}
+        </a>
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.work.Label && props.work.Label.Parent
@@ -71,6 +74,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
         <IssueTableIssueAndLabelDependenciesRow
+          currentProjectName={props.work.Issue.ProjectName}
           deps={props.work.Dependencies}
           labelDeps={props.work.Label ? props.work.Label.Dependencies : []}
         />

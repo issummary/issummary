@@ -69,7 +69,7 @@
   },
   "scripts": {
     "test": "jest",
-    "start": "webpack-dev-server --inline --port 8081 --host daisy",
+    "start": "webpack-dev-server --inline --port 8081",
     "build:prod": "run-p build:prod:*",
     "build:dev": "run-p build:dev:*",
     "build:prod:main": "webpack --config webpack.prod.js --mode development",

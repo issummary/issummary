@@ -41,6 +41,7 @@ type Issue struct {
 	Description *IssueDescription
 	URL         string
 	ProjectName string
+	GroupName   string
 }
 
 type IssueDescription struct {
@@ -52,8 +53,15 @@ type IssueDescription struct {
 }
 
 type DependencyIDs struct {
-	IssueIIDs  []int
-	LabelNames []string
+	IssueIIDs          []int
+	LabelNames         []string
+	OtherProjectIssues []*OtherProjectIssueDependency
+}
+
+type OtherProjectIssueDependency struct {
+	GroupName   string
+	ProjectName string
+	IssueIID    int
 }
 
 type Work struct {
@@ -73,8 +81,9 @@ type DependLabel struct {
 }
 
 type Dependencies struct {
-	Issues []*Issue
-	Labels []*DependLabel
+	OtherProjectIssues []*Issue
+	Issues             []*Issue
+	Labels             []*DependLabel
 }
 
 func (c *Client) ListGroupWorks(gid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {
@@ -263,6 +272,16 @@ func (c *Client) listAllLabels(pid interface{}) ([]*gitlab.Label, error) {
 func findProjectByID(projects []*gitlab.Project, id int) (*gitlab.Project, bool) {
 	for _, project := range projects {
 		if project.ID == id {
+			return project, true
+		}
+	}
+
+	return nil, false
+}
+
+func findProjectByName(projects []*gitlab.Project, name string) (*gitlab.Project, bool) {
+	for _, project := range projects {
+		if project.Name == name {
 			return project, true
 		}
 	}
