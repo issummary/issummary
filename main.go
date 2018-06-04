@@ -4,7 +4,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -38,19 +37,19 @@ func main() {
 			works, err := client.ListGroupWorks(gid, "LC", "S")
 
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 
 			workManager.AddWorks(works)
 		}
 
 		if err := workManager.ConnectByDependencies(); err != nil {
-			panic(err)
+			return nil, err
 		}
 		sortedWorks, err := workManager.GetSortedWorks()
 
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		return sortedWorks, nil
 	}
@@ -94,7 +93,7 @@ type Output struct {
 }
 
 type ErrorOutput struct {
-	Error error
+	Error string
 }
 
 type BodyFunc func(body []byte) (interface{}, error)
@@ -108,23 +107,24 @@ func createJsonHandleFunc(bodyFunc BodyFunc) http.HandlerFunc {
 				log.Fatal(err)
 			}
 			rw.Header().Set("Content-Type", "application/json")
+			fmt.Println(string(marshaledJson))
 			fmt.Fprint(rw, string(marshaledJson))
 		}()
 
 		if req.Method != "POST" {
-			retJson = ErrorOutput{errors.New("request is not post method")}
+			retJson = ErrorOutput{"request is not post method"}
 			return
 		}
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			retJson = ErrorOutput{err}
+			retJson = ErrorOutput{err.Error()}
 			return
 		}
 
 		input, err := bodyFunc(body)
 		if err != nil {
-			retJson = ErrorOutput{err}
+			retJson = ErrorOutput{err.Error()}
 			return
 		}
 		retJson = input

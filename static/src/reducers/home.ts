@@ -39,6 +39,10 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
     ...state,
     isFetchingData: false
   }))
+  .case(issueTableAsyncActionCreators.requestNewDataFetching.failed, state => ({
+    ...state,
+    isFetchingData: false
+  }))
   .case(homeActionCreators.enableManDay, state => ({
     ...state,
     showManDayColumn: true,

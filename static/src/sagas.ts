@@ -12,6 +12,9 @@ import {
   issueTableAsyncActionCreators
 } from './actions/issueTable';
 import { Api } from './services/api';
+import { Milestone } from './models/milestone';
+import { Work } from './models/work';
+import { errorDialogActionCreators } from './actions/errorDialog';
 
 function* incrementAsync(payload: ICounterAmountPayload) {
   yield delay(1000);
@@ -34,8 +37,27 @@ function* watchIncrementAsync() {
 const requestNewIssueTableData = bindAsyncAction(
   issueTableAsyncActionCreators.requestNewDataFetching
 )(function*(): SagaIterator {
-  const milestones = yield call(Api.fetchMilestones);
-  const works = yield call(Api.fetchWorks);
+  let works: Work[] = [];
+  let milestones: Milestone[] = [];
+
+  try {
+    works = yield call(Api.fetchWorks);
+  } catch (e) {
+    yield put(issueTableAsyncActionCreators.requestNewDataFetching.failed(e));
+    yield put(
+      errorDialogActionCreators.failWorksResourceFetching({ error: e.Error })
+    );
+  }
+
+  try {
+    milestones = yield call(Api.fetchMilestones);
+  } catch (e) {
+    yield put(issueTableAsyncActionCreators.requestNewDataFetching.failed(e));
+    yield put(
+      errorDialogActionCreators.failWorksResourceFetching({ error: e.Error })
+    );
+  }
+
   return { milestones, works };
 });
 

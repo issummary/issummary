@@ -20,6 +20,7 @@ export class ErrorDialog extends React.Component<IDialogAlertProps, any> {
 
     return (
       <Dialog
+        title="Error occurred"
         actions={actions}
         modal={false}
         open={this.props.open}

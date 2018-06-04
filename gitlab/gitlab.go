@@ -45,23 +45,24 @@ type Issue struct {
 }
 
 type IssueDescription struct {
-	Raw           string
-	DependencyIDs *DependencyIDs
-	Summary       string
-	Note          string
-	Details       string
+	Raw          string
+	Dependencies *IssueDependencies
+	Summary      string
+	Note         string
+	Details      string
 }
 
-type DependencyIDs struct {
-	IssueIIDs          []int
+type IssueDependencies struct { // FIXME merge Dependencies
+	Issues             []*DependIssue
 	LabelNames         []string
-	OtherProjectIssues []*OtherProjectIssueDependency
+	OtherProjectIssues []*DependIssue
 }
 
-type OtherProjectIssueDependency struct {
+type DependIssue struct {
 	GroupName   string
 	ProjectName string
-	IssueIID    int
+	IID         int
+	ID          int
 }
 
 type Work struct {
