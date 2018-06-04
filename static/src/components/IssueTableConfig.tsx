@@ -5,6 +5,7 @@ import TextField from 'material-ui/TextField';
 import MenuItem from 'material-ui/MenuItem';
 import SelectField from 'material-ui/SelectField';
 import { ProjectSelectField } from './ProjectSelectField';
+import RaisedButton from 'material-ui/RaisedButton';
 
 interface IIssueTableConfigProps {
   style: CSSProperties;
@@ -31,6 +32,10 @@ export const IssueTableConfig = (props: IIssueTableConfigProps) => {
     }
   };
 
+  const content = 'あいうえお,かきくけこ,さしすせそ';
+  const blob = new Blob([content], { type: 'text/plain' });
+  const csvUrl = window.URL.createObjectURL(blob);
+
   return (
     <div style={props.style}>
       <TextField
@@ -44,6 +49,9 @@ export const IssueTableConfig = (props: IIssueTableConfigProps) => {
         projectNames={props.projectNames}
         onChange={props.onChangeProjectSelectField}
       />
+      <a href={csvUrl} download="test.csv">
+        <RaisedButton label="Export CSV" />
+      </a>
     </div>
   );
 };
