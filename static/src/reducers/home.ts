@@ -6,6 +6,7 @@ import { combineReducers } from 'redux';
 import { issueTableReducer } from './issueTable';
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
 import { homeActionCreators } from '../actions/home';
+import { errorDialogReducer } from './errorDialog';
 
 export interface IHomeState {
   isFetchingData: boolean;
@@ -38,6 +39,10 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
     ...state,
     isFetchingData: false
   }))
+  .case(issueTableAsyncActionCreators.requestNewDataFetching.failed, state => ({
+    ...state,
+    isFetchingData: false
+  }))
   .case(homeActionCreators.enableManDay, state => ({
     ...state,
     showManDayColumn: true,
@@ -65,5 +70,6 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
 
 export const homeReducer = combineReducers({
   global: homeGlobalReducer,
-  issueTable: issueTableReducer
+  issueTable: issueTableReducer,
+  errorDialog: errorDialogReducer
 });

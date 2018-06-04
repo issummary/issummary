@@ -116,18 +116,23 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 			},
 		}
 
-		for _, is := range findIssuesByIIDs(issues, issue.Description.DependencyIDs.IssueIIDs) {
-			is, err := toIssue(is)
+		for _, depIssues := range issue.Description.Dependencies.Issues {
+			gitlabIssue, ok := findIssueByIIDAndProjectID(issues, depIssues.IID, gitlabIssue.ProjectID)
+			if !ok {
+				return nil, fmt.Errorf("depend issue not found: #%v", depIssues.IID)
+			}
+			is, err := toIssue(gitlabIssue)
 
 			if err != nil {
 				return nil, err
 			}
+
 			work.Dependencies.Issues = append(work.Dependencies.Issues, is)
 		}
 
-		for _, otherIssueDep := range issue.Description.DependencyIDs.OtherProjectIssues {
+		for _, otherIssueDep := range issue.Description.Dependencies.OtherProjectIssues {
 			if project, ok := findProjectByName(projects, otherIssueDep.ProjectName); ok {
-				if otherIssue, ok := findIssueByIIDAndProjectID(issues, otherIssueDep.IssueIID, project.ID); ok {
+				if otherIssue, ok := findIssueByIIDAndProjectID(issues, otherIssueDep.IID, project.ID); ok {
 					ois, err := toIssue(otherIssue)
 					if err != nil {
 						return nil, err
@@ -140,7 +145,7 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 			}
 		}
 
-		for _, labelName := range issue.Description.DependencyIDs.LabelNames {
+		for _, labelName := range issue.Description.Dependencies.LabelNames {
 			dependLabel, err := toDependLabel(labelName, labels, issues)
 			if err != nil {
 				return nil, err
@@ -272,12 +277,12 @@ func parseIssueDescription(description string) (*IssueDescription, error) {
 	md := blackfriday.New()
 	node := md.Parse([]byte(description))
 
-	dependencyIDs, err := getDependencyIDsFromMDNodes(node)
+	issueDependencies, err := getIssueDependenciesFromMDNodes(node)
 	if err != nil {
 		return nil, err
 	}
 
-	issueDescription.DependencyIDs = dependencyIDs
+	issueDescription.Dependencies = issueDependencies
 	summary, err := getMDContentByHeader(node, "Summary")
 	if err != nil {
 		return nil, err
@@ -326,18 +331,18 @@ func getMDContentByHeader(node *blackfriday.Node, header string) (string, error)
 	}
 }
 
-func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error) {
-	dependencyIDs := &DependencyIDs{}
+func getIssueDependenciesFromMDNodes(node *blackfriday.Node) (*IssueDependencies, error) {
+	issueDependencies := &IssueDependencies{}
 	childNode := node.FirstChild
 	for {
 		if childNode == nil {
-			return dependencyIDs, nil
+			return issueDependencies, nil
 		}
 
 		if childNode.Type == blackfriday.Heading && string(childNode.FirstChild.Literal) == "dependencies" {
 			nextChildNode := childNode.Next
 			if nextChildNode == nil {
-				return dependencyIDs, nil
+				return issueDependencies, nil
 			}
 
 			dependencyStrs := strings.Split(string(nextChildNode.FirstChild.Literal), " ")
@@ -350,10 +355,15 @@ func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error)
 				if strings.HasPrefix(depStr, "#") {
 					trimmedDep := strings.TrimLeft(depStr, "#")
 					depNum, err := strconv.Atoi(trimmedDep)
+
+					depIssue := &DependIssue{
+						IID: depNum,
+					}
+
 					if err != nil {
 						return nil, err
 					}
-					dependencyIDs.IssueIIDs = append(dependencyIDs.IssueIIDs, depNum)
+					issueDependencies.Issues = append(issueDependencies.Issues, depIssue)
 					continue
 				}
 
@@ -373,7 +383,7 @@ func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error)
 
 					trimmedDep := strings.TrimLeft(depStr, "~")
 					labelName := strings.Trim(trimmedDep, `"`)
-					dependencyIDs.LabelNames = append(dependencyIDs.LabelNames, labelName)
+					issueDependencies.LabelNames = append(issueDependencies.LabelNames, labelName)
 					continue
 				}
 
@@ -389,13 +399,13 @@ func getDependencyIDsFromMDNodes(node *blackfriday.Node) (*DependencyIDs, error)
 							depStr, err)
 					}
 
-					opIssue := &OtherProjectIssueDependency{
+					opIssue := &DependIssue{
 						ProjectName: projectName,
-						IssueIID:    issueIID,
+						IID:         issueIID,
 						GroupName:   strings.Join(depStrList[:len(depStrList)-1], "/"),
 					}
 
-					dependencyIDs.OtherProjectIssues = append(dependencyIDs.OtherProjectIssues, opIssue)
+					issueDependencies.OtherProjectIssues = append(issueDependencies.OtherProjectIssues, opIssue)
 				}
 			}
 		}

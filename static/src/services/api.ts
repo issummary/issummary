@@ -6,6 +6,10 @@ import { Milestone } from '../models/milestone';
 export class Api {
   static fetchWorks(): Promise<Work[]> {
     return axios.post('/api/works').then(r => {
+      if (r.data.hasOwnProperty('Error')) {
+        return Promise.reject(r.data);
+      }
+
       const works = r.data;
       return works.map((w: any) => {
         w.Issue.DueDate = w.Issue.DueDate ? moment(w.Issue.DueDate) : null;

@@ -14,6 +14,12 @@ import { IssueTableConfig } from './IssueTableConfig';
 import { IHomeState } from '../reducers/home';
 import { homeActionCreators, IHomeActionCreators } from '../actions/home';
 import { MilestoneTable } from './milestoneTable';
+import { ErrorDialog } from './ErrorDialog';
+import {
+  errorDialogActionCreators,
+  IErrorDialogActionCreators
+} from '../actions/errorDialog';
+import { IErrorDialogState } from '../reducers/errorDialog';
 
 const style: CSSProperties = {
   margin: 0,
@@ -46,9 +52,11 @@ const Refresh = (props: RefreshProps) => (
 interface IHomeProps {
   global: IHomeState;
   issueTable: IIssueTableProps;
+  errorDialog: IErrorDialogState;
   actions: {
     home: IHomeActionCreators;
     issueTable: IIssueTableActionCreators;
+    errorDialog: IErrorDialogActionCreators;
   };
 }
 
@@ -65,6 +73,11 @@ class Home extends React.Component<IHomeProps, any> {
   public render() {
     return (
       <div>
+        <ErrorDialog
+          error={this.props.errorDialog.error}
+          onRequestClose={this.props.actions.errorDialog.requestClosing}
+          open={this.props.errorDialog.open}
+        />
         <IssueTableConfig
           style={issueTableConfigStyle}
           onEnableManDay={this.props.actions.home.enableManDay}
@@ -107,7 +120,8 @@ function mapDispatchToProps(dispatch: Dispatch<any>) {
   return {
     actions: {
       home: bindActionCreators(homeActionCreators as {}, dispatch),
-      issueTable: bindActionCreators(issueTableActionCreators as {}, dispatch)
+      issueTable: bindActionCreators(issueTableActionCreators as {}, dispatch),
+      errorDialog: bindActionCreators(errorDialogActionCreators as {}, dispatch)
     }
   };
 }
