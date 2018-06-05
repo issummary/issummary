@@ -43,7 +43,7 @@ func toIssue(gitlabIssue *gitlab.Issue) (*Issue, error) {
 func toDependLabel(labelName string, labels []*gitlab.Label, issues []*gitlab.Issue) (*DependLabel, error) {
 	gitlabLabel, ok := findLabelByName(labels, labelName)
 	if !ok {
-		return nil, errors.New("invalid label name: " + labelName)
+		return nil, errors.New("label name not found: " + labelName)
 	}
 
 	label, err := toLabel(gitlabLabel, labels, issues)
@@ -119,7 +119,7 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 		for _, depIssues := range issue.Description.Dependencies.Issues {
 			gitlabIssue, ok := findIssueByIIDAndProjectID(issues, depIssues.IID, gitlabIssue.ProjectID)
 			if !ok {
-				return nil, fmt.Errorf("depend issue not found: #%v", depIssues.IID)
+				continue
 			}
 			is, err := toIssue(gitlabIssue)
 
@@ -148,7 +148,7 @@ func toWorks(issues []*gitlab.Issue, projects []*gitlab.Project, labels []*gitla
 		for _, labelName := range issue.Description.Dependencies.LabelNames {
 			dependLabel, err := toDependLabel(labelName, labels, issues)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to find depend label from '%v#%v(%v)': %v", issue.ProjectName, issue.IID, issue.Title, err)
 			}
 			work.Dependencies.Labels = append(work.Dependencies.Labels, dependLabel)
 		}
