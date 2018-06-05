@@ -7,6 +7,7 @@ import { IssueTableHeadersRow } from './IssueTableHeadersRow';
 import TableHeader from 'material-ui/Table/TableHeader';
 import { IssueTableRow } from './IssueTableRow';
 import { Milestone } from '../models/milestone';
+import { eachSum } from '../services/util';
 
 export interface IIssueTableProps {
   works: Work[];
@@ -66,6 +67,3 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
     );
   }
 }
-
-const sum = (arr: number[]): number => arr.reduce((a, b) => a + b, 0);
-const eachSum = (arr: number[]) => arr.map((e, i) => sum(arr.slice(0, i + 1)));

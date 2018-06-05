@@ -3,10 +3,7 @@ import { CSSProperties } from 'react';
 import { Work } from '../models/work';
 import TableRowColumn from 'material-ui/Table/TableRowColumn';
 import TableRow from 'material-ui/Table/TableRow';
-import {
-  IssueIIDAndProjectName,
-  IssueTableIssueAndLabelDependenciesRow
-} from './IssueTableIssueAndLabelDependenciesRow';
+import { IssueTableIssueAndLabelDependenciesRow } from './IssueTableIssueAndLabelDependenciesRow';
 import koyomi = require('koyomi');
 import * as moment from 'moment';
 export interface IIssueTableRowProps {
