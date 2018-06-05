@@ -5,8 +5,16 @@ import TextField from 'material-ui/TextField';
 import MenuItem from 'material-ui/MenuItem';
 import SelectField from 'material-ui/SelectField';
 import { ProjectSelectField } from './ProjectSelectField';
+import RaisedButton from 'material-ui/RaisedButton';
+import { Work } from '../models/work';
+import { worksToCSV } from '../services/csv';
+import { eachSum } from '../services/util';
+import * as moment from 'moment';
 
 interface IIssueTableConfigProps {
+  works: Work[];
+  velocityPerManPerDay: number;
+  parallels: number;
   style: CSSProperties;
   onEnableManDay: () => void;
   onDisableManDay: () => void;
@@ -31,6 +39,15 @@ export const IssueTableConfig = (props: IIssueTableConfigProps) => {
     }
   };
 
+  const content = worksToCSV(
+    props.works,
+    props.velocityPerManPerDay,
+    moment(), // FIXME
+    props.parallels
+  );
+  const blob = new Blob([content], { type: 'text/plain' });
+  const csvUrl = window.URL.createObjectURL(blob);
+
   return (
     <div style={props.style}>
       <TextField
@@ -44,6 +61,9 @@ export const IssueTableConfig = (props: IIssueTableConfigProps) => {
         projectNames={props.projectNames}
         onChange={props.onChangeProjectSelectField}
       />
+      <a href={csvUrl} download="test.csv">
+        <RaisedButton label="Export CSV" />
+      </a>
     </div>
   );
 };

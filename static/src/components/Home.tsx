@@ -79,6 +79,9 @@ class Home extends React.Component<IHomeProps, any> {
           open={this.props.errorDialog.open}
         />
         <IssueTableConfig
+          works={this.props.issueTable.works}
+          velocityPerManPerDay={this.props.global.velocityPerManPerDay}
+          parallels={this.props.global.parallels}
           style={issueTableConfigStyle}
           onEnableManDay={this.props.actions.home.enableManDay}
           onDisableManDay={this.props.actions.home.disableManDay}
