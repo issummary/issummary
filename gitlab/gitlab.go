@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"fmt"
+
 	"github.com/xanzy/go-gitlab"
 	"golang.org/x/sync/errgroup"
 )
@@ -116,9 +118,26 @@ func (c *Client) ListGroupWorks(gid interface{}, prefix, spLabelPrefix string) (
 		log.Fatal(err)
 	}
 
-	works, err = toWorks(<-issuesChan, <-projectsChan, <-labelsChan, prefix, spLabelPrefix)
+	projects := <-projectsChan
+	issues := <-issuesChan
+	var filteredIssues []*gitlab.Issue
+
+	for _, issue := range issues {
+		for _, project := range projects {
+			if issue.ProjectID == project.ID {
+				filteredIssues = append(filteredIssues, issue)
+				break
+			}
+		}
+	}
+
+	works, err = toWorks(filteredIssues, projects, <-labelsChan, prefix, spLabelPrefix)
 	if err != nil {
-		return nil, err
+		var projectNames []string
+		for _, project := range projects {
+			projectNames = append(projectNames, project.Name)
+		}
+		return nil, fmt.Errorf("failed to convert to works from %v issues(projects are %v): %v", gid, projectNames, err)
 	}
 	return works, nil
 }
