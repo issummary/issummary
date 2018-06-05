@@ -7,7 +7,7 @@ import { IssueTableHeadersRow } from './IssueTableHeadersRow';
 import TableHeader from 'material-ui/Table/TableHeader';
 import { IssueTableRow } from './IssueTableRow';
 import { Milestone } from '../models/milestone';
-import { eachSum } from '../services/util';
+import { eachSum, filterWorksByProjectNames } from '../services/util';
 
 export interface IIssueTableProps {
   works: Work[];
@@ -42,26 +42,19 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
         </TableHeader>
 
         <TableBody displayRowCheckbox={false}>
-          {this.props.works
-            .filter(w => {
-              return (
-                this.props.selectedProjectName === 'all' ||
-                w.Issue.ProjectName === this.props.selectedProjectName
-              );
-            })
-            .map((w, i) => (
-              <IssueTableRow
-                work={w}
-                key={w.Issue.ProjectName + w.Issue.IID}
-                totalSP={totalSPs[i]}
-                showManDayColumn={this.props.showManDayColumn}
-                showTotalManDayColumn={this.props.showTotalManDayColumn}
-                showSPColumn={this.props.showSPColumn}
-                showTotalSPColumn={this.props.showTotalSPColumn}
-                velocityPerManPerDay={this.props.velocityPerManPerDay}
-                parallels={this.props.parallels}
-              />
-            ))}
+          {this.props.works.map((w, i) => (
+            <IssueTableRow
+              work={w}
+              key={w.Issue.ProjectName + w.Issue.IID}
+              totalSP={totalSPs[i]}
+              showManDayColumn={this.props.showManDayColumn}
+              showTotalManDayColumn={this.props.showTotalManDayColumn}
+              showSPColumn={this.props.showSPColumn}
+              showTotalSPColumn={this.props.showTotalSPColumn}
+              velocityPerManPerDay={this.props.velocityPerManPerDay}
+              parallels={this.props.parallels}
+            />
+          ))}
         </TableBody>
       </Table>
     );

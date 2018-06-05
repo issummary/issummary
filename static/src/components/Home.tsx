@@ -20,6 +20,7 @@ import {
   IErrorDialogActionCreators
 } from '../actions/errorDialog';
 import { IErrorDialogState } from '../reducers/errorDialog';
+import { filterWorksByProjectNames } from '../services/util';
 
 const style: CSSProperties = {
   margin: 0,
@@ -71,6 +72,13 @@ class Home extends React.Component<IHomeProps, any> {
   }
 
   public render() {
+    const works =
+      this.props.global.selectedProjectName === 'All'
+        ? this.props.issueTable.works
+        : filterWorksByProjectNames(this.props.issueTable.works, [
+            this.props.global.selectedProjectName
+          ]);
+
     return (
       <div>
         <ErrorDialog
@@ -79,7 +87,7 @@ class Home extends React.Component<IHomeProps, any> {
           open={this.props.errorDialog.open}
         />
         <IssueTableConfig
-          works={this.props.issueTable.works}
+          works={works}
           velocityPerManPerDay={this.props.global.velocityPerManPerDay}
           parallels={this.props.global.parallels}
           style={issueTableConfigStyle}
@@ -98,7 +106,7 @@ class Home extends React.Component<IHomeProps, any> {
           isFetching={this.props.global.isFetchingData}
         />
         <IssueTable
-          works={this.props.issueTable.works}
+          works={works}
           milestones={this.props.issueTable.milestones}
           actions={this.props.actions.issueTable}
           showManDayColumn={this.props.global.showManDayColumn}

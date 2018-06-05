@@ -2,13 +2,10 @@ import * as React from 'react';
 import Toggle from 'material-ui/Toggle';
 import { CSSProperties } from 'react';
 import TextField from 'material-ui/TextField';
-import MenuItem from 'material-ui/MenuItem';
-import SelectField from 'material-ui/SelectField';
 import { ProjectSelectField } from './ProjectSelectField';
 import RaisedButton from 'material-ui/RaisedButton';
 import { Work } from '../models/work';
 import { worksToCSV } from '../services/csv';
-import { eachSum } from '../services/util';
 import * as moment from 'moment';
 
 interface IIssueTableConfigProps {

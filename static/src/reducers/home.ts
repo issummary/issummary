@@ -27,7 +27,7 @@ const homeInitialState: IHomeState = {
   showTotalSPColumn: true,
   velocityPerManPerDay: 1,
   parallels: 2,
-  selectedProjectName: 'all'
+  selectedProjectName: 'All'
 };
 
 const homeGlobalReducer = reducerWithInitialState(homeInitialState)
