@@ -28,12 +28,6 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
   }
 
   render() {
-    const works =
-      this.props.selectedProjectName === 'All'
-        ? this.props.works
-        : filterWorksByProjectNames(this.props.works, [
-            this.props.selectedProjectName
-          ]);
     console.log(this.props.works);
     const totalSPs = eachSum(this.props.works.map(w => w.StoryPoint));
     return (
@@ -48,7 +42,7 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
         </TableHeader>
 
         <TableBody displayRowCheckbox={false}>
-          {works.map((w, i) => (
+          {this.props.works.map((w, i) => (
             <IssueTableRow
               work={w}
               key={w.Issue.ProjectName + w.Issue.IID}
