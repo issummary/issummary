@@ -42,6 +42,9 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
         </a>
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
+        {props.work.Issue.Milestone ? props.work.Issue.Milestone.Title : '-'}
+      </TableRowColumn>
+      <TableRowColumn style={rowStyle}>
         {props.work.Label && props.work.Label.Parent
           ? props.work.Label.Parent.Name
           : '-'}

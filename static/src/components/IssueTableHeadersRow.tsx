@@ -12,6 +12,7 @@ interface IIssueTableHeadersProps {
 export const IssueTableHeadersRow = (props: IIssueTableHeadersProps) => (
   <TableRow>
     <TableHeaderColumn>Project+IID</TableHeaderColumn>
+    <TableHeaderColumn>Milestone</TableHeaderColumn>
     <TableHeaderColumn>Parent Label</TableHeaderColumn>
     <TableHeaderColumn>Label</TableHeaderColumn>
     <TableHeaderColumn>Title</TableHeaderColumn>

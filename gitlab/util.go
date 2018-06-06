@@ -37,6 +37,7 @@ func toIssue(gitlabIssue *gitlab.Issue) (*Issue, error) {
 		Title:       gitlabIssue.Title,
 		Description: issueDescription,
 		URL:         gitlabIssue.WebURL,
+		Milestone:   toMilestone(gitlabIssue.Milestone),
 	}, nil
 }
 

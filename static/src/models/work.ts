@@ -1,4 +1,5 @@
 import { Moment } from 'moment';
+import { Milestone } from './milestone';
 
 export interface Work {
   Issue: Issue;
@@ -29,6 +30,7 @@ export interface Issue {
   Description: IssueDescription;
   URL: string;
   ProjectName: string;
+  Milestone: Milestone;
 }
 
 export interface IssueDescription {

@@ -44,6 +44,7 @@ type Issue struct {
 	URL         string
 	ProjectName string
 	GroupName   string
+	Milestone   *Milestone
 }
 
 type IssueDescription struct {
