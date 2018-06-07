@@ -11,44 +11,59 @@ import (
 	"gonum.org/v1/gonum/graph/topo"
 )
 
-type WorkNode struct {
-	node graph.Node
-	work *Work
-}
-
-type Dependency struct {
-	fromIID int
-	toIID   int
-}
-
-type WorkManager struct {
+type GraphManager struct {
 	g           *simple.DirectedGraph
 	gMap        map[int64]*WorkNode
 	workNodeMap map[int]*WorkNode
 }
 
-func NewWorkManager() *WorkManager {
-	return &WorkManager{
-		g:           simple.NewDirectedGraph(),
-		gMap:        map[int64]*WorkNode{},
-		workNodeMap: map[int]*WorkNode{},
+type WorkNode struct {
+	node graph.Node
+	work *Work
+}
+
+func (gm *GraphManager) addWork(work *Work) {
+	node := gm.g.NewNode()
+	gm.g.AddNode(node)
+	gm.gMap[node.ID()] = &WorkNode{node: node, work: work}
+	gm.workNodeMap[work.Issue.ID] = &WorkNode{node: node, work: work}
+}
+
+func (gm *GraphManager) getWorkNodes() (workNodes []*WorkNode) {
+	for _, workNode := range gm.gMap {
+		workNodes = append(workNodes, workNode)
 	}
+	return
 }
 
-func (wg *WorkManager) AddWork(work *Work) {
-	node := wg.g.NewNode()
-	wg.g.AddNode(node)
-	wg.gMap[node.ID()] = &WorkNode{node: node, work: work}
-	wg.workNodeMap[work.Issue.ID] = &WorkNode{node: node, work: work}
+func (gm *GraphManager) getWorks() (works []*Work) {
+	for _, workNode := range gm.getWorkNodes() {
+		works = append(works, workNode.work)
+	}
+	return
 }
 
-func (wg *WorkManager) ConnectByDependencies() error {
-	for _, fromWorkNode := range wg.workNodeMap {
-		if err := wg.setEdgesByDependIssues(fromWorkNode, fromWorkNode.work.Dependencies.Issues); err != nil {
+func (gm *GraphManager) getWorkByNodeID(id int64) (*Work, bool) {
+	workNode, ok := gm.gMap[id]
+	return workNode.work, ok
+}
+
+func (gm *GraphManager) getWorkNodeByWork(work *Work) (*WorkNode, bool) {
+	return gm.getWorkNodeByWorkID(work.Issue.ID)
+}
+
+func (gm *GraphManager) getWorkNodeByWorkID(id int) (*WorkNode, bool) {
+	workNode, bool := gm.workNodeMap[id]
+	return workNode, bool
+}
+
+func (gm *GraphManager) ConnectByDependencies() error {
+	for _, fromWorkNode := range gm.workNodeMap {
+		if err := gm.setEdgesByDependIssues(fromWorkNode, fromWorkNode.work.Dependencies.Issues); err != nil {
 			return fmt.Errorf("work edge setting is failed: %v", err) // FIXME
 		}
 		for _, dependLabel := range fromWorkNode.work.Dependencies.Labels {
-			if err := wg.setEdgesByDependIssues(fromWorkNode, dependLabel.RelatedIssues); err != nil {
+			if err := gm.setEdgesByDependIssues(fromWorkNode, dependLabel.RelatedIssues); err != nil {
 				return fmt.Errorf("depend label edge setting is failed: %v", err) // FIXME
 			}
 		}
@@ -61,7 +76,7 @@ func (wg *WorkManager) ConnectByDependencies() error {
 			for _, issue := range label.RelatedIssues {
 				fmt.Println(issue.Title)
 			}
-			if err := wg.setEdgesByDependIssues(fromWorkNode, label.RelatedIssues); err != nil {
+			if err := gm.setEdgesByDependIssues(fromWorkNode, label.RelatedIssues); err != nil {
 				return fmt.Errorf("label dependency edge setting is failed: %v", err) // FIXME
 			}
 		}
@@ -69,10 +84,10 @@ func (wg *WorkManager) ConnectByDependencies() error {
 	return nil
 }
 
-func (wg *WorkManager) setEdgesByDependIssues(workNode *WorkNode, issues []*Issue) error {
+func (gm *GraphManager) setEdgesByDependIssues(workNode *WorkNode, issues []*Issue) error {
 	for _, issue := range issues {
 		toID := issue.ID
-		toWorkNode, ok := wg.workNodeMap[toID]
+		toWorkNode, ok := gm.workNodeMap[toID]
 		if !ok {
 			return fmt.Errorf("dependency (to: %v) cant resolve\n", toWorkNode.work) // FIXME
 		}
@@ -81,9 +96,32 @@ func (wg *WorkManager) setEdgesByDependIssues(workNode *WorkNode, issues []*Issu
 			return fmt.Errorf("self edge: %s/%s", workNode.work.Issue.ProjectName, workNode.work.Issue.Title)
 		}
 
-		wg.g.SetEdge(wg.g.NewEdge(workNode.node, toWorkNode.node))
+		gm.g.SetEdge(gm.g.NewEdge(workNode.node, toWorkNode.node))
 	}
 	return nil
+}
+
+type Dependency struct {
+	fromIID int
+	toIID   int
+}
+
+type WorkManager struct {
+	gm *GraphManager
+}
+
+func NewWorkManager() *WorkManager {
+	gm := &GraphManager{
+		g:           simple.NewDirectedGraph(),
+		gMap:        map[int64]*WorkNode{},
+		workNodeMap: map[int]*WorkNode{},
+	}
+
+	return &WorkManager{gm}
+}
+
+func (wg *WorkManager) AddWork(work *Work) {
+	wg.gm.addWork(work)
 }
 
 func (wg *WorkManager) AddWorks(works []*Work) {
@@ -93,19 +131,16 @@ func (wg *WorkManager) AddWorks(works []*Work) {
 }
 
 func (wg *WorkManager) ListSortedWorksByDueDate() (workNodes []*WorkNode) {
-	for _, work := range wg.gMap {
-		workNodes = append(workNodes, work)
-	}
-
+	workNodes = wg.gm.getWorkNodes()
 	sort.Slice(workNodes, func(i, j int) bool {
 		return workNodes[i].work.Issue.DueDate.After(*(workNodes[j].work.Issue.DueDate))
 	})
 	return workNodes
 }
 
-func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
+func (gm *GraphManager) GetSortedWorks() (works []*Work, err error) {
 
-	marshalGraph, err := dot.Marshal(wg.g, "name", "prefix", "  ", false)
+	marshalGraph, err := dot.Marshal(gm.g, "name", "prefix", "  ", false)
 	if err != nil {
 		return nil, err
 	}
@@ -114,10 +149,10 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 		return nil, err
 	}
 
-	nodes, err := topo.SortStabilized(wg.g, func(nodes []graph.Node) {
+	nodes, err := topo.SortStabilized(gm.g, func(nodes []graph.Node) {
 		sort.Slice(nodes, func(i, j int) bool {
-			aWork := wg.gMap[nodes[i].ID()]
-			bWork := wg.gMap[nodes[j].ID()]
+			aWork := gm.gMap[nodes[i].ID()]
+			bWork := gm.gMap[nodes[j].ID()]
 
 			if aWork.work.Label == nil {
 				return true
@@ -131,8 +166,8 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 		})
 
 		sort.SliceStable(nodes, func(i, j int) bool {
-			aWork := wg.gMap[nodes[i].ID()]
-			bWork := wg.gMap[nodes[j].ID()]
+			aWork := gm.gMap[nodes[i].ID()]
+			bWork := gm.gMap[nodes[j].ID()]
 
 			if aWork.work.Label == nil {
 				return true
@@ -154,14 +189,14 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 		})
 
 		sort.SliceStable(nodes, func(i, j int) bool {
-			aWork := wg.gMap[nodes[i].ID()]
-			bWork := wg.gMap[nodes[j].ID()]
+			aWork := gm.gMap[nodes[i].ID()]
+			bWork := gm.gMap[nodes[j].ID()]
 			return aWork.work.Issue.ProjectName+string(aWork.work.Issue.IID) > bWork.work.Issue.ProjectName+string(bWork.work.Issue.IID)
 		})
 
 		sort.SliceStable(nodes, func(i, j int) bool {
-			aWork := wg.gMap[nodes[i].ID()]
-			bWork := wg.gMap[nodes[j].ID()]
+			aWork := gm.gMap[nodes[i].ID()]
+			bWork := gm.gMap[nodes[j].ID()]
 
 			if bWork.work.Issue.DueDate == nil {
 				return false
@@ -183,15 +218,15 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 	}
 
 	for _, node := range nodes {
-		works = append(works, wg.gMap[node.ID()].work)
+		works = append(works, gm.gMap[node.ID()].work)
 	}
 
 	return reverseWorks(works), nil
 
 	//workNodeFlags := map[int64]struct{}{}
 	//// TODO: 締め切りが設定されているworkを短い順に取り出す
-	//for _, workNodes := range wg.ListSortedWorksByDueDate() {
-	//	nodes := wg.g.To(workNodes.node.ID())
+	//for _, workNodes := range gm.ListSortedWorksByDueDate() {
+	//	nodes := gm.g.To(workNodes.node.ID())
 	//	for _, node := range nodes {
 	//		if _, ok := workNodeFlags[node.ID()]; !ok {
 	//			continue
@@ -207,6 +242,29 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 	//}
 	//
 	//return
+}
+
+func (wg *WorkManager) ConnectByDependencies() error {
+	return wg.gm.ConnectByDependencies()
+}
+
+func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
+	return wg.gm.GetSortedWorks()
+}
+
+func (wg *WorkManager) GetDependWorks(work *Work) (works []*Work) {
+	workNode, ok := wg.gm.getWorkNodeByWork(work)
+	if !ok {
+		return
+	}
+
+	nodes := wg.gm.g.To(workNode.node.ID())
+	for _, node := range nodes {
+		if work, ok := wg.gm.getWorkByNodeID(node.ID()); ok {
+			works = append(works, work)
+		}
+	}
+	return
 }
 
 func reverseWorks(works []*Work) []*Work {
