@@ -5,11 +5,28 @@ import (
 	"io/ioutil"
 	"sort"
 
-	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding/dot"
 	"gonum.org/v1/gonum/graph/simple"
-	"gonum.org/v1/gonum/graph/topo"
 )
+
+type Dependency struct {
+	fromIID int
+	toIID   int
+}
+
+type WorkManager struct {
+	w *WorkGraph
+}
+
+func NewWorkManager() *WorkManager {
+	gm := &WorkGraph{
+		g:           simple.NewDirectedGraph(),
+		gMap:        map[int64]*WorkNode{},
+		workNodeMap: map[int]*WorkNode{},
+	}
+
+	return &WorkManager{gm}
+}
 
 func (wg *WorkManager) ConnectByDependencies() error {
 	for _, work := range wg.w.GetWorks() {
@@ -59,25 +76,6 @@ func (wg *WorkManager) setEdgesByDependIssues(fromWork *Work, issues []*Issue) e
 	return nil
 }
 
-type Dependency struct {
-	fromIID int
-	toIID   int
-}
-
-type WorkManager struct {
-	w *WorkGraph
-}
-
-func NewWorkManager() *WorkManager {
-	gm := &WorkGraph{
-		g:           simple.NewDirectedGraph(),
-		gMap:        map[int64]*WorkNode{},
-		workNodeMap: map[int]*WorkNode{},
-	}
-
-	return &WorkManager{gm}
-}
-
 func (wg *WorkManager) AddWork(work *Work) {
 	wg.w.AddWork(work)
 }
@@ -96,95 +94,60 @@ func (wg *WorkManager) ListSortedWorksByDueDate() (workNodes []*WorkNode) {
 	return workNodes
 }
 
-func (w *WorkGraph) GetSortedWorks() (works []*Work, err error) {
-
-	marshalGraph, err := dot.Marshal(w.g, "name", "prefix", "  ", false)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = ioutil.WriteFile("test.dot", marshalGraph, 0777); err != nil {
-		return nil, err
-	}
-
-	nodes, err := topo.SortStabilized(w.g, func(nodes []graph.Node) {
-		sort.Slice(nodes, func(i, j int) bool {
-			aWork := w.gMap[nodes[i].ID()]
-			bWork := w.gMap[nodes[j].ID()]
-
-			if aWork.work.Label == nil {
+func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
+	sortWorkFunctions := []SortWorkFunc{
+		func(aWork, bWork *Work) bool {
+			if aWork.Label == nil {
 				return true
 			}
 
-			if bWork.work.Label == nil {
+			if bWork.Label == nil {
 				return false
 			}
 
-			return aWork.work.Label.Name < bWork.work.Label.Name
-		})
-
-		sort.SliceStable(nodes, func(i, j int) bool {
-			aWork := w.gMap[nodes[i].ID()]
-			bWork := w.gMap[nodes[j].ID()]
-
-			if aWork.work.Label == nil {
+			return aWork.Label.Name < bWork.Label.Name
+		},
+		func(aWork, bWork *Work) bool {
+			if aWork.Label == nil {
 				return true
 			}
 
-			if bWork.work.Label == nil {
+			if bWork.Label == nil {
 				return false
 			}
 
-			if aWork.work.Label.Parent == nil {
+			if aWork.Label.Parent == nil {
 				return true
 			}
 
-			if bWork.work.Label.Parent == nil {
+			if bWork.Label.Parent == nil {
 				return false
 			}
 
-			return aWork.work.Label.Parent.Name < bWork.work.Label.Parent.Name
-		})
-
-		sort.SliceStable(nodes, func(i, j int) bool {
-			aWork := w.gMap[nodes[i].ID()]
-			bWork := w.gMap[nodes[j].ID()]
-			return aWork.work.Issue.ProjectName+string(aWork.work.Issue.IID) > bWork.work.Issue.ProjectName+string(bWork.work.Issue.IID)
-		})
-
-		sort.SliceStable(nodes, func(i, j int) bool {
-			aWork := w.gMap[nodes[i].ID()]
-			bWork := w.gMap[nodes[j].ID()]
-
-			if bWork.work.Issue.DueDate == nil {
+			return aWork.Label.Parent.Name < bWork.Label.Parent.Name
+		},
+		func(aWork, bWork *Work) bool {
+			return aWork.Issue.ProjectName+string(aWork.Issue.IID) > bWork.Issue.ProjectName+string(bWork.Issue.IID)
+		},
+		func(aWork, bWork *Work) bool {
+			if bWork.Issue.DueDate == nil {
 				return false
 			}
 
-			if aWork.work.Issue.DueDate == nil {
+			if aWork.Issue.DueDate == nil {
 				return true
 			}
 
-			return aWork.work.Issue.DueDate.After(*bWork.work.Issue.DueDate)
-		})
-	})
-	if err != nil {
-		return nil, err
+			return aWork.Issue.DueDate.After(*bWork.Issue.DueDate)
+		},
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	for _, node := range nodes {
-		works = append(works, w.gMap[node.ID()].work)
-	}
-
-	return reverseWorks(works), nil
+	return wg.w.GetSortedWorks(sortWorkFunctions)
 
 	//workNodeFlags := map[int64]struct{}{}
 	//// TODO: 締め切りが設定されているworkを短い順に取り出す
-	//for _, workNodes := range w.ListSortedWorksByDueDate() {
-	//	nodes := w.g.To(workNodes.node.ID())
+	//for _, workNodes := range wg.ListSortedWorksByDueDate() {
+	//	nodes := wg.g.To(workNodes.node.ID())
 	//	for _, node := range nodes {
 	//		if _, ok := workNodeFlags[node.ID()]; !ok {
 	//			continue
@@ -202,8 +165,16 @@ func (w *WorkGraph) GetSortedWorks() (works []*Work, err error) {
 	//return
 }
 
-func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
-	return wg.w.GetSortedWorks()
+func (wg *WorkManager) MarshalGraph() error {
+	marshalGraph, err := dot.Marshal(wg.w.g, "name", "prefix", "  ", false)
+	if err != nil {
+		return err
+	}
+
+	if err = ioutil.WriteFile("test.dot", marshalGraph, 0777); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (wg *WorkManager) GetDependWorks(work *Work) (works []*Work) {

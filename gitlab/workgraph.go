@@ -2,9 +2,11 @@ package gitlab // FIXME
 
 import (
 	"fmt"
+	"sort"
 
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
+	"gonum.org/v1/gonum/graph/topo"
 )
 
 type WorkGraph struct {
@@ -17,6 +19,8 @@ type WorkNode struct {
 	node graph.Node
 	work *Work
 }
+
+type SortWorkFunc func(aWork, bWork *Work) bool
 
 func (w *WorkGraph) AddWork(work *Work) {
 	node := w.g.NewNode()
@@ -39,6 +43,25 @@ func (w *WorkGraph) GetWorks() (works []*Work) {
 	return
 }
 
+func (w *WorkGraph) GetSortedWorks(sortWorkFunctions []SortWorkFunc) (works []*Work, err error) {
+	nodes, err := topo.SortStabilized(w.g, func(nodes []graph.Node) {
+		for _, sortWorkFunction := range sortWorkFunctions {
+			sortFunction := func(i, j int) bool {
+				aWork, _ := w.getWorkByNodeID(nodes[i].ID())
+				bWork, _ := w.getWorkByNodeID(nodes[j].ID())
+				return sortWorkFunction(aWork, bWork)
+			}
+			sort.SliceStable(nodes, sortFunction)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	works = w.convertNodesToWorks(nodes)
+	return reverseWorks(works), nil
+}
+
 func (w *WorkGraph) getWorkByNodeID(id int64) (*Work, bool) {
 	workNode, ok := w.gMap[id]
 	return workNode.work, ok
@@ -58,6 +81,15 @@ func (w *WorkGraph) GetWorkByID(id int) (*Work, bool) {
 		return workNode.work, true
 	}
 	return nil, false
+}
+
+func (w *WorkGraph) convertNodesToWorks(nodes []graph.Node) (works []*Work) {
+	for _, node := range nodes {
+		if work, ok := w.getWorkByNodeID(node.ID()); ok {
+			works = append(works, work)
+		}
+	}
+	return
 }
 
 func (w *WorkGraph) SetEdge(aWork, bWork *Work) error {
