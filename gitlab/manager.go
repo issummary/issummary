@@ -28,10 +28,13 @@ func NewWorkManager() *WorkManager {
 	return &WorkManager{gm}
 }
 
-func (wg *WorkManager) ConnectByDependencies() error {
+func (wg *WorkManager) ResolveDependencies() error {
 	for _, work := range wg.w.GetWorks() {
 		wg.setEdgesByWork(work)
 	}
+
+	wg.setWorkDependencies()
+
 	return nil
 }
 
@@ -178,18 +181,14 @@ func (wg *WorkManager) MarshalGraph() error {
 }
 
 func (wg *WorkManager) GetDependWorks(work *Work) (works []*Work) {
-	workNode, ok := wg.w.toWorkNode(work)
-	if !ok {
-		return
-	}
+	return wg.w.GetRelatedWorks(work)
+}
 
-	nodes := wg.w.g.To(workNode.node.ID())
-	for _, node := range nodes {
-		if work, ok := wg.w.getWorkByNodeID(node.ID()); ok {
-			works = append(works, work)
-		}
+func (wg *WorkManager) setWorkDependencies() {
+	for _, work := range wg.w.GetWorks() {
+		work.DependWorks = wg.GetDependWorks(work)
+		work.TotalStoryPoint = work.GetTotalStoryPoint()
 	}
-	return
 }
 
 func reverseWorks(works []*Work) []*Work {

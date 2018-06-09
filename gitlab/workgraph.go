@@ -106,3 +106,22 @@ func (w *WorkGraph) SetEdge(aWork, bWork *Work) error {
 	w.g.SetEdge(w.g.NewEdge(aWorkNode.node, bWorkNode.node))
 	return nil
 }
+
+func (w *WorkGraph) getRelatedWorksByNodeID(id int64) (works []*Work) {
+	nodes := w.g.From(id)
+	for _, node := range nodes {
+		if work, ok := w.getWorkByNodeID(node.ID()); ok {
+			works = append(works, work)
+		}
+	}
+	return works
+}
+
+func (w *WorkGraph) GetRelatedWorks(work *Work) (works []*Work) {
+	workNode, ok := w.toWorkNode(work)
+	if !ok {
+		return
+	}
+
+	return w.getRelatedWorksByNodeID(workNode.node.ID())
+}
