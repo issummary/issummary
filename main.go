@@ -43,7 +43,7 @@ func main() {
 			workManager.AddWorks(works)
 		}
 
-		if err := workManager.ConnectByDependencies(); err != nil {
+		if err := workManager.ResolveDependencies(); err != nil {
 			return nil, err
 		}
 		sortedWorks, err := workManager.GetSortedWorks()

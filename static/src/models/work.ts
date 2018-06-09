@@ -5,6 +5,8 @@ export interface Work {
   Issue: Issue;
   Label: Label;
   Dependencies: Dependencies;
+  DependWorks: Work[];
+  TotalStoryPoint: number;
   StoryPoint: number;
 }
 

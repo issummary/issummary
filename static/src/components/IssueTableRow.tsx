@@ -60,6 +60,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.work.StoryPoint / props.velocityPerManPerDay}
+        <br />(+{props.work.TotalStoryPoint / props.velocityPerManPerDay})
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.totalSP / props.velocityPerManPerDay}

@@ -71,12 +71,20 @@ type DependIssue struct {
 type Work struct {
 	Issue           *Issue
 	Label           *Label
-	Dependencies    *Dependencies
+	Dependencies    *Dependencies // FIXME
+	DependWorks     []*Work
 	StoryPoint      int
 	TotalStoryPoint int
 	ManDay          int
 	TotalManDay     int
 	RemainManDays   int
+}
+
+func (w *Work) GetTotalStoryPoint() (totalSP int) {
+	for _, dWork := range w.DependWorks {
+		totalSP += dWork.StoryPoint
+	}
+	return
 }
 
 type DependLabel struct {
