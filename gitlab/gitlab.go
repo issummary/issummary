@@ -320,8 +320,10 @@ func findProjectByName(projects []*gitlab.Project, name string) (*gitlab.Project
 
 func (c *Client) listAllProjects(gid interface{}) ([]*gitlab.Project, error) {
 	opt := &gitlab.ListGroupProjectsOptions{
-		Page:    1,
-		PerPage: 100,
+		ListOptions: gitlab.ListOptions{
+			Page:    1,
+			PerPage: 100,
+		},
 	}
 
 	var allProjects []*gitlab.Project
