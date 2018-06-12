@@ -27,17 +27,17 @@ var RootCmd = &cobra.Command{
 			log.Fatal("Error loading .env file")
 		}
 
-		client := gitlab.New(os.Getenv("GITLAB_TOKEN"))
+		config := generateIssummaryConfig()
 
-		if os.Getenv("GITLAB_BASEURL") != "" {
-			client.SetBaseURL(os.Getenv("GITLAB_BASEURL"))
+		client := gitlab.New(config.Token)
+
+		if config.GitServiceBaseURL != "" {
+			client.SetBaseURL(config.GitServiceBaseURL)
 		}
-
-		gidList := strings.Split(os.Getenv("GITLAB_PID"), ",")
 
 		worksBodyFunc := func(body []byte) (interface{}, error) {
 			workManager := gitlab.NewWorkManager()
-			for _, gid := range gidList {
+			for _, gid := range config.GIDs {
 				works, err := client.ListGroupWorks(gid, "LC", "S")
 
 				if err != nil {
@@ -60,7 +60,7 @@ var RootCmd = &cobra.Command{
 
 		milestonesBodyFunc := func(body []byte) (interface{}, error) {
 			var allMilestones []*gitlab.Milestone
-			for _, gid := range gidList {
+			for _, gid := range config.GIDs {
 				milestones, err := client.ListGroupMilestones(gid)
 
 				if err != nil {
@@ -82,7 +82,7 @@ var RootCmd = &cobra.Command{
 
 		http.HandleFunc("/api/works", api.CreateJsonHandleFunc(worksBodyFunc))
 		http.HandleFunc("/api/milestones", api.CreateJsonHandleFunc(milestonesBodyFunc))
-		err = http.ListenAndServe(":8080", nil)
+		err = http.ListenAndServe(fmt.Sprintf(":%v", config.Port), nil)
 		if err != nil {
 			panic(err)
 		}
@@ -98,6 +98,13 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.issummary.yaml)")
+	RootCmd.PersistentFlags().String("token", "", "git repository service token")
+	viper.BindPFlag("token", RootCmd.PersistentFlags().Lookup("token"))
+	RootCmd.PersistentFlags().Int("port", 8080, "Listen port")
+	viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
+	RootCmd.PersistentFlags().String("gid", "", "Group ID list")
+	viper.BindPFlag("gid", RootCmd.PersistentFlags().Lookup("gid"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -108,10 +115,28 @@ func initConfig() {
 
 	viper.SetConfigName(".issummary")      // name of config file (without extension)
 	viper.AddConfigPath(os.Getenv("HOME")) // adding home directory as first search path
+	viper.SetEnvPrefix("issummary")        // will be uppercased automatically
 	viper.AutomaticEnv()                   // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+}
+
+type Config struct {
+	Port              int
+	Token             string
+	GitServiceBaseURL string
+	GIDs              []string
+}
+
+func generateIssummaryConfig() *Config {
+	gidStr := viper.GetString("gid")
+	return &Config{
+		Port:              viper.GetInt("port"),
+		Token:             viper.GetString("token"),
+		GitServiceBaseURL: viper.GetString("base-url"),
+		GIDs:              strings.Split(gidStr, ","),
 	}
 }
