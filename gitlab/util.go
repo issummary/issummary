@@ -13,6 +13,7 @@ import (
 )
 
 func toIssues(gitlabIssues []*gitlab.Issue) (issues []*Issue, err error) {
+	issues = []*Issue{}
 	for _, gitlabIssue := range gitlabIssues {
 		issue, err := toIssue(gitlabIssue)
 		if err != nil {
