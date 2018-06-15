@@ -25,6 +25,12 @@ const rowStyle: CSSProperties = {
 
 const today = moment().format('YYYY-MM-DD');
 
+const TotalSPPoint = (props: { work: Work; velocityPerManPerDay: number }) => (
+  <span>
+    <br />(+{props.work.TotalStoryPoint / props.velocityPerManPerDay})
+  </span>
+);
+
 export const IssueTableRow = (props: IIssueTableRowProps) => {
   const totalManDay = props.totalSP / props.velocityPerManPerDay;
   const totalParallelManDay = Math.ceil(totalManDay / props.parallels);
@@ -33,6 +39,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
   const bizDay = bizRawDay
     ? moment(bizRawDay).format('YYYY-MM-DD')
     : '1年以上先';
+
   return (
     <TableRow key={props.key}>
       <TableRowColumn>
@@ -60,7 +67,12 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.work.StoryPoint / props.velocityPerManPerDay}
-        <br />(+{props.work.TotalStoryPoint / props.velocityPerManPerDay})
+        {props.work.TotalStoryPoint !== 0 ? (
+          <TotalSPPoint
+            work={props.work}
+            velocityPerManPerDay={props.velocityPerManPerDay}
+          />
+        ) : null}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.totalSP / props.velocityPerManPerDay}
