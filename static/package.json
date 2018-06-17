@@ -1,7 +1,7 @@
 {
   "name": "issummary",
   "version": "0.0.1",
-  "description": "",
+  "description": "dammy",
   "main": "dist/main.bundle.js",
   "dependencies": {
     "axios": "^0.18.0",
