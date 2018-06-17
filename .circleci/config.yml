@@ -1,8 +1,28 @@
 version: 2
-restore_cache: &restore_cache
+
+build_cache_key: &build_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}-build
+restore_build_cache_keys: &restore_build_cache_keys
   keys:
-    - v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}
-    - v1-dependencies-{{ .Branch }}
+    - *build_cache_key
+    - v1-dependencies-{{ .Branch }}-build
+
+install_cache_key: &install_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}-install
+restore_install_cache_keys: &restore_install_cache_keys
+  keys:
+    - *install_cache_key
+    - v1-dependencies-{{ .Branch }}-install
+
+server_build_cache_key: &server_build_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}-build
+server_restore_build_cache_keys: &server_restore_build_cache_keys
+  keys:
+    - *server_build_cache_key
+    - v1-dependencies-{{ .Branch }}-build
+
+server_install_cache_key: &server_install_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}-install
+server_restore_install_cache_keys: &server_restore_install_cache_keys
+  keys:
+    - *server_install_cache_key
+    - v1-dependencies-{{ .Branch }}-install
 
 workflows:
   version: 2
@@ -31,34 +51,34 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - restore_cache: *restore_cache
+      - restore_cache: *restore_install_cache_keys
       - run: cd static && npm install
       - save_cache:
           paths:
             - "./static/node_modules"
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}
+          key: *install_cache_key
   frontend-lint:
     <<: *frontend-install
     steps:
       - checkout
-      - restore_cache: *restore_cache
+      - restore_cache: *restore_install_cache_keys
       - run: cd static && npm run lint
   frontend-test:
     <<: *frontend-install
     steps:
       - checkout
-      - restore_cache: *restore_cache
+      - restore_cache: *restore_install_cache_keys
       - run: cd static && npm test
   frontend-build:
     <<: *frontend-install
     steps:
       - checkout
-      - restore_cache: *restore_cache
+      - restore_cache: *restore_install_cache_keys
       - run: cd static && npm run build:prod
       - save_cache:
           paths:
             - "./static/dist"
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}
+          key: *build_cache_key
 
   server-build:
     working_directory: /go/src/github.com/issummary/issummary
@@ -66,10 +86,8 @@ jobs:
       - image: circleci/golang
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}
-            - v1-dependencies-{{ .Branch }}
+      - restore_cache: *server_restore_install_cache_keys
+      - restore_cache: *server_restore_build_cache_keys
       - run: mv ~/repo/static/node_modules /go/src/github.com/issummary/issummary/static/
       - run: mv ~/repo/static/dist /go/src/github.com/issummary/issummary/static/
       - run: make setup
