@@ -1,5 +1,8 @@
 import { SpanManager } from '../../src/services/span';
 import moment from 'moment';
+import {configure} from "enzyme";
+import Adapter from "enzyme-adapter-react-16";
+configure({ adapter: new Adapter() });
 
 const dammyMilestone = {
   ID: 1,
@@ -25,11 +28,11 @@ describe('SpanManager', () => {
     });
   });
 
-  describe('#calcEstimateDate', () => {
-    const spanManager = new SpanManager([dammyMilestone], 2);
-    it('should return correct date', () => {
-      const estDate = spanManager.calcEstimateDate(moment([2017, 12, 31]), 5);
-      console.log(estDate);
-    });
-  });
+  // describe('#calcEstimateDate', () => {
+  //   const spanManager = new SpanManager([dammyMilestone], 2);
+  //   it('should return correct date', () => {
+  //     const estDate = spanManager.calcEstimateDate(moment([2017, 12, 31]), 5);
+  //     console.log(estDate);
+  //   });
+  // });
 });
