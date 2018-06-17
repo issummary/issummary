@@ -26,20 +26,8 @@
 
 
 [[constraint]]
-  name = "github.com/joho/godotenv"
-  version = "1.2.0"
-
-[[constraint]]
   name = "github.com/rakyll/statik"
   version = "0.1.1"
-
-[[constraint]]
-  name = "github.com/spf13/cobra"
-  version = "0.0.3"
-
-[[constraint]]
-  name = "github.com/spf13/viper"
-  version = "1.0.2"
 
 [[constraint]]
   name = "github.com/xanzy/go-gitlab"

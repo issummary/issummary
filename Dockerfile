@@ -1,9 +1,3 @@
-#FROM node:9.4.0-stretch AS front-builder
-#COPY . /app
-##RUN ls -la
-#WORKDIR /app
-#RUN make build-front
-
 FROM golang:1 AS builder
 RUN apt update && apt -y upgrade
 
@@ -21,8 +15,10 @@ COPY ./static /go/src/github.com/issummary/issummary/static
 RUN make install-front
 
 COPY . /go/src/github.com/issummary/issummary
-RUN make install
+RUN make CGO_ENABLED=0 install
 
-#FROM golang:1-alpine3.7
-#COPY --from=builder /go/bin/* /go/bin/
-#ENTRYPOINT ["issummary"]
+FROM alpine
+RUN apk add --no-cache ca-certificates
+EXPOSE 8080
+COPY --from=builder /go/bin/* /usr/local/bin/
+ENTRYPOINT ["issummary"]

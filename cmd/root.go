@@ -7,12 +7,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mpppk/issummary/api"
-	"github.com/mpppk/issummary/gitlab"
+	"github.com/issummary/issummary/api"
+	"github.com/issummary/issummary/gitlab"
+	"github.com/joho/godotenv"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/joho/godotenv"
 )
 
 var cfgFile string
@@ -95,8 +95,8 @@ func Execute() {
 
 func init() {
 	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if err == nil {
+		log.Println(".env file found")
 	}
 
 	cobra.OnInitialize(initConfig)
@@ -127,8 +127,8 @@ func initConfig() {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 
-	viper.SetEnvPrefix("issummary")        // will be uppercased automatically
-	viper.AutomaticEnv()                   // read in environment variables that match
+	viper.SetEnvPrefix("issummary") // will be uppercased automatically
+	viper.AutomaticEnv()            // read in environment variables that match
 }
 
 type Config struct {
