@@ -1,8 +1,7 @@
 version: 2
 restore_cache: &restore_cache
-  working_directory: ~/repo/static
   keys:
-    - v1-dependencies-{{ .Branch }}-{{ checksum "package.json" }}
+    - v1-dependencies-{{ .Branch }}-{{ checksum "~/repo/static/package.json" }}
     - v1-dependencies-{{ .Branch }}
 
 workflows:
