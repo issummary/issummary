@@ -35,8 +35,8 @@ jobs:
       - run: cd static && npm install
       - save_cache:
           paths:
-            - "node_modules"
-            - "dist"
+            - "static/node_modules"
+            - "static/dist"
           key: v1-dependencies-{{ .Branch }}-{{ checksum "~/repo/static/package.json" }}
   frontend-lint:
     <<: *frontend-install
