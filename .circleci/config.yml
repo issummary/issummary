@@ -28,7 +28,7 @@ jobs:
   frontend-install: &frontend-install
     docker:
       - image: circleci/node:8.9.4-stretch
-    working_directory: /go/src/github.com/issummary/issummary
+    working_directory: ~/repo
     steps:
       - checkout
       - restore_cache: *restore_cache
@@ -70,6 +70,8 @@ jobs:
           keys:
             - v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}
             - v1-dependencies-{{ .Branch }}
+      - run: mv ~/repo/static/node_modules /go/src/github.com/issummary/issummary/static/
+      - run: mv ~/repo/static/dist /go/src/github.com/issummary/issummary/static/
       - run: make setup
       - run: make codecov
 
