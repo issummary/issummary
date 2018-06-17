@@ -1,7 +1,7 @@
 version: 2
 restore_cache: &restore_cache
   keys:
-    - v1-dependencies-{{ .Branch }}-{{ checksum "package.json" }}
+    - v1-dependencies-{{ .Branch }}-{{ checksum "static/package.json" }}
     - v1-dependencies-{{ .Branch }}
 
 workflows:
