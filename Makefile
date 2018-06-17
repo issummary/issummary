@@ -13,7 +13,7 @@ build-front: install-front
 	cd static && npm run build:prod
 
 .PHONY: generate
-generate: build-front
+generate:
 	go generate
 
 .PHONY: deps
