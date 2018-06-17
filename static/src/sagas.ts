@@ -7,14 +7,14 @@ import {
   counterAsyncActionCreators,
   ICounterAmountPayload
 } from './actions/counter';
+import { errorDialogActionCreators } from './actions/errorDialog';
 import {
   issueTableActionCreators,
   issueTableAsyncActionCreators
 } from './actions/issueTable';
+import { IMilestone } from './models/milestone';
+import { IWork } from './models/work';
 import { Api } from './services/api';
-import { Milestone } from './models/milestone';
-import { Work } from './models/work';
-import { errorDialogActionCreators } from './actions/errorDialog';
 
 function* incrementAsync(payload: ICounterAmountPayload) {
   yield delay(1000);
@@ -37,8 +37,8 @@ function* watchIncrementAsync() {
 const requestNewIssueTableData = bindAsyncAction(
   issueTableAsyncActionCreators.requestNewDataFetching
 )(function*(): SagaIterator {
-  let works: Work[] = [];
-  let milestones: Milestone[] = [];
+  let works: IWork[] = [];
+  let milestones: IMilestone[] = [];
 
   try {
     works = yield call(Api.fetchWorks);

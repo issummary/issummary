@@ -22,7 +22,7 @@ const store = createStore(
 
 sagaMiddleware.run(rootSaga);
 
-const RootApp = () => (
+const RootApp = () => (// tslint:disable-line
   <MuiThemeProvider>
     <Provider store={store}>
       <App />
@@ -30,6 +30,6 @@ const RootApp = () => (
   </MuiThemeProvider>
 );
 
-const HotRootApp = hot(module)(RootApp);
+const HotRootApp = hot(module)(RootApp);// tslint:disable-line
 
 ReactDOM.render(<RootApp />, document.getElementById('example'));

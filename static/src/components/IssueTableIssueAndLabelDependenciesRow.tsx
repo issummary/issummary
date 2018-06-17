@@ -1,8 +1,8 @@
-import * as React from 'react';
-import { Dependencies, DependLabel, Issue } from '../models/work';
 import * as _ from 'lodash';
+import * as React from 'react';
+import { IDependencies, IDependLabel, Issue } from '../models/work';
 
-export const IssueIIDAndProjectName = (props: {
+export const IssueIIDAndProjectName = (props: {// tslint:disable-line
   currentProjectName: string;
   issue: Issue;
 }) => (
@@ -14,7 +14,8 @@ export const IssueIIDAndProjectName = (props: {
   </a>
 );
 
-const IssueDependencies = (props: {
+
+const IssueDependencies = (props: { // tslint:disable-line
   currentProjectName: string;
   issues: Issue[];
 }) => {
@@ -26,7 +27,7 @@ const IssueDependencies = (props: {
     />
   ));
 
-  if (issueLinks.length == 0) {
+  if (issueLinks.length === 0) {
     return null;
   }
 
@@ -37,7 +38,7 @@ const IssueDependencies = (props: {
       {issueLinks.map((a, i) => (
         <span key={i}>
           {a}
-          <span> </span>
+          <span>{' '}</span>
         </span>
       ))}
       {lastLink}
@@ -45,9 +46,9 @@ const IssueDependencies = (props: {
   );
 };
 
-const LabelDependencies = (props: {
+const LabelDependencies = (props: {// tslint:disable-line
   currentProjectName: string;
-  dependLabel: DependLabel;
+  dependLabel: IDependLabel;
 }) => {
   return (
     <span>
@@ -61,15 +62,15 @@ const LabelDependencies = (props: {
   );
 };
 
-export const IssueTableIssueAndLabelDependenciesRow = (props: {
+export const IssueTableIssueAndLabelDependenciesRow = (props: {// tslint:disable-line
   currentProjectName: string;
-  deps: Dependencies;
-  labelDeps: DependLabel[];
+  deps: IDependencies;
+  labelDeps: IDependLabel[];
 }) => {
   if (
-    props.deps.Issues.length == 0 &&
-    props.deps.Labels.length == 0 &&
-    props.labelDeps.length == 0
+    props.deps.Issues.length === 0 &&
+    props.deps.Labels.length === 0 &&
+    props.labelDeps.length === 0
   ) {
     return <span>-</span>;
   }

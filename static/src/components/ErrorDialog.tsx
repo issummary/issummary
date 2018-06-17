@@ -1,6 +1,6 @@
-import * as React from 'react';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
+import * as React from 'react';
 
 interface IDialogAlertProps {
   open: boolean;
@@ -9,9 +9,10 @@ interface IDialogAlertProps {
 }
 
 export class ErrorDialog extends React.Component<IDialogAlertProps, any> {
-  render() {
+  public render() {
     const actions = [
       <FlatButton
+        key="OK"
         label="OK"
         primary={true}
         onClick={this.props.onRequestClose}

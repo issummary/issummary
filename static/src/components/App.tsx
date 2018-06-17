@@ -5,11 +5,11 @@ import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { BrowserRouter as Router, Link, Route } from 'react-router-dom';
 import { bindActionCreators } from 'redux';
+import { appActionCreators, IAppActionCreators } from '../actions/app';
 import { IRootState } from '../reducers/reducer';
 import { About } from './About';
 import { ConnectedCounter } from './Counter';
 import { ConnectedHome } from './Home';
-import { appActionCreators, IAppActionCreators } from '../actions/app';
 
 export interface IAppProps {
   isOpenDrawer: boolean;

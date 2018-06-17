@@ -1,12 +1,12 @@
+import { combineReducers } from 'redux';
+import { reducerWithInitialState } from 'typescript-fsa-reducers';
+import { homeActionCreators } from '../actions/home';
 import {
   issueTableActionCreators,
   issueTableAsyncActionCreators
 } from '../actions/issueTable';
-import { combineReducers } from 'redux';
-import { issueTableReducer } from './issueTable';
-import { reducerWithInitialState } from 'typescript-fsa-reducers';
-import { homeActionCreators } from '../actions/home';
 import { errorDialogReducer } from './errorDialog';
+import { issueTableReducer } from './issueTable';
 
 export interface IHomeState {
   isFetchingData: boolean;
@@ -21,13 +21,13 @@ export interface IHomeState {
 
 const homeInitialState: IHomeState = {
   isFetchingData: false,
+  parallels: 2,
+  selectedProjectName: 'All',
   showManDayColumn: false,
-  showTotalManDayColumn: false,
   showSPColumn: true,
+  showTotalManDayColumn: false,
   showTotalSPColumn: true,
   velocityPerManPerDay: 1,
-  parallels: 2,
-  selectedProjectName: 'All'
 };
 
 const homeGlobalReducer = reducerWithInitialState(homeInitialState)
@@ -46,16 +46,16 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
   .case(homeActionCreators.enableManDay, state => ({
     ...state,
     showManDayColumn: true,
-    showTotalManDayColumn: true,
     showSPColumn: false,
+    showTotalManDayColumn: true,
     showTotalSPColumn: false,
     velocityPerManPerDay: 2 // FIXME
   }))
   .case(homeActionCreators.disableManDay, state => ({
     ...state,
     showManDayColumn: false,
-    showTotalManDayColumn: false,
     showSPColumn: true,
+    showTotalManDayColumn: false,
     showTotalSPColumn: true,
     velocityPerManPerDay: 1
   }))
@@ -69,7 +69,7 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
   }));
 
 export const homeReducer = combineReducers({
+  errorDialog: errorDialogReducer,
   global: homeGlobalReducer,
   issueTable: issueTableReducer,
-  errorDialog: errorDialogReducer
 });

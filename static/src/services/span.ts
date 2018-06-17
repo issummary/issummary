@@ -1,9 +1,9 @@
-import { Milestone } from '../models/milestone';
-import { DateRange, extendMoment } from 'moment-range';
 import Moment from 'moment';
 import { Moment as MomentC } from 'moment';
+import { DateRange, extendMoment } from 'moment-range';
+import { IMilestone } from '../models/milestone';
 // import * as koyomi from "koyomi";
-const koyomi = require('koyomi');
+const koyomi = require('koyomi');// tslint:disable-line
 const moment = extendMoment(Moment);
 
 export class SpanError implements Error {
@@ -11,24 +11,24 @@ export class SpanError implements Error {
 
   constructor(public message: string) {}
 
-  toString() {
+  public toString() {
     return this.name + ': ' + this.message;
   }
 }
 
-export class Span {
+export class Span {// tslint:disable-line
   public range: DateRange;
 
-  constructor(public milestone: Milestone) {
+  constructor(public milestone: IMilestone) {
     if (milestone.StartDate === undefined) {
       throw new SpanError(
-        'Invalid Start Date or Due Date of Milestone: ' + milestone
+        'Invalid Start Date or Due Date of IMilestone: ' + milestone
       );
     }
 
     if (milestone.DueDate === undefined) {
       throw new SpanError(
-        'Invalid Start Date or Due Date of Milestone: ' + milestone
+        'Invalid Start Date or Due Date of IMilestone: ' + milestone
       );
     }
 
@@ -36,9 +36,9 @@ export class Span {
   }
 }
 
-export class SpanManager {
+export class SpanManager {// tslint:disable-line
   private spans: Span[];
-  constructor(milestones: Milestone[], private defaultParallel: number) {
+  constructor(milestones: IMilestone[], private defaultParallel: number) {
     this.spans = milestones.map(m => new Span(m));
 
     if (this.hasDuplicateSpan()) {
@@ -63,7 +63,7 @@ export class SpanManager {
 
   public calcEstimateDate(startDate: MomentC, manDays: number): MomentC {
     let remainManDays = manDays;
-    let currentDate = startDate;
+    const currentDate = startDate;
     while (remainManDays > 0) {
       if (koyomi.isOpen(currentDate.toDate())) {
         const span = this.getContainSpan(currentDate);

@@ -1,11 +1,11 @@
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
 import { issueTableAsyncActionCreators } from '../actions/issueTable';
-import { Work } from '../models/work';
-import { Milestone } from '../models/milestone';
+import { IMilestone } from '../models/milestone';
+import { IWork } from '../models/work';
 
 export interface IIssueTableState {
-  works: Work[];
-  milestones: Milestone[];
+  works: IWork[];
+  milestones: IMilestone[];
 }
 
 const issueTableInitialState: IIssueTableState = { works: [], milestones: [] };
@@ -15,7 +15,7 @@ export const issueTableReducer = reducerWithInitialState(
 ).case(
   issueTableAsyncActionCreators.requestNewDataFetching.done,
   (state, payload) => ({
+    milestones: payload.result.milestones,
     works: payload.result.works,
-    milestones: payload.result.milestones
   })
 );

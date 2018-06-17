@@ -1,6 +1,6 @@
 import { Moment } from 'moment';
 
-export interface Milestone {
+export interface IMilestone {
   ID: number;
   IID: number;
   parallel: number;

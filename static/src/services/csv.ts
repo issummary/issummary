@@ -1,9 +1,9 @@
-import { Work } from '../models/work';
-import * as moment from 'moment';
 import koyomi = require('koyomi');
-import { Moment } from 'moment';
-import { eachSum } from './util';
 import * as _ from 'lodash';
+import * as moment from 'moment';
+import { Moment } from 'moment';
+import { IWork } from '../models/work';
+import { eachSum } from './util';
 
 export const calcBizDay = (
   totalSP: number,
@@ -17,7 +17,7 @@ export const calcBizDay = (
 };
 
 export const worksToCSV = (
-  works: Work[],
+  works: IWork[],
   velocityPerManPerDay: number,
   baseDay: Moment,
   parallels: number
@@ -40,9 +40,9 @@ export const worksToCSV = (
     'IssueDepIIDs',
     'LabelDepIIDs'
   ];
-  const lines = works.map((work, i) => {
+  const lines = works.map((work, index) => {
     const bizRawDay = calcBizDay(
-      totalSPs[i],
+      totalSPs[index],
       velocityPerManPerDay,
       baseDay,
       parallels
@@ -66,7 +66,7 @@ export const worksToCSV = (
       work.Issue.Title,
       work.Issue.Description.Summary ? work.Issue.Description.Summary : '-',
       work.StoryPoint / velocityPerManPerDay,
-      totalSPs[i] / velocityPerManPerDay,
+      totalSPs[index] / velocityPerManPerDay,
       bizDayStr,
       work.Issue.DueDate ? work.Issue.DueDate : '-',
       work.Dependencies.Issues.map(i => `${i.ProjectName}#${i.IID}`).join('/'),

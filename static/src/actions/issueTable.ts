@@ -1,6 +1,6 @@
 import actionCreatorFactory, { ActionCreator } from 'typescript-fsa';
-import { Work } from '../models/work';
-import { Milestone } from '../models/milestone';
+import { IMilestone } from '../models/milestone';
+import { IWork } from '../models/work';
 
 const actionCreator = actionCreatorFactory('ISSUE_TABLE');
 
@@ -12,15 +12,15 @@ export const issueTableActionCreators: IIssueTableActionCreators = {
   requestUpdate: actionCreator<undefined>('REQUEST_UPDATE')
 };
 
-export interface RequestNewDataFetchingPayload {
-  works: Work[];
-  milestones: Milestone[];
+export interface IRequestNewDataFetchingPayload {
+  works: IWork[];
+  milestones: IMilestone[];
 }
 
 export const issueTableAsyncActionCreators = {
   requestNewDataFetching: actionCreator.async<
     null,
-    RequestNewDataFetchingPayload,
+    IRequestNewDataFetchingPayload,
     null
   >('REQUEST_NEW_DATA_FETCHING') // FIXME
 };

@@ -1,15 +1,15 @@
-import * as React from 'react';
-import Toggle from 'material-ui/Toggle';
-import { CSSProperties } from 'react';
-import TextField from 'material-ui/TextField';
-import { ProjectSelectField } from './ProjectSelectField';
 import RaisedButton from 'material-ui/RaisedButton';
-import { Work } from '../models/work';
-import { worksToCSV } from '../services/csv';
+import TextField from 'material-ui/TextField';
+import Toggle from 'material-ui/Toggle';
 import * as moment from 'moment';
+import * as React from 'react';
+import { CSSProperties } from 'react';
+import { IWork } from '../models/work';
+import { worksToCSV } from '../services/csv';
+import { ProjectSelectField } from './ProjectSelectField';
 
 interface IIssueTableConfigProps {
-  works: Work[];
+  works: IWork[];
   velocityPerManPerDay: number;
   parallels: number;
   style: CSSProperties;
@@ -20,7 +20,7 @@ interface IIssueTableConfigProps {
   onChangeProjectSelectField: (p: string) => void;
 }
 
-export const IssueTableConfig = (props: IIssueTableConfigProps) => {
+export const IssueTableConfig = (props: IIssueTableConfigProps) => {// tslint:disable-line
   const handleToggle = (event: object, isInputChecked: boolean) => {
     if (isInputChecked) {
       props.onEnableManDay();

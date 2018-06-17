@@ -1,13 +1,13 @@
+import koyomi = require('koyomi');
+import TableRow from 'material-ui/Table/TableRow';
+import TableRowColumn from 'material-ui/Table/TableRowColumn';
+import * as moment from 'moment';
 import * as React from 'react';
 import { CSSProperties } from 'react';
-import { Work } from '../models/work';
-import TableRowColumn from 'material-ui/Table/TableRowColumn';
-import TableRow from 'material-ui/Table/TableRow';
+import { IWork } from '../models/work';
 import { IssueTableIssueAndLabelDependenciesRow } from './IssueTableIssueAndLabelDependenciesRow';
-import koyomi = require('koyomi');
-import * as moment from 'moment';
 export interface IIssueTableRowProps {
-  work: Work;
+  work: IWork;
   key: string;
   totalSP: number;
   velocityPerManPerDay: number;
@@ -19,19 +19,19 @@ export interface IIssueTableRowProps {
 }
 
 const rowStyle: CSSProperties = {
+  whiteSpace: 'normal',
   wordWrap: 'break-word',
-  whiteSpace: 'normal'
 };
 
 const today = moment().format('YYYY-MM-DD');
 
-const TotalSPPoint = (props: { work: Work; velocityPerManPerDay: number }) => (
+const TotalSPPoint = (props: { work: IWork; velocityPerManPerDay: number }) => (// tslint:disable-line
   <span>
     <br />(+{props.work.TotalStoryPoint / props.velocityPerManPerDay})
   </span>
 );
 
-export const IssueTableRow = (props: IIssueTableRowProps) => {
+export const IssueTableRow = (props: IIssueTableRowProps) => {// tslint:disable-line
   const totalManDay = props.totalSP / props.velocityPerManPerDay;
   const totalParallelManDay = Math.ceil(totalManDay / props.parallels);
   const bizRawDay = koyomi.addBiz(today, totalParallelManDay);

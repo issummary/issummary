@@ -1,15 +1,15 @@
-import { SpanManager } from '../../src/services/span';
+import {configure} from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
 import moment from 'moment';
-import {configure} from "enzyme";
-import Adapter from "enzyme-adapter-react-16";
+import { SpanManager } from '../../src/services/span';
 configure({ adapter: new Adapter() });
 
 const dammyMilestone = {
+  DueDate: moment([2018, 1, 3]),
   ID: 1,
   IID: 2,
-  Title: 'dammy milestone',
   StartDate: moment([2018, 1, 1]),
-  DueDate: moment([2018, 1, 3])
+  Title: 'dammy milestone',
 };
 
 describe('SpanManager', () => {

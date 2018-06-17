@@ -1,7 +1,7 @@
 {
   "name": "issummary",
   "version": "0.0.1",
-  "description": "dammy",
+  "description": "issue summary viewer",
   "main": "dist/main.bundle.js",
   "dependencies": {
     "axios": "^0.18.0",
@@ -78,7 +78,7 @@
     "build:dev:libs": "webpack --config webpack.libs.config.js",
     "watch-sandbox": "webpack --watch --config webpack.sandbox.config.js",
     "run-sandbox": "node dist/sandbox.bundle.js",
-    "lint": "tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' 'test/**/*.ts'",
+    "lint": "tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' 'test/**/*.ts' --fix",
     "test-circleci": "circleci build",
     "pretty-quick": "pretty-quick",
     "precommit": "pretty-quick --staged"
