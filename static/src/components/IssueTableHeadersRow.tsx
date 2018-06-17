@@ -1,6 +1,6 @@
-import * as React from 'react';
-import TableRow from 'material-ui/Table/TableRow';
 import TableHeaderColumn from 'material-ui/Table/TableHeaderColumn';
+import TableRow from 'material-ui/Table/TableRow';
+import * as React from 'react';
 
 interface IIssueTableHeadersProps {
   showManDayColumn: boolean;
@@ -9,7 +9,7 @@ interface IIssueTableHeadersProps {
   showTotalSPColumn: boolean;
 }
 
-export const IssueTableHeadersRow = (props: IIssueTableHeadersProps) => (
+export const IssueTableHeadersRow = (props: IIssueTableHeadersProps) => (// tslint:disable-line
   <TableRow>
     <TableHeaderColumn>Project+IID</TableHeaderColumn>
     <TableHeaderColumn>Milestone</TableHeaderColumn>

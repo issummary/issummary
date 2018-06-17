@@ -1,17 +1,17 @@
 import * as React from 'react';
 
 import { Table, TableBody } from 'material-ui/Table';
-import { IIssueTableActionCreators } from '../actions/issueTable';
-import { Work } from '../models/work';
-import { IssueTableHeadersRow } from './IssueTableHeadersRow';
 import TableHeader from 'material-ui/Table/TableHeader';
-import { IssueTableRow } from './IssueTableRow';
-import { Milestone } from '../models/milestone';
+import { IIssueTableActionCreators } from '../actions/issueTable';
+import { IMilestone } from '../models/milestone';
+import { IWork } from '../models/work';
 import { eachSum, filterWorksByProjectNames } from '../services/util';
+import { IssueTableHeadersRow } from './IssueTableHeadersRow';
+import { IssueTableRow } from './IssueTableRow';
 
 export interface IIssueTableProps {
-  works: Work[];
-  milestones: Milestone[];
+  works: IWork[];
+  milestones: IMilestone[];
   showManDayColumn: boolean;
   showTotalManDayColumn: boolean;
   showSPColumn: boolean;
@@ -23,12 +23,12 @@ export interface IIssueTableProps {
 }
 
 export class IssueTable extends React.Component<IIssueTableProps, any> {
-  componentDidMount() {
+  public componentDidMount() {
     this.props.actions.requestUpdate();
   }
 
-  render() {
-    console.log(this.props.works);
+  public render() {
+    console.log(this.props.works);// tslint:disable-line
     const totalSPs = eachSum(this.props.works.map(w => w.StoryPoint));
     return (
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>

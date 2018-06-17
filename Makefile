@@ -1,20 +1,29 @@
-REPO_OWNER = mpppk
-REPO_NAME = issummary
-BUILD_PATH = .
-VERSION_PATH = cmd/
 SHELL = /bin/bash
 
-ifdef update
-  u=-u
-endif
+.PHONY: install-front
+install-front:
+	cd static && npm install
+
+.PHONY: test-front
+test-front: install-front
+	cd static && npm test
+
+.PHONY: build-front
+build-front: install-front
+	cd static && npm run build:prod
+
+.PHONY: generate
+generate:
+	go generate
 
 .PHONY: deps
-deps:
-	dep ensure
+deps: generate
+	dep ensure -v
 
 .PHONY: setup
 setup:
-	go get ${u} github.com/golang/dep/cmd/dep
+	go get github.com/golang/dep/cmd/dep
+	go get github.com/rakyll/statik
 
 .PHONY: lint
 lint: deps
@@ -34,14 +43,12 @@ codecov: deps coverage
 
 .PHONY: build
 build: deps
-	cd static && npm i && npm run build:prod
-	go generate
 	go build $(BUILD_PATH)
 
 .PHONY: install
 install: deps
 	go install $(BUILD_PATH)
 
-.PHONY: install
+.PHONY: circleci
 circleci:
 	circleci build -e GITHUB_TOKEN=$GITHUB_TOKEN

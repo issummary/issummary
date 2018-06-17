@@ -1,46 +1,46 @@
-import * as React from 'react';
-import { IIssueTableProps, IssueTable } from './IssueTable';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import AutoRenew from 'material-ui/svg-icons/action/autorenew';
+import * as React from 'react';
 import { CSSProperties } from 'react';
-import { bindActionCreators } from 'redux';
-import {
-  IIssueTableActionCreators,
-  issueTableActionCreators
-} from '../actions/issueTable';
 import { connect, Dispatch } from 'react-redux';
-import { IRootState } from '../reducers/reducer';
-import { IssueTableConfig } from './IssueTableConfig';
-import { IHomeState } from '../reducers/home';
-import { homeActionCreators, IHomeActionCreators } from '../actions/home';
-import { MilestoneTable } from './milestoneTable';
-import { ErrorDialog } from './ErrorDialog';
+import { bindActionCreators } from 'redux';
 import {
   errorDialogActionCreators,
   IErrorDialogActionCreators
 } from '../actions/errorDialog';
+import { homeActionCreators, IHomeActionCreators } from '../actions/home';
+import {
+  IIssueTableActionCreators,
+  issueTableActionCreators
+} from '../actions/issueTable';
 import { IErrorDialogState } from '../reducers/errorDialog';
+import { IHomeState } from '../reducers/home';
+import { IRootState } from '../reducers/reducer';
 import { filterWorksByProjectNames } from '../services/util';
+import { ErrorDialog } from './ErrorDialog';
+import { IIssueTableProps, IssueTable } from './IssueTable';
+import { IssueTableConfig } from './IssueTableConfig';
+import { MilestoneTable } from './milestoneTable';
 
 const style: CSSProperties = {
-  margin: 0,
-  top: 'auto',
-  right: 20,
   bottom: 20,
   left: 'auto',
-  position: 'fixed'
+  margin: 0,
+  position: 'fixed',
+  right: 20,
+  top: 'auto',
 };
 
 const issueTableConfigStyle: CSSProperties = {
   margin: 10
 };
 
-interface RefreshProps {
+interface IRefreshProps {
   onClick: React.MouseEventHandler<JSX.Element | HTMLElement>;
   isFetching: boolean;
 }
 
-const Refresh = (props: RefreshProps) => (
+const Refresh = (props: IRefreshProps) => (// tslint:disable-line
   <FloatingActionButton
     style={style}
     onClick={props.onClick}
@@ -67,7 +67,7 @@ class Home extends React.Component<IHomeProps, any> {
     this.onClickRefreshButton = this.onClickRefreshButton.bind(this);
   }
 
-  onClickRefreshButton() {
+  public onClickRefreshButton() {
     this.props.actions.issueTable.requestUpdate();
   }
 
@@ -130,9 +130,9 @@ function mapStateToProps(state: IRootState) {
 function mapDispatchToProps(dispatch: Dispatch<any>) {
   return {
     actions: {
+      errorDialog: bindActionCreators(errorDialogActionCreators as {}, dispatch),
       home: bindActionCreators(homeActionCreators as {}, dispatch),
       issueTable: bindActionCreators(issueTableActionCreators as {}, dispatch),
-      errorDialog: bindActionCreators(errorDialogActionCreators as {}, dispatch)
     }
   };
 }

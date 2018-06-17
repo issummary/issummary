@@ -1,24 +1,24 @@
 import { Moment } from 'moment';
-import { Milestone } from './milestone';
+import { IMilestone } from './milestone';
 
-export interface Work {
+export interface IWork {
   Issue: Issue;
-  Label: Label;
-  Dependencies: Dependencies;
-  DependWorks: Work[];
+  Label: ILabel;
+  Dependencies: IDependencies;
+  DependWorks: IWork[];
   TotalStoryPoint: number;
   StoryPoint: number;
 }
 
-export interface Label {
+export interface ILabel {
   ID: number;
   Name: string;
-  Description: LabelDescription;
-  Parent: Label;
-  Dependencies: DependLabel[];
+  Description: ILabelDescription;
+  Parent: ILabel;
+  Dependencies: IDependLabel[];
 }
 
-export interface LabelDescription {
+export interface ILabelDescription {
   Raw: string;
   DependLabelNames: string[];
   ParentName: string;
@@ -32,28 +32,28 @@ export interface Issue {
   Description: IssueDescription;
   URL: string;
   ProjectName: string;
-  Milestone: Milestone;
+  Milestone: IMilestone;
 }
 
 export interface IssueDescription {
   Raw: string;
-  DependencyIDs: DependencyIDs;
+  DependencyIDs: IDependencyIDs;
   Summary: string;
   Note: string;
   Details: string;
 }
 
-export interface DependencyIDs {
+export interface IDependencyIDs {
   issueIIDs: number[];
   labelNames: string[];
 }
 
-export interface Dependencies {
+export interface IDependencies {
   Issues: Issue[];
-  Labels: DependLabel[];
+  Labels: IDependLabel[];
 }
 
-export interface DependLabel {
-  Label: Label;
+export interface IDependLabel {
+  Label: ILabel;
   RelatedIssues: Issue[];
 }

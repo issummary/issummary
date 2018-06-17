@@ -151,7 +151,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "a9e25c09b96b8870693763211309e213c6ef299d"
+  revision = "6c888cc515d3ed83fc103cf1d84468aad274b0a7"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -200,7 +200,7 @@
     "lapack/lapack64",
     "mat"
   ]
-  revision = "9d5875b8394fdb38a3995bcff4e101cbb5391907"
+  revision = "8e1506827975b0dc186684d456b97d96430f094f"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -213,8 +213,8 @@
     "internal/urlfetch",
     "urlfetch"
   ]
-  revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
-  version = "v1.0.0"
+  revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
+  version = "v1.1.0"
 
 [[projects]]
   name = "gopkg.in/russross/blackfriday.v2"
@@ -231,6 +231,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "466ad6344552594cd2fd5a7a49027675882874c844d51285f598c642a06cb059"
+  inputs-digest = "2a89e1d004c2524f1bd39d79239bbef97db0c075ca34e0f5403a73e17c7c5b8c"
   solver-name = "gps-cdcl"
   solver-version = 1

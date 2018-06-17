@@ -1,21 +1,19 @@
 import actionCreatorFactory, { ActionCreator } from 'typescript-fsa';
-import { Work } from '../models/work';
-import { Milestone } from '../models/milestone';
 
 const actionCreator = actionCreatorFactory('ERROR_DIALOG');
 
 export interface IErrorDialogActionCreators {
-  failWorksResourceFetching: ActionCreator<failWorksResourceFetchingPayload>;
+  failWorksResourceFetching: ActionCreator<IFailWorksResourceFetchingPayload>;
   requestClosing: ActionCreator<undefined>;
 }
 
 export const errorDialogActionCreators: IErrorDialogActionCreators = {
-  failWorksResourceFetching: actionCreator<failWorksResourceFetchingPayload>(
+  failWorksResourceFetching: actionCreator<IFailWorksResourceFetchingPayload>(
     'FAIL_WORKS_RESOURCE_FETCHING'
   ),
   requestClosing: actionCreator<undefined>('REQUEST_CLOSING')
 };
 
-export interface failWorksResourceFetchingPayload {
+export interface IFailWorksResourceFetchingPayload {
   error: string;
 }

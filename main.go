@@ -3,8 +3,8 @@
 package main
 
 import (
-	"github.com/mpppk/issummary/cmd"
-	_ "github.com/mpppk/issummary/statik"
+	"github.com/issummary/issummary/cmd"
+	_ "github.com/issummary/issummary/statik"
 )
 
 func main() {

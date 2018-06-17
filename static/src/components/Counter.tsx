@@ -2,11 +2,11 @@ import RaisedButton from 'material-ui/RaisedButton';
 import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { IRootState } from '../reducers/reducer';
 import {
   counterActionCreators,
   ICounterActionCreators
 } from '../actions/counter';
+import { IRootState } from '../reducers/reducer';
 export interface ICounterProps {
   count: number;
   actions: ICounterActionCreators;

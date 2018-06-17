@@ -1,10 +1,10 @@
 import axios from 'axios';
-import { Work } from '../models/work';
 import moment = require('moment');
-import { Milestone } from '../models/milestone';
+import { IMilestone } from '../models/milestone';
+import { IWork } from '../models/work';
 
 export class Api {
-  static fetchWorks(): Promise<Work[]> {
+  public static fetchWorks(): Promise<IWork[]> {
     return axios.post('/api/works').then(r => {
       if (r.data.hasOwnProperty('Error')) {
         return Promise.reject(r.data);
@@ -18,7 +18,7 @@ export class Api {
     });
   }
 
-  static fetchMilestones(): Promise<Milestone[]> {
+  public static fetchMilestones(): Promise<IMilestone[]> {
     return axios.post('/api/milestones').then(r => {
       const milestones = r.data;
 

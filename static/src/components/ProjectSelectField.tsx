@@ -1,26 +1,26 @@
-import * as React from 'react';
-import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
+import SelectField from 'material-ui/SelectField';
+import * as React from 'react';
 
-interface ProjectSelectFieldProps {
+interface IProjectSelectFieldProps {
   projectNames: string[];
   onChange: (projectName: string) => void;
 }
 
 export class ProjectSelectField extends React.Component<
-  ProjectSelectFieldProps,
+  IProjectSelectFieldProps,
   any
 > {
-  state = {
+  public state = {
     value: 'all'
   };
 
-  handleChange = (event: object, index: number, value: string) => {
+  public handleChange = (event: object, index: number, value: string) => {
     this.setState({ value });
     this.props.onChange(value);
   };
 
-  render() {
+  public render() {
     return (
       <div>
         <SelectField

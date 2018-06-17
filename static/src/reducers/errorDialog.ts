@@ -1,7 +1,4 @@
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
-import { issueTableAsyncActionCreators } from '../actions/issueTable';
-import { Work } from '../models/work';
-import { Milestone } from '../models/milestone';
 import { errorDialogActionCreators } from '../actions/errorDialog';
 
 export interface IErrorDialogState {
@@ -18,8 +15,8 @@ export const errorDialogReducer = reducerWithInitialState(
     errorDialogActionCreators.failWorksResourceFetching,
     (state, payload) => ({
       ...state,
+      error: payload.error,
       open: true,
-      error: payload.error
     })
   )
   .case(errorDialogActionCreators.requestClosing, state => ({

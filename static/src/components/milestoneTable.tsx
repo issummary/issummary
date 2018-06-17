@@ -2,18 +2,18 @@ import * as React from 'react';
 
 import { Table, TableBody } from 'material-ui/Table';
 import TableHeader from 'material-ui/Table/TableHeader';
-import { Milestone } from '../models/milestone';
 import TableHeaderColumn from 'material-ui/Table/TableHeaderColumn';
-import TableRowColumn from 'material-ui/Table/TableRowColumn';
 import TableRow from 'material-ui/Table/TableRow';
+import TableRowColumn from 'material-ui/Table/TableRowColumn';
+import { IMilestone } from '../models/milestone';
 
 export interface IMilestoneTableProps {
-  milestones: Milestone[];
+  milestones: IMilestone[];
 }
 
 export class MilestoneTable extends React.Component<IMilestoneTableProps, any> {
-  render() {
-    console.log(this.props.milestones);
+  public render() {
+    console.log(this.props.milestones);// tslint:disable-line
     return (
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
         <TableHeader displaySelectAll={false} adjustForCheckbox={false}>

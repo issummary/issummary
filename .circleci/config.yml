@@ -1,52 +1,95 @@
 version: 2
-restore_cache: &restore_cache
-  keys:
-    - v1-dependencies-{{ .Branch }}-{{ checksum "package.json" }}
-    - v1-dependencies-{{ .Branch }}
-jobs:
-  build: &build
-    docker:
-      - image: circleci/node:8.9.4-stretch
 
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - restore_cache: *restore_cache
-      - run: npm install
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "package.json" }}
-  webpack-build:
-    <<: *build
-    steps:
-      - checkout
-      - restore_cache: *restore_cache
-      - run: npm run build
-  lint:
-    <<: *build
-    steps:
-      - checkout
-      - restore_cache: *restore_cache
-      - run: npm run lint
-  test:
-    <<: *build
-    steps:
-      - checkout
-      - restore_cache: *restore_cache
-      - run: npm test
+build_cache_key: &build_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}-build
+restore_build_cache_keys: &restore_build_cache_keys
+  keys:
+    - *build_cache_key
+    - v1-dependencies-{{ .Branch }}-build
+
+install_cache_key: &install_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}-install
+restore_install_cache_keys: &restore_install_cache_keys
+  keys:
+    - *install_cache_key
+    - v1-dependencies-{{ .Branch }}-install
+
+server_build_cache_key: &server_build_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}-build
+server_restore_build_cache_keys: &server_restore_build_cache_keys
+  keys:
+    - *server_build_cache_key
+    - v1-dependencies-{{ .Branch }}-build
+
+server_install_cache_key: &server_install_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}-install
+server_restore_install_cache_keys: &server_restore_install_cache_keys
+  keys:
+    - *server_install_cache_key
+    - v1-dependencies-{{ .Branch }}-install
 
 workflows:
   version: 2
   all:
     jobs:
-      - build
-      - webpack-build:
+      - frontend-install
+      - frontend-lint:
           requires:
-            - build
-      - lint:
+            - frontend-install
+      - frontend-test:
           requires:
-            - build
-      - test:
+            - frontend-install
+      - frontend-build:
           requires:
-            - build
+            - frontend-install
+      - server-build:
+          requires:
+            - frontend-build
+            - frontend-lint
+            - frontend-test
+
+jobs:
+  frontend-install: &frontend-install
+    docker:
+      - image: circleci/node:8.9.4-stretch
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache: *restore_install_cache_keys
+      - run: cd static && npm install
+      - save_cache:
+          paths:
+            - "./static/node_modules"
+          key: *install_cache_key
+  frontend-lint:
+    <<: *frontend-install
+    steps:
+      - checkout
+      - restore_cache: *restore_install_cache_keys
+      - run: cd static && npm run lint
+  frontend-test:
+    <<: *frontend-install
+    steps:
+      - checkout
+      - restore_cache: *restore_install_cache_keys
+      - run: cd static && npm test
+  frontend-build:
+    <<: *frontend-install
+    steps:
+      - checkout
+      - restore_cache: *restore_install_cache_keys
+      - run: cd static && npm run build:prod
+      - save_cache:
+          paths:
+            - "./static/dist"
+          key: *build_cache_key
+
+  server-build:
+    working_directory: /go/src/github.com/issummary/issummary
+    docker:
+      - image: circleci/golang
+    steps:
+      - checkout
+      - restore_cache: *server_restore_install_cache_keys
+      - restore_cache: *server_restore_build_cache_keys
+      - run: mv ~/repo/static/node_modules /go/src/github.com/issummary/issummary/static/
+      - run: mv ~/repo/static/dist /go/src/github.com/issummary/issummary/static/
+      - run: make setup
+      - run: make codecov
+
