@@ -62,8 +62,7 @@ jobs:
       - image: circleci/golang
     steps:
       - checkout
-      - run:
-        restore_cache:
+      - restore_cache:
           keys:
             - v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}
             - v1-dependencies-{{ .Branch }}
