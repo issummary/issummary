@@ -28,7 +28,7 @@ jobs:
   frontend-install: &frontend-install
     docker:
       - image: circleci/node:8.9.4-stretch
-    working_directory: ~/repo
+    working_directory: /go/src/github.com/issummary/issummary
     steps:
       - checkout
       - restore_cache: *restore_cache
