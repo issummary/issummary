@@ -62,6 +62,9 @@ jobs:
       - image: circleci/golang
     steps:
       - checkout
-      - restore_cache: *restore_cache
+      - restore_cache:
+        keys:
+          - v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}
+          - v1-dependencies-{{ .Branch }}
       - run: make codecov -f Makefile
 
