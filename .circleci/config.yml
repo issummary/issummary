@@ -1,7 +1,7 @@
 version: 2
 restore_cache: &restore_cache
   keys:
-    - v1-dependencies-{{ .Branch }}-{{ checksum "~/repo/static/package.json" }}
+    - v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}
     - v1-dependencies-{{ .Branch }}
 
 workflows:
@@ -35,9 +35,8 @@ jobs:
       - run: cd static && npm install
       - save_cache:
           paths:
-            - "static/node_modules"
-            - "static/dist"
-          key: v1-dependencies-{{ .Branch }}-{{ checksum "~/repo/static/package.json" }}
+            - "./static/node_modules"
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}
   frontend-lint:
     <<: *frontend-install
     steps:
@@ -56,6 +55,11 @@ jobs:
       - checkout
       - restore_cache: *restore_cache
       - run: cd static && npm run build:prod
+      - save_cache:
+          paths:
+            - "./static/dist"
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}
+
   server-build:
     working_directory: /go/src/github.com/issummary/issummary
     docker:

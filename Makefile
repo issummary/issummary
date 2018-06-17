@@ -22,7 +22,7 @@ deps: generate
 
 .PHONY: setup
 setup:
-	go get ${u} github.com/golang/dep/cmd/dep
+	go get github.com/golang/dep/cmd/dep
 	go get github.com/rakyll/statik
 
 .PHONY: lint
