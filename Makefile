@@ -26,15 +26,15 @@ setup:
 	go get github.com/rakyll/statik
 
 .PHONY: lint
-lint: deps
+lint: deps generate
 	gometalinter
 
 .PHONY: test
-test: deps
+test: deps generate
 	go test ./...
 
 .PHONY: coverage
-coverage: deps
+coverage: deps generate
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 .PHONY: codecov
