@@ -129,6 +129,8 @@ func initConfig() {
 
 	viper.SetEnvPrefix("issummary") // will be uppercased automatically
 	viper.AutomaticEnv()            // read in environment variables that match
+
+	viper.Set("base-url", viper.GetString("base_url"))
 }
 
 type Config struct {
