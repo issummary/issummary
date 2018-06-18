@@ -17,7 +17,7 @@ generate:
 	go generate
 
 .PHONY: deps
-deps: generate
+deps:
 	dep ensure -v
 
 .PHONY: setup
@@ -26,15 +26,15 @@ setup:
 	go get github.com/rakyll/statik
 
 .PHONY: lint
-lint: deps
+lint: deps generate
 	gometalinter
 
 .PHONY: test
-test: deps
+test: deps generate
 	go test ./...
 
 .PHONY: coverage
-coverage: deps
+coverage: deps generate
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 .PHONY: codecov
@@ -42,11 +42,15 @@ codecov: deps coverage
 	bash <(curl -s https://codecov.io/bash)
 
 .PHONY: build
-build: deps
+build: deps generate
 	go build $(BUILD_PATH)
 
+.PHONY: cross-build-snapshot
+cross-build: deps generate
+	goreleaser --rm-dist --snapshot
+
 .PHONY: install
-install: deps
+install: deps generate
 	go install $(BUILD_PATH)
 
 .PHONY: circleci

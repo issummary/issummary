@@ -3,3 +3,5 @@ static/dist/
 static/node_modules/
 vendor/
 statik/
+dist/
+.env*

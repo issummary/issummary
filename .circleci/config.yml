@@ -93,3 +93,9 @@ jobs:
       - run: make setup
       - run: make codecov
 
+deployment:
+  tag:
+    tag: /v[0-9]+(\.[0-9]+)*(-.*)*/
+    owner: issummery
+    commands:
+      - curl -sL https://git.io/goreleaser | bash
