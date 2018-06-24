@@ -1,23 +1,27 @@
 package gitlab
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"fmt"
-
+	"github.com/mpppk/gitany"
+	gitanygitlab "github.com/mpppk/gitany/gitlab"
 	"github.com/xanzy/go-gitlab"
 	"golang.org/x/sync/errgroup"
 )
 
 type Client struct {
 	*gitlab.Client
+	gitanyClient gitany.Client
 }
 
-func New(token string) *Client {
+func New(token string, gitanyClient gitany.Client) *Client {
 	return &Client{
-		Client: gitlab.NewClient(nil, token),
+		gitanyClient: gitanyClient,
+		Client:       gitlab.NewClient(nil, token),
 	}
 }
 
@@ -98,14 +102,14 @@ type Dependencies struct {
 	Labels             []*DependLabel
 }
 
-func (c *Client) ListGroupWorks(gid interface{}, prefix, spLabelPrefix string) (works []*Work, err error) {
+func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabelPrefix string) (works []*Work, err error) {
 	eg := errgroup.Group{}
 	issuesChan := make(chan []*gitlab.Issue, 1)
 	projectsChan := make(chan []*gitlab.Project, 1)
 	labelsChan := make(chan []*gitlab.Label, 1)
 
 	eg.Go(func() error {
-		allIssues, err := c.listAllGroupIssuesByLabel(gid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
+		allIssues, err := c.listAllGroupIssuesByLabel(ctx, gid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
 		issuesChan <- allIssues
 		return err
 	})
@@ -165,20 +169,20 @@ func (c *Client) listLabelsByPrefix(pid interface{}, prefix string) (prefixLabel
 	return prefixLabels, nil
 }
 
-func (c *Client) listAllGroupIssuesByLabel(pid interface{}, labels gitlab.Labels) ([]*gitlab.Issue, error) {
-	issueOpt := &gitlab.ListGroupIssuesOptions{
-		ListOptions: gitlab.ListOptions{
+func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labels gitlab.Labels) ([]*gitlab.Issue, error) {
+	issueOpt := &gitany.IssueListOptions{
+		ListOptions: gitany.ListOptions{
 			Page:    1,
 			PerPage: 100,
 		},
 		Labels: labels,
-		State:  gitlab.String("opened"), // FIXME
+		State:  "open", // FIXME
 	}
 
 	var allIssues []*gitlab.Issue
 
 	for {
-		issues, _, err := c.Issues.ListGroupIssues(pid, issueOpt)
+		issues, _, err := c.gitanyClient.GetIssues().ListByOrg(ctx, gid, issueOpt)
 		if err != nil {
 			return nil, err
 		}
@@ -187,7 +191,16 @@ func (c *Client) listAllGroupIssuesByLabel(pid interface{}, labels gitlab.Labels
 			break
 		}
 
-		allIssues = append(allIssues, issues...)
+		var gitlabIssues []*gitlab.Issue
+		for _, issue := range issues {
+			gitanyGitLabIssue, ok := issue.(*gitanygitlab.Issue)
+			if !ok {
+				return nil, fmt.Errorf("failed to fetch gitlab issues: %v", err)
+			}
+			gitlabIssues = append(gitlabIssues, gitanyGitLabIssue.Issue)
+		}
+
+		allIssues = append(allIssues, gitlabIssues...)
 		issueOpt.Page = issueOpt.Page + 1
 	}
 	return allIssues, nil

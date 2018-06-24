@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +12,10 @@ import (
 	"github.com/issummary/issummary/api"
 	"github.com/issummary/issummary/gitlab"
 	"github.com/joho/godotenv"
+	"github.com/mpppk/gitany"
+	"github.com/mpppk/gitany/etc"
+	gitanygitlab "github.com/mpppk/gitany/gitlab"
+
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,11 +28,28 @@ var RootCmd = &cobra.Command{
 	Short: "issue summary viewer",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		config := generateIssummaryConfig()
+		ctx := context.Background()
+		config, err := generateIssummaryConfig()
+		if err != nil {
+			panic(err)
+		}
 
 		fmt.Printf("%#v\n", config)
 
-		client := gitlab.New(config.Token)
+		gitany.RegisterClientGenerator(&gitanygitlab.ClientGenerator{}) // FIXME
+		serviceConfig := &etc.ServiceConfig{                            // FIXME
+			Host:     "gitlab.com",
+			Type:     "gitlab",
+			Token:    config.Token,
+			Protocol: "https",
+		}
+
+		gitanyClient, err := gitany.GetClient(context.Background(), serviceConfig) // FIXME
+		if err != nil {
+			panic(err)
+		}
+
+		client := gitlab.New(config.Token, gitanyClient)
 
 		if config.GitServiceBaseURL != "" {
 			client.SetBaseURL(config.GitServiceBaseURL)
@@ -35,7 +58,7 @@ var RootCmd = &cobra.Command{
 		worksBodyFunc := func(body []byte) (interface{}, error) {
 			workManager := gitlab.NewWorkManager()
 			for _, gid := range config.GIDs {
-				works, err := client.ListGroupWorks(gid, "LC", "S")
+				works, err := client.ListGroupWorks(ctx, gid, "LC", "S")
 
 				if err != nil {
 					return nil, err
@@ -140,12 +163,18 @@ type Config struct {
 	GIDs              []string
 }
 
-func generateIssummaryConfig() *Config {
+func generateIssummaryConfig() (*Config, error) {
 	gidStr := viper.GetString("gid")
+	gids := strings.Split(gidStr, ",")
+
+	if len(gids) == 0 {
+		return nil, errors.New("gid is empty")
+	}
+
 	return &Config{
 		Port:              viper.GetInt("port"),
 		Token:             viper.GetString("token"),
 		GitServiceBaseURL: viper.GetString("base-url"),
-		GIDs:              strings.Split(gidStr, ","),
-	}
+		GIDs:              gids,
+	}, nil
 }
