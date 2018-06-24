@@ -116,7 +116,7 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 	})
 
 	eg.Go(func() error {
-		projects, err := c.listAllProjects(gid)
+		projects, err := c.listAllProjects(ctx, gid)
 		if err != nil {
 			return err
 		}
@@ -348,9 +348,9 @@ func findProjectByName(projects []*gitlab.Project, name string) (*gitlab.Project
 	return nil, false
 }
 
-func (c *Client) listAllProjects(gid interface{}) ([]*gitlab.Project, error) {
-	opt := &gitlab.ListGroupProjectsOptions{
-		ListOptions: gitlab.ListOptions{
+func (c *Client) listAllProjects(ctx context.Context, org string) ([]*gitlab.Project, error) {
+	opt := &gitany.RepositoryListByOrgOptions{
+		ListOptions: gitany.ListOptions{
 			Page:    1,
 			PerPage: 100,
 		},
@@ -359,16 +359,22 @@ func (c *Client) listAllProjects(gid interface{}) ([]*gitlab.Project, error) {
 	var allProjects []*gitlab.Project
 
 	for {
-		labels, _, err := c.Groups.ListGroupProjects(gid, opt)
+		repositories, _, err := c.gitanyClient.GetRepositories().ListByOrg(ctx, org, opt)
 		if err != nil {
 			return nil, err
 		}
 
-		if len(labels) == 0 {
+		if len(repositories) == 0 {
 			break
 		}
 
-		allProjects = append(allProjects, labels...)
+		for _, repository := range repositories {
+			gitlabProject, ok := repository.(*gitanygitlab.Repository)
+			if !ok {
+				return nil, errors.New("failed to convert to gitlab projects")
+			}
+			allProjects = append(allProjects, gitlabProject.Project)
+		}
 		opt.Page = opt.Page + 1
 	}
 	return allProjects, nil
