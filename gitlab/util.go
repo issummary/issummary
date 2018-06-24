@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/mpppk/gitany"
 	gitanygitlab "github.com/mpppk/gitany/gitlab"
@@ -13,7 +12,7 @@ import (
 	"gopkg.in/russross/blackfriday.v2"
 )
 
-func toIssues(gitlabIssues []*gitlab.Issue) (issues []*Issue, err error) {
+func toIssues(gitlabIssues []gitany.Issue) (issues []*Issue, err error) {
 	issues = []*Issue{}
 	for _, gitlabIssue := range gitlabIssues {
 		issue, err := toIssue(gitlabIssue)
@@ -26,24 +25,24 @@ func toIssues(gitlabIssues []*gitlab.Issue) (issues []*Issue, err error) {
 	return issues, nil
 }
 
-func toIssue(gitlabIssue *gitlab.Issue) (*Issue, error) {
-	issueDescription, err := parseIssueDescription(gitlabIssue.Description)
+func toIssue(rawIssue gitany.Issue) (*Issue, error) {
+	issueDescription, err := parseIssueDescription(rawIssue.GetBody())
 	if err != nil {
 		return nil, err
 	}
 
 	return &Issue{
-		ID:          gitlabIssue.ID,
-		IID:         gitlabIssue.IID,
-		DueDate:     (*time.Time)(gitlabIssue.DueDate),
-		Title:       gitlabIssue.Title,
+		ID:          int(rawIssue.GetID()),
+		IID:         rawIssue.GetNumber(),
+		DueDate:     rawIssue.GetDueDate(),
+		Title:       rawIssue.GetTitle(),
 		Description: issueDescription,
-		URL:         gitlabIssue.WebURL,
-		Milestone:   toMilestone(gitlabIssue.Milestone),
+		URL:         rawIssue.GetHTMLURL(),
+		Milestone:   toMilestone(rawIssue.GetMilestone()),
 	}, nil
 }
 
-func toDependLabel(labelName string, labels []*gitlab.Label, issues []*gitlab.Issue) (*DependLabel, error) {
+func toDependLabel(labelName string, labels []*gitlab.Label, issues []gitany.Issue) (*DependLabel, error) {
 	gitlabLabel, ok := findLabelByName(labels, labelName)
 	if !ok {
 		return nil, errors.New("label name not found: " + labelName)
@@ -67,7 +66,7 @@ func toDependLabel(labelName string, labels []*gitlab.Label, issues []*gitlab.Is
 	}, nil
 }
 
-func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label, issues []*gitlab.Issue) (label *Label, err error) {
+func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label, issues []gitany.Issue) (label *Label, err error) {
 	label = &Label{
 		ID:           gitlabLabel.ID,
 		Name:         gitlabLabel.Name,
@@ -101,15 +100,15 @@ func toLabel(gitlabLabel *gitlab.Label, otherLabels []*gitlab.Label, issues []*g
 }
 
 func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitany.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
-	var gitlabIssues []*gitlab.Issue
-	for _, orgIssue := range issues {
-		gitlabIssue, ok := orgIssue.(*gitanygitlab.Issue)
-		if !ok {
-			panic("failed to convert to gitlab issue")
-		}
-		gitlabIssues = append(gitlabIssues, gitlabIssue.Issue)
-	}
-
+	//var gitlabIssues []gitany.Issue
+	//for _, orgIssue := range issues {
+	//	gitlabIssue, ok := orgIssue.(*gitanygitlab.Issue)
+	//	if !ok {
+	//		panic("failed to convert to gitlab issue")
+	//	}
+	//	gitlabIssues = append(gitlabIssues, gitlabIssue.Issue)
+	//}
+	//
 	var gitlabLabels []*gitlab.Label
 	for _, label := range labels {
 		gitlabLabel, ok := label.(*gitanygitlab.Label)
@@ -120,12 +119,12 @@ func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitan
 	}
 
 	for _, orgIssue := range issues {
-		gitlabIssue, ok := orgIssue.(*gitanygitlab.Issue)
-		if !ok {
-			panic("failed to convert to gitlab issue")
-		}
+		//gitlabIssue, ok := orgIssue.(*gitanygitlab.Issue)
+		//if !ok {
+		//	panic("failed to convert to gitlab issue")
+		//}
 
-		issue, err := toIssue(gitlabIssue.Issue)
+		issue, err := toIssue(orgIssue)
 		if err != nil {
 			return nil, err
 		}
@@ -148,12 +147,12 @@ func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitan
 				continue
 			}
 
-			findGitLabIssue, ok := findIssue.(*gitanygitlab.Issue)
-			if !ok {
-				panic("failed to convert to gitlab issue")
-			}
+			//findGitLabIssue, ok := findIssue.(*gitanygitlab.Issue)
+			//if !ok {
+			//	panic("failed to convert to gitlab issue")
+			//}
 
-			is, err := toIssue(findGitLabIssue.Issue)
+			is, err := toIssue(findIssue)
 
 			if err != nil {
 				return nil, err
@@ -166,11 +165,11 @@ func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitan
 			if project, ok := findProjectByName(projects, otherIssueDep.ProjectName); ok {
 				if otherIssue, ok := findIssueByIIDAndProjectID(issues, otherIssueDep.IID, project.GetID()); ok {
 
-					otherGitLabIssue, ok := otherIssue.(*gitanygitlab.Issue)
-					if !ok {
-						panic("failed to convert to gitlab issue")
-					}
-					ois, err := toIssue(otherGitLabIssue.Issue)
+					//otherGitLabIssue, ok := otherIssue.(*gitanygitlab.Issue)
+					//if !ok {
+					//	panic("failed to convert to gitlab issue")
+					//}
+					ois, err := toIssue(otherIssue)
 					if err != nil {
 						return nil, err
 					}
@@ -183,7 +182,7 @@ func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitan
 		}
 
 		for _, labelName := range issue.Description.Dependencies.LabelNames {
-			dependLabel, err := toDependLabel(labelName, gitlabLabels, gitlabIssues)
+			dependLabel, err := toDependLabel(labelName, gitlabLabels, issues)
 			if err != nil {
 				return nil, fmt.Errorf("failed to find depend label from '%v#%v(%v)': %v", issue.ProjectName, issue.IID, issue.Title, err)
 			}
@@ -193,7 +192,7 @@ func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitan
 		for _, labelName := range orgIssue.GetLabels() {
 			if strings.HasPrefix(labelName, targetLabelPrefix) {
 				if l, ok := findLabelByName(gitlabLabels, labelName); ok {
-					work.Label, err = toLabel(l, gitlabLabels, gitlabIssues)
+					work.Label, err = toLabel(l, gitlabLabels, issues)
 					if err != nil {
 						return nil, err
 					}
@@ -268,9 +267,9 @@ func findLabelByName(labels []*gitlab.Label, name string) (*gitlab.Label, bool) 
 	return nil, false
 }
 
-func findIssuesByLabelName(issues []*gitlab.Issue, labelName string) (filteredIssues []*gitlab.Issue) {
+func findIssuesByLabelName(issues []gitany.Issue, labelName string) (filteredIssues []gitany.Issue) {
 	for _, issue := range issues {
-		for _, issueLabelName := range issue.Labels {
+		for _, issueLabelName := range issue.GetLabels() {
 			if issueLabelName == labelName {
 				filteredIssues = append(filteredIssues, issue)
 				break
@@ -280,7 +279,7 @@ func findIssuesByLabelName(issues []*gitlab.Issue, labelName string) (filteredIs
 	return
 }
 
-func findIssuesByIIDs(issues []*gitlab.Issue, iidList []int) (filteredIssues []*gitlab.Issue) {
+func findIssuesByIIDs(issues []gitany.Issue, iidList []int) (filteredIssues []gitany.Issue) {
 	for _, iid := range iidList {
 		if issue, ok := findIssueByIID(issues, iid); ok {
 			filteredIssues = append(filteredIssues, issue)
@@ -289,9 +288,9 @@ func findIssuesByIIDs(issues []*gitlab.Issue, iidList []int) (filteredIssues []*
 	return
 }
 
-func findIssueByIID(issues []*gitlab.Issue, iid int) (*gitlab.Issue, bool) {
+func findIssueByIID(issues []gitany.Issue, iid int) (gitany.Issue, bool) {
 	for _, issue := range issues {
-		if issue.IID == iid {
+		if issue.GetNumber() == iid {
 			return issue, true
 		}
 	}
