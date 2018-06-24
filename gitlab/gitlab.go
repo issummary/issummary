@@ -2,14 +2,12 @@ package gitlab
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/mpppk/gitany"
-	gitanygitlab "github.com/mpppk/gitany/gitlab"
 	"github.com/xanzy/go-gitlab"
 	"golang.org/x/sync/errgroup"
 )
@@ -105,9 +103,9 @@ type Dependencies struct {
 
 func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabelPrefix string) (works []*Work, err error) {
 	eg := errgroup.Group{}
-	issuesChan := make(chan []*gitlab.Issue, 1)
-	projectsChan := make(chan []*gitlab.Project, 1)
-	labelsChan := make(chan []*gitlab.Label, 1)
+	issuesChan := make(chan []gitany.Issue, 1)
+	repositoriesChan := make(chan []gitany.Repository, 1)
+	labelsChan := make(chan []gitany.Label, 1)
 
 	eg.Go(func() error {
 		allIssues, err := c.listAllGroupIssuesByLabel(ctx, gid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
@@ -121,7 +119,7 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 			return err
 		}
 
-		projectsChan <- projects
+		repositoriesChan <- projects
 
 		labels, err := c.listAllProjectsLabels(ctx, gid, projects)
 		labelsChan <- labels
@@ -132,45 +130,47 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 		log.Fatal(err)
 	}
 
-	projects := <-projectsChan
+	projects := <-repositoriesChan
 	issues := <-issuesChan
-	var filteredIssues []*gitlab.Issue
+	var filteredIssues []gitany.Issue
 
 	for _, issue := range issues {
 		for _, project := range projects {
-			if issue.ProjectID == project.ID {
+			fmt.Printf("%#v\n", issue)
+			if issue.GetRepositoryID() == project.GetID() {
 				filteredIssues = append(filteredIssues, issue)
 				break
 			}
 		}
 	}
 
-	works, err = toWorks(filteredIssues, projects, <-labelsChan, prefix, spLabelPrefix)
+	labels := <-labelsChan
+	works, err = toWorks(filteredIssues, projects, labels, prefix, spLabelPrefix)
 	if err != nil {
 		var projectNames []string
 		for _, project := range projects {
-			projectNames = append(projectNames, project.Name)
+			projectNames = append(projectNames, project.GetName())
 		}
 		return nil, fmt.Errorf("failed to convert to works from %v issues(projects are %v): %v", gid, projectNames, err)
 	}
 	return works, nil
 }
 
-func (c *Client) listLabelsByPrefix(ctx context.Context, owner, repo, prefix string) (prefixLabels []*gitlab.Label, err error) {
+func (c *Client) listLabelsByPrefix(ctx context.Context, owner, repo, prefix string) (prefixLabels []gitany.Label, err error) {
 	labels, err := c.listAllLabels(ctx, owner, repo)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, label := range labels {
-		if strings.Contains(label.Name, prefix) {
+		if strings.Contains(label.GetName(), prefix) {
 			prefixLabels = append(prefixLabels, label)
 		}
 	}
 	return prefixLabels, nil
 }
 
-func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labels gitlab.Labels) ([]*gitlab.Issue, error) {
+func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labels []string) ([]gitany.Issue, error) {
 	issueOpt := &gitany.IssueListOptions{
 		ListOptions: gitany.ListOptions{
 			Page:    1,
@@ -180,7 +180,7 @@ func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labe
 		State:  "open", // FIXME
 	}
 
-	var allIssues []*gitlab.Issue
+	var allIssues []gitany.Issue
 
 	for {
 		issues, _, err := c.gitanyClient.GetIssues().ListByOrg(ctx, gid, issueOpt)
@@ -192,22 +192,13 @@ func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labe
 			break
 		}
 
-		var gitlabIssues []*gitlab.Issue
-		for _, issue := range issues {
-			gitanyGitLabIssue, ok := issue.(*gitanygitlab.Issue)
-			if !ok {
-				return nil, errors.New("failed to convert to gitlab group issues")
-			}
-			gitlabIssues = append(gitlabIssues, gitanyGitLabIssue.Issue)
-		}
-
-		allIssues = append(allIssues, gitlabIssues...)
+		allIssues = append(allIssues, issues...)
 		issueOpt.Page = issueOpt.Page + 1
 	}
 	return allIssues, nil
 }
 
-func (c *Client) listAllProjectIssuesByLabel(ctx context.Context, owner, repo string, labels gitlab.Labels) ([]*gitlab.Issue, error) {
+func (c *Client) listAllProjectIssuesByLabel(ctx context.Context, owner, repo string, labels []string) ([]gitany.Issue, error) {
 	issueOpt := &gitany.IssueListByRepoOptions{
 		ListOptions: gitany.ListOptions{
 			Page:    1,
@@ -216,7 +207,7 @@ func (c *Client) listAllProjectIssuesByLabel(ctx context.Context, owner, repo st
 		Labels: labels,
 	}
 
-	var allIssues []*gitlab.Issue
+	var allIssues []gitany.Issue
 
 	for {
 		issues, _, err := c.gitanyClient.GetIssues().ListByRepo(ctx, owner, repo, issueOpt)
@@ -228,21 +219,15 @@ func (c *Client) listAllProjectIssuesByLabel(ctx context.Context, owner, repo st
 			break
 		}
 
-		for _, issue := range issues {
-			gitlabIssue, ok := issue.(*gitanygitlab.Issue)
-			if !ok {
-				return nil, errors.New("failed to convert to gitlab issues in listAllProjectIssuesByLabel")
-			}
-			allIssues = append(allIssues, gitlabIssue.Issue)
-		}
+		allIssues = append(allIssues, issues...)
 
 		issueOpt.Page = issueOpt.Page + 1
 	}
 	return allIssues, nil
 }
 
-func (c *Client) listAllProjectsLabels(ctx context.Context, gid string, projects []*gitlab.Project) (allLabels []*gitlab.Label, err error) {
-	labelChan := make(chan *gitlab.Label, 100)
+func (c *Client) listAllProjectsLabels(ctx context.Context, gid string, projects []gitany.Repository) (allLabels []gitany.Label, err error) {
+	labelChan := make(chan gitany.Label, 100)
 	eg := errgroup.Group{}
 
 	if err := eg.Wait(); err != nil {
@@ -252,7 +237,7 @@ func (c *Client) listAllProjectsLabels(ctx context.Context, gid string, projects
 	for _, project := range projects {
 		project := project
 		eg.Go(func() error {
-			labels, err := c.listAllLabels(ctx, gid, project.Name)
+			labels, err := c.listAllLabels(ctx, gid, project.GetName())
 			if err != nil {
 				return err
 			}
@@ -273,9 +258,9 @@ func (c *Client) listAllProjectsLabels(ctx context.Context, gid string, projects
 		}
 	}()
 
-	labelMap := map[int]*gitlab.Label{}
+	labelMap := map[int64]gitany.Label{}
 	for label := range labelChan {
-		labelMap[label.ID] = label
+		labelMap[label.GetID()] = label
 	}
 
 	return labelMapToSlice(labelMap), nil
@@ -288,20 +273,20 @@ func issueMapToSlice(issueMap map[int]*gitlab.Issue) (issues []*gitlab.Issue) {
 	return issues
 }
 
-func labelMapToSlice(labelMap map[int]*gitlab.Label) (labels []*gitlab.Label) {
+func labelMapToSlice(labelMap map[int64]gitany.Label) (labels []gitany.Label) {
 	for _, label := range labelMap {
 		labels = append(labels, label)
 	}
 	return labels
 }
 
-func (c *Client) listAllLabels(ctx context.Context, owner, repo string) ([]*gitlab.Label, error) {
+func (c *Client) listAllLabels(ctx context.Context, owner, repo string) ([]gitany.Label, error) {
 	opt := &gitany.ListOptions{
 		Page:    1,
 		PerPage: 100,
 	}
 
-	var allLabels []*gitlab.Label
+	var allLabels []gitany.Label
 
 	for {
 		labels, _, err := c.gitanyClient.GetIssues().ListLabels(ctx, owner, repo, opt)
@@ -313,24 +298,15 @@ func (c *Client) listAllLabels(ctx context.Context, owner, repo string) ([]*gitl
 			break
 		}
 
-		var gitlabLabels []*gitlab.Label
-		for _, label := range labels {
-			gitanyGitLabLabel, ok := label.(*gitanygitlab.Label)
-			if !ok {
-				return nil, errors.New("failed to convert to gitlab labels")
-			}
-			gitlabLabels = append(gitlabLabels, gitanyGitLabLabel.Label)
-		}
-
-		allLabels = append(allLabels, gitlabLabels...)
+		allLabels = append(allLabels, labels...)
 		opt.Page = opt.Page + 1
 	}
 	return allLabels, nil
 }
 
-func findProjectByID(projects []*gitlab.Project, id int) (*gitlab.Project, bool) {
+func findProjectByID(projects []gitany.Repository, id int64) (gitany.Repository, bool) {
 	for _, project := range projects {
-		if project.ID == id {
+		if project.GetID() == id {
 			return project, true
 		}
 	}
@@ -338,9 +314,9 @@ func findProjectByID(projects []*gitlab.Project, id int) (*gitlab.Project, bool)
 	return nil, false
 }
 
-func findProjectByName(projects []*gitlab.Project, name string) (*gitlab.Project, bool) {
+func findProjectByName(projects []gitany.Repository, name string) (gitany.Repository, bool) {
 	for _, project := range projects {
-		if project.Name == name {
+		if project.GetName() == name {
 			return project, true
 		}
 	}
@@ -348,7 +324,7 @@ func findProjectByName(projects []*gitlab.Project, name string) (*gitlab.Project
 	return nil, false
 }
 
-func (c *Client) listAllProjects(ctx context.Context, org string) ([]*gitlab.Project, error) {
+func (c *Client) listAllProjects(ctx context.Context, org string) ([]gitany.Repository, error) {
 	opt := &gitany.RepositoryListByOrgOptions{
 		ListOptions: gitany.ListOptions{
 			Page:    1,
@@ -356,7 +332,7 @@ func (c *Client) listAllProjects(ctx context.Context, org string) ([]*gitlab.Pro
 		},
 	}
 
-	var allProjects []*gitlab.Project
+	var allProjects []gitany.Repository
 
 	for {
 		repositories, _, err := c.gitanyClient.GetRepositories().ListByOrg(ctx, org, opt)
@@ -368,13 +344,7 @@ func (c *Client) listAllProjects(ctx context.Context, org string) ([]*gitlab.Pro
 			break
 		}
 
-		for _, repository := range repositories {
-			gitlabProject, ok := repository.(*gitanygitlab.Repository)
-			if !ok {
-				return nil, errors.New("failed to convert to gitlab projects")
-			}
-			allProjects = append(allProjects, gitlabProject.Project)
-		}
+		allProjects = append(allProjects, repositories...)
 		opt.Page = opt.Page + 1
 	}
 	return allProjects, nil
