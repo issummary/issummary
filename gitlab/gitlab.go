@@ -207,9 +207,9 @@ func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labe
 	return allIssues, nil
 }
 
-func (c *Client) listAllProjectIssuesByLabel(pid interface{}, labels gitlab.Labels) ([]*gitlab.Issue, error) {
-	issueOpt := &gitlab.ListProjectIssuesOptions{
-		ListOptions: gitlab.ListOptions{
+func (c *Client) listAllProjectIssuesByLabel(ctx context.Context, owner, repo string, labels gitlab.Labels) ([]*gitlab.Issue, error) {
+	issueOpt := &gitany.IssueListByRepoOptions{
+		ListOptions: gitany.ListOptions{
 			Page:    1,
 			PerPage: 100,
 		},
@@ -219,7 +219,7 @@ func (c *Client) listAllProjectIssuesByLabel(pid interface{}, labels gitlab.Labe
 	var allIssues []*gitlab.Issue
 
 	for {
-		issues, _, err := c.Issues.ListProjectIssues(pid, issueOpt)
+		issues, _, err := c.gitanyClient.GetIssues().ListByRepo(ctx, owner, repo, issueOpt)
 		if err != nil {
 			return nil, err
 		}
@@ -228,7 +228,14 @@ func (c *Client) listAllProjectIssuesByLabel(pid interface{}, labels gitlab.Labe
 			break
 		}
 
-		allIssues = append(allIssues, issues...)
+		for _, issue := range issues {
+			gitlabIssue, ok := issue.(*gitanygitlab.Issue)
+			if !ok {
+				return nil, errors.New("failed to convert to gitlab issues in listAllProjectIssuesByLabel")
+			}
+			allIssues = append(allIssues, gitlabIssue.Issue)
+		}
+
 		issueOpt.Page = issueOpt.Page + 1
 	}
 	return allIssues, nil
