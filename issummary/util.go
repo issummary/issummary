@@ -1,4 +1,4 @@
-package gitlab
+package issummary
 
 import (
 	"errors"
@@ -10,17 +10,17 @@ import (
 	"gopkg.in/russross/blackfriday.v2"
 )
 
-func toIssues(gitlabIssues []gitany.Issue) (issues []*Issue, err error) {
-	issues = []*Issue{}
-	for _, gitlabIssue := range gitlabIssues {
-		issue, err := toIssue(gitlabIssue)
+func toIssues(issues []gitany.Issue) (issummaryIssues []*Issue, err error) {
+	issummaryIssues = []*Issue{}
+	for _, issue := range issues {
+		issue, err := toIssue(issue)
 		if err != nil {
 			return nil, err
 		}
-		issues = append(issues, issue)
+		issummaryIssues = append(issummaryIssues, issue)
 	}
 
-	return issues, nil
+	return issummaryIssues, nil
 }
 
 func toIssue(rawIssue gitany.Issue) (*Issue, error) {

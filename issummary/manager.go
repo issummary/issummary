@@ -1,4 +1,4 @@
-package gitlab
+package issummary
 
 import (
 	"fmt"

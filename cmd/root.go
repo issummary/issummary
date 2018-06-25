@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/issummary/issummary/api"
-	"github.com/issummary/issummary/gitlab"
+	"github.com/issummary/issummary/git"
 	"github.com/joho/godotenv"
 	"github.com/mpppk/gitany"
 	"github.com/mpppk/gitany/etc"
@@ -49,14 +49,10 @@ var RootCmd = &cobra.Command{
 			panic(err)
 		}
 
-		client := gitlab.New(config.Token, gitanyClient)
-
-		if config.GitServiceBaseURL != "" {
-			client.SetBaseURL(config.GitServiceBaseURL)
-		}
+		client := git.New(gitanyClient)
 
 		worksBodyFunc := func(body []byte) (interface{}, error) {
-			workManager := gitlab.NewWorkManager()
+			workManager := git.NewWorkManager()
 			for _, gid := range config.GIDs {
 				works, err := client.ListGroupWorks(ctx, gid, "LC", "S")
 
@@ -79,7 +75,7 @@ var RootCmd = &cobra.Command{
 		}
 
 		milestonesBodyFunc := func(body []byte) (interface{}, error) {
-			var allMilestones []*gitlab.Milestone
+			var allMilestones []*git.Milestone
 			for _, gid := range config.GIDs {
 				milestones, err := client.ListGroupMilestones(ctx, gid)
 

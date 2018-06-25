@@ -1,104 +1,23 @@
-package gitlab
+package issummary
 
 import (
 	"context"
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/mpppk/gitany"
-	"github.com/xanzy/go-gitlab"
 	"golang.org/x/sync/errgroup"
 )
 
 type Client struct {
-	*gitlab.Client
-	gitanyClient gitany.Client
+	client gitany.Client
 }
 
-func New(token string, gitanyClient gitany.Client) *Client {
+func New(client gitany.Client) *Client {
 	return &Client{
-		gitanyClient: gitanyClient,
-		Client:       gitlab.NewClient(nil, token),
+		client: client,
 	}
-}
-
-type Label struct {
-	ID           int
-	Name         string
-	Description  *LabelDescription
-	Parent       *Label
-	Dependencies []*DependLabel
-}
-
-type LabelDescription struct {
-	Raw              string
-	DependLabelNames []string
-	ParentName       string // TODO: 複数の親を持てるようにする
-}
-
-type Issue struct {
-	ID          int
-	IID         int
-	DueDate     *time.Time
-	Title       string
-	Description *IssueDescription
-	URL         string
-	ProjectName string
-	GroupName   string
-	Milestone   *Milestone
-}
-
-type IssueDescription struct {
-	Raw          string
-	Dependencies *IssueDependencies
-	Summary      string
-	Note         string
-	Details      string
-}
-
-type IssueDependencies struct { // FIXME merge Dependencies
-	Issues             []*DependIssue
-	LabelNames         []string
-	OtherProjectIssues []*DependIssue
-}
-
-type DependIssue struct {
-	GroupName   string
-	ProjectName string
-	IID         int
-	ID          int
-}
-
-type Work struct {
-	Issue           *Issue
-	Label           *Label
-	Dependencies    *Dependencies // FIXME
-	DependWorks     []*Work
-	StoryPoint      int
-	TotalStoryPoint int
-	ManDay          int
-	TotalManDay     int
-	RemainManDays   int
-}
-
-func (w *Work) GetTotalStoryPoint() (totalSP int) {
-	for _, dWork := range w.DependWorks {
-		totalSP += dWork.StoryPoint
-	}
-	return
-}
-
-type DependLabel struct {
-	Label         *Label
-	RelatedIssues []*Issue
-}
-
-type Dependencies struct {
-	OtherProjectIssues []*Issue
-	Issues             []*Issue
-	Labels             []*DependLabel
 }
 
 func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabelPrefix string) (works []*Work, err error) {
@@ -108,7 +27,7 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 	labelsChan := make(chan []gitany.Label, 1)
 
 	eg.Go(func() error {
-		allIssues, err := c.listAllGroupIssuesByLabel(ctx, gid, gitlab.Labels{"W"}) // TODO: 外から指定できるようにする
+		allIssues, err := c.listAllGroupIssuesByLabel(ctx, gid, []string{"W"}) // TODO: 外から指定できるようにする
 		issuesChan <- allIssues
 		return err
 	})
@@ -183,7 +102,7 @@ func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labe
 	var allIssues []gitany.Issue
 
 	for {
-		issues, _, err := c.gitanyClient.GetIssues().ListByOrg(ctx, gid, issueOpt)
+		issues, _, err := c.client.GetIssues().ListByOrg(ctx, gid, issueOpt)
 		if err != nil {
 			return nil, err
 		}
@@ -210,7 +129,7 @@ func (c *Client) listAllProjectIssuesByLabel(ctx context.Context, owner, repo st
 	var allIssues []gitany.Issue
 
 	for {
-		issues, _, err := c.gitanyClient.GetIssues().ListByRepo(ctx, owner, repo, issueOpt)
+		issues, _, err := c.client.GetIssues().ListByRepo(ctx, owner, repo, issueOpt)
 		if err != nil {
 			return nil, err
 		}
@@ -282,7 +201,7 @@ func (c *Client) listAllLabels(ctx context.Context, owner, repo string) ([]gitan
 	var allLabels []gitany.Label
 
 	for {
-		labels, _, err := c.gitanyClient.GetIssues().ListLabels(ctx, owner, repo, opt)
+		labels, _, err := c.client.GetIssues().ListLabels(ctx, owner, repo, opt)
 		if err != nil {
 			return nil, err
 		}
@@ -328,7 +247,7 @@ func (c *Client) listAllProjects(ctx context.Context, org string) ([]gitany.Repo
 	var allProjects []gitany.Repository
 
 	for {
-		repositories, _, err := c.gitanyClient.GetRepositories().ListByOrg(ctx, org, opt)
+		repositories, _, err := c.client.GetRepositories().ListByOrg(ctx, org, opt)
 		if err != nil {
 			return nil, err
 		}
@@ -354,7 +273,7 @@ func (c *Client) ListGroupMilestones(ctx context.Context, org string) ([]*Milest
 	var allMilestones []gitany.Milestone
 
 	for {
-		milestones, _, err := c.gitanyClient.GetIssues().ListMilestonesByOrg(ctx, org, opt)
+		milestones, _, err := c.client.GetIssues().ListMilestonesByOrg(ctx, org, opt)
 		if err != nil {
 			return nil, err
 		}

@@ -1,4 +1,4 @@
-package gitlab // FIXME
+package issummary // FIXME
 
 import (
 	"fmt"
