@@ -266,13 +266,6 @@ func (c *Client) listAllProjectsLabels(ctx context.Context, gid string, projects
 	return labelMapToSlice(labelMap), nil
 }
 
-func issueMapToSlice(issueMap map[int]*gitlab.Issue) (issues []*gitlab.Issue) {
-	for _, issue := range issueMap {
-		issues = append(issues, issue)
-	}
-	return issues
-}
-
 func labelMapToSlice(labelMap map[int64]gitany.Label) (labels []gitany.Label) {
 	for _, label := range labelMap {
 		labels = append(labels, label)
@@ -350,18 +343,18 @@ func (c *Client) listAllProjects(ctx context.Context, org string) ([]gitany.Repo
 	return allProjects, nil
 }
 
-func (c *Client) ListGroupMilestones(gid string) ([]*Milestone, error) {
-	opt := &gitlab.ListGroupMilestonesOptions{
-		ListOptions: gitlab.ListOptions{
+func (c *Client) ListGroupMilestones(ctx context.Context, org string) ([]*Milestone, error) {
+	opt := &gitany.MilestoneListOptions{
+		ListOptions: gitany.ListOptions{
 			Page:    1,
 			PerPage: 100,
 		},
 	}
 
-	var allMilestones []*gitlab.GroupMilestone
+	var allMilestones []gitany.Milestone
 
 	for {
-		milestones, _, err := c.GroupMilestones.ListGroupMilestones(gid, opt)
+		milestones, _, err := c.gitanyClient.GetIssues().ListMilestonesByOrg(ctx, org, opt)
 		if err != nil {
 			return nil, err
 		}

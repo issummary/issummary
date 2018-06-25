@@ -81,7 +81,7 @@ var RootCmd = &cobra.Command{
 		milestonesBodyFunc := func(body []byte) (interface{}, error) {
 			var allMilestones []*gitlab.Milestone
 			for _, gid := range config.GIDs {
-				milestones, err := client.ListGroupMilestones(gid)
+				milestones, err := client.ListGroupMilestones(ctx, gid)
 
 				if err != nil {
 					panic(err)

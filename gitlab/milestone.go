@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/mpppk/gitany"
-	"github.com/xanzy/go-gitlab"
 )
 
 type Milestone struct {
@@ -14,17 +13,6 @@ type Milestone struct {
 	StartDate time.Time
 	DueDate   time.Time
 	State     string
-}
-
-func toMilestoneFromGroupMilestone(milestone *gitlab.GroupMilestone) *Milestone {
-	return &Milestone{
-		ID:        milestone.ID,
-		IID:       milestone.IID,
-		Title:     milestone.Title,
-		StartDate: time.Time(*milestone.StartDate),
-		DueDate:   time.Time(*milestone.DueDate),
-		State:     milestone.State,
-	}
 }
 
 func toMilestone(milestone gitany.Milestone) *Milestone {
@@ -42,9 +30,9 @@ func toMilestone(milestone gitany.Milestone) *Milestone {
 	}
 }
 
-func toMilestones(gitlabMilestones []*gitlab.GroupMilestone) (milestones []*Milestone) {
+func toMilestones(gitlabMilestones []gitany.Milestone) (milestones []*Milestone) {
 	for _, gm := range gitlabMilestones {
-		milestones = append(milestones, toMilestoneFromGroupMilestone(gm))
+		milestones = append(milestones, toMilestone(gm))
 	}
 	return
 }
