@@ -6,31 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"github.com/xanzy/go-gitlab"
 )
-
-type Client struct {
-	git          *gitlab.Client
-	pid          interface{}
-	targetLabels []string
-}
-
-func NewClient(token string, pid interface{}, targetLabels []string) *Client {
-	git := gitlab.NewClient(nil, token)
-	return &Client{
-		git:          git,
-		pid:          pid,
-		targetLabels: targetLabels,
-	}
-}
-
-func (c *Client) GetIssues() ([]*gitlab.Issue, *gitlab.Response, error) {
-	opt := &gitlab.ListProjectIssuesOptions{
-		Labels: c.targetLabels,
-	}
-	return c.git.Issues.ListProjectIssues(c.pid, opt)
-}
 
 type Input struct {
 	In string
@@ -55,7 +31,6 @@ func CreateJsonHandleFunc(bodyFunc BodyFunc) http.HandlerFunc {
 				log.Fatal(err)
 			}
 			rw.Header().Set("Content-Type", "application/json")
-			fmt.Println(string(marshaledJson))
 			fmt.Fprint(rw, string(marshaledJson))
 		}()
 

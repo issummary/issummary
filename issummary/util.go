@@ -30,13 +30,8 @@ func toIssue(rawIssue gitany.Issue) (*Issue, error) {
 	}
 
 	return &Issue{
-		ID:          int(rawIssue.GetID()),
-		IID:         rawIssue.GetNumber(),
-		DueDate:     rawIssue.GetDueDate(),
-		Title:       rawIssue.GetTitle(),
+		Issue:       rawIssue,
 		Description: issueDescription,
-		URL:         rawIssue.GetHTMLURL(),
-		Milestone:   toMilestone(rawIssue.GetMilestone()),
 	}, nil
 }
 
@@ -64,11 +59,10 @@ func toDependLabel(labelName string, labels []gitany.Label, issues []gitany.Issu
 	}, nil
 }
 
-func toLabel(gitlabLabel gitany.Label, otherLabels []gitany.Label, issues []gitany.Issue) (label *Label, err error) {
+func toLabel(rawLabel gitany.Label, otherLabels []gitany.Label, issues []gitany.Issue) (label *Label, err error) {
 	label = &Label{
-		ID:           int(gitlabLabel.GetID()),
-		Name:         gitlabLabel.GetName(),
-		Description:  parseLabelDescription(gitlabLabel.GetDescription()),
+		Label:        rawLabel,
+		Description:  parseLabelDescription(rawLabel.GetDescription()),
 		Dependencies: []*DependLabel{},
 	}
 
@@ -104,16 +98,16 @@ func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitan
 			return nil, err
 		}
 
-		if project, ok := findProjectByID(projects, int64(orgIssue.GetRepositoryID())); ok {
-			issue.ProjectName = project.GetName()
-		}
-
 		work := &Work{
 			Issue: issue,
 			Dependencies: &Dependencies{
 				Issues: []*Issue{},
 				Labels: []*DependLabel{},
 			},
+		}
+
+		if project, ok := findProjectByID(projects, int64(orgIssue.GetRepositoryID())); ok {
+			work.Repository = &Repository{Repository: project}
 		}
 
 		for _, depIssues := range issue.Description.Dependencies.Issues {
@@ -149,7 +143,7 @@ func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitan
 		for _, labelName := range issue.Description.Dependencies.LabelNames {
 			dependLabel, err := toDependLabel(labelName, labels, issues)
 			if err != nil {
-				return nil, fmt.Errorf("failed to find depend label from '%v#%v(%v)': %v", issue.ProjectName, issue.IID, issue.Title, err)
+				return nil, fmt.Errorf("failed to find depend label from '%v#%v(%v)': %v", issue.ProjectName, issue.GetNumber(), issue.GetTitle(), err)
 			}
 			work.Dependencies.Labels = append(work.Dependencies.Labels, dependLabel)
 		}

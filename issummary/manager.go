@@ -65,13 +65,13 @@ func (wg *WorkManager) setEdgesByWork(fromWork *Work) error {
 
 func (wg *WorkManager) setEdgesByDependIssues(fromWork *Work, issues []*Issue) error {
 	for _, issue := range issues {
-		toWork, ok := wg.w.GetWorkByID(issue.ID)
+		toWork, ok := wg.w.GetWorkByID(int(issue.GetID()))
 		if !ok {
 			return fmt.Errorf("dependency (to: %v) cant resolve\n", toWork) // FIXME
 		}
 
-		if fromWork.Issue.ID == toWork.Issue.ID {
-			return fmt.Errorf("self edge: %s/%s", fromWork.Issue.ProjectName, fromWork.Issue.Title)
+		if fromWork.Issue.GetID() == toWork.Issue.GetID() {
+			return fmt.Errorf("self edge: %s/%s", fromWork.Issue.ProjectName, fromWork.Issue.GetTitle())
 		}
 
 		wg.w.SetEdge(fromWork, toWork)
@@ -89,10 +89,10 @@ func (wg *WorkManager) AddWorks(works []*Work) {
 	}
 }
 
-func (wg *WorkManager) ListSortedWorksByDueDate() (workNodes []*WorkNode) {
+func (wg *WorkManager) GetListSortedWorksByDueDate() (workNodes []*WorkNode) {
 	workNodes = wg.w.getWorkNodes()
 	sort.Slice(workNodes, func(i, j int) bool {
-		return workNodes[i].work.Issue.DueDate.After(*(workNodes[j].work.Issue.DueDate))
+		return workNodes[i].work.Issue.GetDueDate().After(*(workNodes[j].work.Issue.GetDueDate()))
 	})
 	return workNodes
 }
@@ -108,7 +108,7 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 				return false
 			}
 
-			return aWork.Label.Name < bWork.Label.Name
+			return aWork.Label.GetName() < bWork.Label.GetName()
 		},
 		func(aWork, bWork *Work) bool {
 			if aWork.Label == nil {
@@ -127,21 +127,21 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 				return false
 			}
 
-			return aWork.Label.Parent.Name < bWork.Label.Parent.Name
+			return aWork.Label.Parent.GetName() < bWork.Label.Parent.GetName()
 		},
 		func(aWork, bWork *Work) bool {
-			return aWork.Issue.ProjectName+string(aWork.Issue.IID) > bWork.Issue.ProjectName+string(bWork.Issue.IID)
+			return aWork.Issue.ProjectName+string(aWork.Issue.GetNumber()) > bWork.Issue.ProjectName+string(bWork.Issue.GetNumber())
 		},
 		func(aWork, bWork *Work) bool {
-			if bWork.Issue.DueDate == nil {
+			if bWork.Issue.GetDueDate() == nil {
 				return false
 			}
 
-			if aWork.Issue.DueDate == nil {
+			if aWork.Issue.GetDueDate() == nil {
 				return true
 			}
 
-			return aWork.Issue.DueDate.After(*bWork.Issue.DueDate)
+			return aWork.Issue.GetDueDate().After(*bWork.Issue.GetDueDate())
 		},
 	}
 
@@ -149,7 +149,7 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 
 	//workNodeFlags := map[int64]struct{}{}
 	//// TODO: 締め切りが設定されているworkを短い順に取り出す
-	//for _, workNodes := range wg.ListSortedWorksByDueDate() {
+	//for _, workNodes := range wg.GetListSortedWorksByDueDate()() {
 	//	nodes := wg.g.To(workNodes.node.ID())
 	//	for _, node := range nodes {
 	//		if _, ok := workNodeFlags[node.ID()]; !ok {

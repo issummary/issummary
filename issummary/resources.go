@@ -1,10 +1,13 @@
 package issummary
 
-import "time"
+import (
+	"github.com/mpppk/gitany"
+)
 
 type Label struct {
-	ID           int
-	Name         string
+	//ID           int
+	//Name         string
+	gitany.Label
 	Description  *LabelDescription
 	Parent       *Label
 	Dependencies []*DependLabel
@@ -17,15 +20,24 @@ type LabelDescription struct {
 }
 
 type Issue struct {
-	ID          int
-	IID         int
-	DueDate     *time.Time
-	Title       string
+	gitany.Issue
+	//ID          int
+	//IID         int
+	//DueDate     *time.Time
+	//Title       string
 	Description *IssueDescription
-	URL         string
+	//URL         string
 	ProjectName string
 	GroupName   string
 	Milestone   *Milestone
+}
+
+func (i *Issue) GetMilestone() *Milestone {
+	return toMilestone(i.Issue.GetMilestone())
+}
+
+type Repository struct {
+	gitany.Repository
 }
 
 type IssueDescription struct {
@@ -50,6 +62,7 @@ type DependIssue struct {
 }
 
 type Work struct {
+	Repository      *Repository
 	Issue           *Issue
 	Label           *Label
 	Dependencies    *Dependencies // FIXME

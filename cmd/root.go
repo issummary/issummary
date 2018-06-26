@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/issummary/issummary/api"
-	"github.com/issummary/issummary/git"
+	"github.com/issummary/issummary/issummary"
 	"github.com/joho/godotenv"
 	"github.com/mpppk/gitany"
 	"github.com/mpppk/gitany/etc"
@@ -49,10 +49,10 @@ var RootCmd = &cobra.Command{
 			panic(err)
 		}
 
-		client := git.New(gitanyClient)
+		client := issummary.New(gitanyClient)
 
 		worksBodyFunc := func(body []byte) (interface{}, error) {
-			workManager := git.NewWorkManager()
+			workManager := issummary.NewWorkManager()
 			for _, gid := range config.GIDs {
 				works, err := client.ListGroupWorks(ctx, gid, "LC", "S")
 
@@ -67,15 +67,15 @@ var RootCmd = &cobra.Command{
 				return nil, err
 			}
 			sortedWorks, err := workManager.GetSortedWorks()
-
 			if err != nil {
 				return nil, err
 			}
-			return sortedWorks, nil
+
+			return api.ToWorks(sortedWorks), nil
 		}
 
 		milestonesBodyFunc := func(body []byte) (interface{}, error) {
-			var allMilestones []*git.Milestone
+			var allMilestones []*issummary.Milestone
 			for _, gid := range config.GIDs {
 				milestones, err := client.ListGroupMilestones(ctx, gid)
 
@@ -86,7 +86,7 @@ var RootCmd = &cobra.Command{
 				allMilestones = append(allMilestones, milestones...)
 			}
 
-			return allMilestones, nil
+			return api.ToMilestones(allMilestones), nil
 		}
 
 		statikFS, err := fs.New()
@@ -126,7 +126,6 @@ func init() {
 	viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
 	RootCmd.PersistentFlags().String("gid", "", "Group ID list")
 	viper.BindPFlag("gid", RootCmd.PersistentFlags().Lookup("gid"))
-	fmt.Println("base-url")
 	fmt.Println(viper.GetString("base-url"))
 	RootCmd.PersistentFlags().String("base-url", viper.GetString("base-url"), "GitLab base URL")
 	viper.BindPFlag("base-url", RootCmd.PersistentFlags().Lookup("base-url"))

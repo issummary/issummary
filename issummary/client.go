@@ -26,13 +26,17 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 	repositoriesChan := make(chan []gitany.Repository, 1)
 	labelsChan := make(chan []gitany.Label, 1)
 
+	targetLabels := []string{"W"} // TODO: 外から指定できるようにする
+
 	eg.Go(func() error {
-		allIssues, err := c.listAllGroupIssuesByLabel(ctx, gid, []string{"W"}) // TODO: 外から指定できるようにする
+		log.Printf("Fetch issues with %v as label from %v", targetLabels, gid)
+		allIssues, err := c.listAllGroupIssuesByLabel(ctx, gid, targetLabels)
 		issuesChan <- allIssues
 		return err
 	})
 
 	eg.Go(func() error {
+		log.Printf("Fetch repositories from %v", gid)
 		projects, err := c.listAllProjects(ctx, gid)
 		if err != nil {
 			return err
@@ -40,6 +44,7 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 
 		repositoriesChan <- projects
 
+		log.Printf("Fetch labels from %v", gid)
 		labels, err := c.listAllProjectsLabels(ctx, gid, projects)
 		labelsChan <- labels
 		return err
