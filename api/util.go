@@ -67,6 +67,7 @@ func toWork(work *issummary.Work) *Work {
 }
 
 func ToWorks(works []*issummary.Work) (apiWorks []*Work) {
+	apiWorks = []*Work{}
 	for _, work := range works {
 		if work == nil {
 			continue
@@ -88,6 +89,7 @@ func toMilestone(milestone *issummary.Milestone) *Milestone {
 }
 
 func ToMilestones(milestones []*issummary.Milestone) (apiMilestones []*Milestone) {
+	apiMilestones = []*Milestone{}
 	for _, milestone := range milestones {
 		if milestone == nil {
 			continue
@@ -120,6 +122,7 @@ func toIssue(issue *issummary.Issue) *Issue {
 }
 
 func toIssues(issues []*issummary.Issue) (apiIssues []*Issue) {
+	apiIssues = []*Issue{}
 	for _, issue := range issues {
 		if issue == nil {
 			continue
@@ -145,6 +148,7 @@ func toLabel(label *issummary.Label) *Label {
 }
 
 func toLabels(labels []*issummary.Label) (apiLabels []*Label) {
+	apiLabels = []*Label{}
 	for _, label := range labels {
 		if label == nil {
 			continue
@@ -167,6 +171,7 @@ func toDependencies(dependencies *issummary.Dependencies) *Dependencies {
 }
 
 func toDependLabels(dependLabels []*issummary.DependLabel) (apiDependLabels []*DependLabel) {
+	apiDependLabels = []*DependLabel{}
 	for _, dependLabel := range dependLabels {
 		if dependLabel == nil {
 			continue
