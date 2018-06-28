@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,8 +10,12 @@ import (
 	"strings"
 
 	"github.com/issummary/issummary/api"
-	"github.com/issummary/issummary/gitlab"
+	"github.com/issummary/issummary/issummary"
 	"github.com/joho/godotenv"
+	"github.com/mpppk/gitany"
+	"github.com/mpppk/gitany/etc"
+	gitanygitlab "github.com/mpppk/gitany/gitlab"
+
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,20 +28,33 @@ var RootCmd = &cobra.Command{
 	Short: "issue summary viewer",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		config := generateIssummaryConfig()
+		ctx := context.Background()
+		config, err := generateIssummaryConfig()
+		if err != nil {
+			panic(err)
+		}
 
 		fmt.Printf("%#v\n", config)
 
-		client := gitlab.New(config.Token)
-
-		if config.GitServiceBaseURL != "" {
-			client.SetBaseURL(config.GitServiceBaseURL)
+		gitany.RegisterClientGenerator(&gitanygitlab.ClientGenerator{}) // FIXME
+		serviceConfig := &etc.ServiceConfig{                            // FIXME
+			Host:     "gitlab.com",
+			Type:     "gitlab",
+			Token:    config.Token,
+			Protocol: "https",
 		}
 
+		gitanyClient, err := gitany.GetClient(context.Background(), serviceConfig) // FIXME
+		if err != nil {
+			panic(err)
+		}
+
+		client := issummary.New(gitanyClient)
+
 		worksBodyFunc := func(body []byte) (interface{}, error) {
-			workManager := gitlab.NewWorkManager()
+			workManager := issummary.NewWorkManager()
 			for _, gid := range config.GIDs {
-				works, err := client.ListGroupWorks(gid, "LC", "S")
+				works, err := client.ListGroupWorks(ctx, gid, "LC", "S")
 
 				if err != nil {
 					return nil, err
@@ -48,17 +67,17 @@ var RootCmd = &cobra.Command{
 				return nil, err
 			}
 			sortedWorks, err := workManager.GetSortedWorks()
-
 			if err != nil {
 				return nil, err
 			}
-			return sortedWorks, nil
+
+			return api.ToWorks(sortedWorks), nil
 		}
 
 		milestonesBodyFunc := func(body []byte) (interface{}, error) {
-			var allMilestones []*gitlab.Milestone
+			var allMilestones []*issummary.Milestone
 			for _, gid := range config.GIDs {
-				milestones, err := client.ListGroupMilestones(gid)
+				milestones, err := client.ListGroupMilestones(ctx, gid)
 
 				if err != nil {
 					panic(err)
@@ -67,7 +86,7 @@ var RootCmd = &cobra.Command{
 				allMilestones = append(allMilestones, milestones...)
 			}
 
-			return allMilestones, nil
+			return api.ToMilestones(allMilestones), nil
 		}
 
 		statikFS, err := fs.New()
@@ -107,7 +126,6 @@ func init() {
 	viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
 	RootCmd.PersistentFlags().String("gid", "", "Group ID list")
 	viper.BindPFlag("gid", RootCmd.PersistentFlags().Lookup("gid"))
-	fmt.Println("base-url")
 	fmt.Println(viper.GetString("base-url"))
 	RootCmd.PersistentFlags().String("base-url", viper.GetString("base-url"), "GitLab base URL")
 	viper.BindPFlag("base-url", RootCmd.PersistentFlags().Lookup("base-url"))
@@ -140,12 +158,18 @@ type Config struct {
 	GIDs              []string
 }
 
-func generateIssummaryConfig() *Config {
+func generateIssummaryConfig() (*Config, error) {
 	gidStr := viper.GetString("gid")
+	gids := strings.Split(gidStr, ",")
+
+	if len(gids) == 0 {
+		return nil, errors.New("gid is empty")
+	}
+
 	return &Config{
 		Port:              viper.GetInt("port"),
 		Token:             viper.GetString("token"),
 		GitServiceBaseURL: viper.GetString("base-url"),
-		GIDs:              strings.Split(gidStr, ","),
-	}
+		GIDs:              gids,
+	}, nil
 }

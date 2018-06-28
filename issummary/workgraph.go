@@ -1,4 +1,4 @@
-package gitlab // FIXME
+package issummary // FIXME
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ func (w *WorkGraph) AddWork(work *Work) {
 	node := w.g.NewNode()
 	w.g.AddNode(node)
 	w.gMap[node.ID()] = &WorkNode{node: node, work: work}
-	w.workNodeMap[work.Issue.ID] = &WorkNode{node: node, work: work}
+	w.workNodeMap[int(work.Issue.GetID())] = &WorkNode{node: node, work: work} // FIXME
 }
 
 func (w *WorkGraph) getWorkNodes() (workNodes []*WorkNode) {
@@ -68,7 +68,7 @@ func (w *WorkGraph) getWorkByNodeID(id int64) (*Work, bool) {
 }
 
 func (w *WorkGraph) toWorkNode(work *Work) (*WorkNode, bool) {
-	return w.getWorkNodeByID(work.Issue.ID)
+	return w.getWorkNodeByID(int(work.Issue.GetID()))
 }
 
 func (w *WorkGraph) getWorkNodeByID(id int) (*WorkNode, bool) {
