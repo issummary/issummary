@@ -56,15 +56,37 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/mitchellh/go-homedir"
+  packages = ["."]
+  revision = "3864e76763d94a6df2f9960b16a20a33da9f9a66"
+
+[[projects]]
+  branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mpppk/gitany"
+  packages = [
+    ".",
+    "etc",
+    "gitlab"
+  ]
+  revision = "797ccab717371e83f6675416638935af5a5dd88c"
 
 [[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
   version = "v1.2.0"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/rakyll/statik"
@@ -231,6 +253,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2a89e1d004c2524f1bd39d79239bbef97db0c075ca34e0f5403a73e17c7c5b8c"
+  inputs-digest = "3ef0b7baa4a0fc8ffbb900964dcd7c942088516a57ea6b2d720b84d82d6d815a"
   solver-name = "gps-cdcl"
   solver-version = 1
