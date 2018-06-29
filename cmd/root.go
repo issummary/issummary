@@ -36,11 +36,15 @@ var RootCmd = &cobra.Command{
 
 		fmt.Printf("%#v\n", config)
 
+		protocolAndHost := strings.Split(config.GitServiceBaseURL, "://")
+		protocol := protocolAndHost[0]
+		host := protocolAndHost[1]
+
 		serviceConfig := &etc.ServiceConfig{ // FIXME
-			Host:     "gitlab.com",
+			Host:     host,
 			Type:     "gitlab",
 			Token:    config.Token,
-			Protocol: "https",
+			Protocol: protocol,
 		}
 
 		gitanyClient, err := gitany.GetClient(context.Background(), serviceConfig) // FIXME
