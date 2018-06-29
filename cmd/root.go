@@ -14,7 +14,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mpppk/gitany"
 	"github.com/mpppk/gitany/etc"
-	gitanygitlab "github.com/mpppk/gitany/gitlab"
+	_ "github.com/mpppk/gitany/gitlab"
 
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
@@ -36,8 +36,7 @@ var RootCmd = &cobra.Command{
 
 		fmt.Printf("%#v\n", config)
 
-		gitany.RegisterClientGenerator(&gitanygitlab.ClientGenerator{}) // FIXME
-		serviceConfig := &etc.ServiceConfig{                            // FIXME
+		serviceConfig := &etc.ServiceConfig{ // FIXME
 			Host:     "gitlab.com",
 			Type:     "gitlab",
 			Token:    config.Token,
