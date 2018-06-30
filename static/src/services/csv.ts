@@ -51,17 +51,20 @@ export const worksToCSV = (
       ? moment(bizRawDay).format('YYYY-MM-DD')
       : '1年以上先';
 
-    const labelIssues = _.flatMap(
-      work.Dependencies.Labels,
-      ls => ls.RelatedIssues
-    );
+    const labelIssues = work.DependWorks.filter(
+      w => w.RelationType === 'LabelOfLabelDescription'
+    ).map(w => w.Issue);
+    const dependIssues = work.DependWorks.filter(
+      w => w.RelationType === 'IssueOfIssueDescription'
+    ).map(w => w.Issue);
+
     const uniqLabelIssues = _.uniqBy(labelIssues, i => i.ID);
 
     return [
       work.Issue.ID,
       work.Issue.ProjectName,
       work.Issue.IID,
-      work.Label && work.Label.Parent ? work.Label.Parent : '-',
+      work.Label && work.Label.ParentName ? work.Label.ParentName : '-',
       work.Label ? work.Label : '-',
       work.Issue.Title,
       work.Issue.Description.Summary ? work.Issue.Description.Summary : '-',
@@ -69,7 +72,7 @@ export const worksToCSV = (
       totalSPs[index] / velocityPerManPerDay,
       bizDayStr,
       work.Issue.DueDate ? work.Issue.DueDate : '-',
-      work.Dependencies.Issues.map(i => `${i.ProjectName}#${i.IID}`).join('/'),
+      dependIssues.map(i => `${i.ProjectName}#${i.IID}`).join('/'),
       uniqLabelIssues.map(i => `#${i.IID}`).join('/')
     ].join(',');
   });

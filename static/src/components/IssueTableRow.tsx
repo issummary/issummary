@@ -20,18 +20,21 @@ export interface IIssueTableRowProps {
 
 const rowStyle: CSSProperties = {
   whiteSpace: 'normal',
-  wordWrap: 'break-word',
+  wordWrap: 'break-word'
 };
 
 const today = moment().format('YYYY-MM-DD');
 
-const TotalSPPoint = (props: { work: IWork; velocityPerManPerDay: number }) => (// tslint:disable-line
+const TotalSPPoint = (
+  props: { work: IWork; velocityPerManPerDay: number } // tslint:disable-line
+) => (
   <span>
     <br />(+{props.work.TotalStoryPoint / props.velocityPerManPerDay})
   </span>
 );
 
-export const IssueTableRow = (props: IIssueTableRowProps) => {// tslint:disable-line
+export const IssueTableRow = (props: IIssueTableRowProps) => {
+  // tslint:disable-line
   const totalManDay = props.totalSP / props.velocityPerManPerDay;
   const totalParallelManDay = Math.ceil(totalManDay / props.parallels);
   const bizRawDay = koyomi.addBiz(today, totalParallelManDay);
@@ -52,9 +55,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {// tslint:disable-
         {props.work.Issue.Milestone ? props.work.Issue.Milestone.Title : '-'}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
-        {props.work.Label && props.work.Label.Parent
-          ? props.work.Label.Parent.Name
-          : '-'}
+        {props.work.Label ? props.work.Label.ParentName : '-'}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.work.Label ? props.work.Label.Name : '-'}
@@ -86,11 +87,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {// tslint:disable-
           : '-'}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
-        <IssueTableIssueAndLabelDependenciesRow
-          currentProjectName={props.work.Issue.ProjectName}
-          deps={props.work.Dependencies}
-          labelDeps={props.work.Label ? props.work.Label.Dependencies : []}
-        />
+        <IssueTableIssueAndLabelDependenciesRow work={props.work} />
       </TableRowColumn>
     </TableRow>
   );

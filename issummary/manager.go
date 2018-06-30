@@ -5,14 +5,10 @@ import (
 	"io/ioutil"
 	"sort"
 
+	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding/dot"
 	"gonum.org/v1/gonum/graph/simple"
 )
-
-type Dependency struct {
-	fromIID int
-	toIID   int
-}
 
 type WorkManager struct {
 	w *WorkGraph
@@ -23,13 +19,14 @@ func NewWorkManager() *WorkManager {
 		g:           simple.NewDirectedGraph(),
 		gMap:        map[int64]*WorkNode{},
 		workNodeMap: map[int]*WorkNode{},
+		edgeMap:     map[graph.Edge]string{},
 	}
 
 	return &WorkManager{gm}
 }
 
 func (wg *WorkManager) ResolveDependencies() error {
-	for _, work := range wg.w.GetWorks() {
+	for _, work := range wg.w.ListWorks(nil) {
 		wg.setEdgesByWork(work)
 	}
 
@@ -39,14 +36,31 @@ func (wg *WorkManager) ResolveDependencies() error {
 }
 
 func (wg *WorkManager) setEdgesByWork(fromWork *Work) error {
-	if err := wg.setEdgesByDependIssues(fromWork, fromWork.Dependencies.Issues); err != nil {
-		return fmt.Errorf("work edge setting is failed: %v", err) // FIXME
 
+	issueDependencies := fromWork.Issue.ListDependencies()
+	for _, issue := range issueDependencies.Issues {
+		opt := &ListWorksOptions{
+			ProjectName: issue.ProjectName,
+			GroupName:   issue.GroupName,
+			Number:      issue.Number,
+		}
+		works := wg.w.ListWorks(opt)
+
+		if len(works) == 0 {
+			return fmt.Errorf("depend issue not found: %v", opt)
+		}
+
+		wg.w.SetEdge(fromWork, works[0], IssueOfIssueDescriptionRelation.String())
 	}
 
-	for _, dependLabel := range fromWork.Dependencies.Labels {
-		if err := wg.setEdgesByDependIssues(fromWork, dependLabel.RelatedIssues); err != nil {
-			return fmt.Errorf("depend label edge setting is failed: %v", err) // FIXME
+	for _, labelName := range issueDependencies.LabelNames {
+		opt := &ListWorksOptions{
+			LabelNames: []string{labelName},
+		}
+		works := wg.w.ListWorks(opt)
+
+		for _, work := range works {
+			wg.w.SetEdge(fromWork, work, LabelOfIssueDescriptionRelation.String())
 		}
 	}
 
@@ -54,27 +68,14 @@ func (wg *WorkManager) setEdgesByWork(fromWork *Work) error {
 		return nil
 	}
 
-	for _, label := range fromWork.Label.Dependencies {
-		if err := wg.setEdgesByDependIssues(fromWork, label.RelatedIssues); err != nil {
-			return fmt.Errorf("label dependency edge setting is failed: %v", err) // FIXME
+	for _, dependLabelName := range fromWork.Label.Description.DependLabelNames {
+		opt := &ListWorksOptions{
+			LabelNames: []string{dependLabelName},
 		}
-	}
-
-	return nil
-}
-
-func (wg *WorkManager) setEdgesByDependIssues(fromWork *Work, issues []*Issue) error {
-	for _, issue := range issues {
-		toWork, ok := wg.w.GetWorkByID(int(issue.GetID()))
-		if !ok {
-			return fmt.Errorf("dependency (to: %v) cant resolve\n", toWork) // FIXME
+		works := wg.w.ListWorks(opt)
+		for _, work := range works {
+			wg.w.SetEdge(fromWork, work, LabelOfLabelDescriptionRelation.String())
 		}
-
-		if fromWork.Issue.GetID() == toWork.Issue.GetID() {
-			return fmt.Errorf("self edge: %s/%s", fromWork.Issue.ProjectName, fromWork.Issue.GetTitle())
-		}
-
-		wg.w.SetEdge(fromWork, toWork)
 	}
 	return nil
 }
@@ -119,15 +120,15 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 				return false
 			}
 
-			if aWork.Label.Parent == nil {
+			if aWork.Label.ParentName == "" {
 				return true
 			}
 
-			if bWork.Label.Parent == nil {
+			if bWork.Label.ParentName == "" {
 				return false
 			}
 
-			return aWork.Label.Parent.GetName() < bWork.Label.Parent.GetName()
+			return aWork.Label.ParentName < bWork.Label.ParentName
 		},
 		func(aWork, bWork *Work) bool {
 			return aWork.Issue.ProjectName+string(aWork.Issue.GetNumber()) > bWork.Issue.ProjectName+string(bWork.Issue.GetNumber())
@@ -185,10 +186,38 @@ func (wg *WorkManager) GetDependWorks(work *Work) (works []*Work) {
 }
 
 func (wg *WorkManager) setWorkDependencies() {
-	for _, work := range wg.w.GetWorks() {
+	for _, work := range wg.w.ListWorks(nil) {
 		work.DependWorks = wg.GetDependWorks(work)
 		work.TotalStoryPoint = work.GetTotalStoryPoint()
 	}
+}
+
+func (wg *WorkManager) listDependencies() (dependencies *IssueDependencies) {
+	dependencies = &IssueDependencies{
+		Issues:     []*DependIssue{},
+		LabelNames: []string{},
+	}
+	for _, work := range wg.w.ListWorks(nil) {
+		dep := work.Issue.Description.Dependencies
+		dependencies.Issues = append(dependencies.Issues, dep.Issues...)
+		dependencies.LabelNames = append(dependencies.LabelNames, dep.LabelNames...)
+	}
+	return
+}
+
+func (wg *WorkManager) ListMissingIssueDependencies() (dependIssues []*DependIssue) {
+	dependencies := wg.listDependencies()
+	for _, issue := range dependencies.Issues {
+		works := wg.w.ListWorks(&ListWorksOptions{
+			GroupName:   issue.GroupName,
+			ProjectName: issue.ProjectName,
+			Number:      issue.Number,
+		})
+		if len(works) == 0 {
+			dependIssues = append(dependIssues, issue)
+		}
+	}
+	return
 }
 
 func reverseWorks(works []*Work) []*Work {

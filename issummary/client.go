@@ -60,7 +60,6 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 
 	for _, issue := range issues {
 		for _, project := range projects {
-			fmt.Printf("%#v\n", issue)
 			if issue.GetRepositoryID() == project.GetID() {
 				filteredIssues = append(filteredIssues, issue)
 				break

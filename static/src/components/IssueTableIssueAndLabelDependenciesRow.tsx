@@ -1,8 +1,9 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import { IDependencies, IDependLabel, Issue } from '../models/work';
+import { Issue, IWork } from '../models/work';
 
-export const IssueIIDAndProjectName = (props: {// tslint:disable-line
+export const IssueIIDAndProjectName = (props: {
+  // tslint:disable-line
   currentProjectName: string;
   issue: Issue;
 }) => (
@@ -14,8 +15,8 @@ export const IssueIIDAndProjectName = (props: {// tslint:disable-line
   </a>
 );
 
-
-const IssueDependencies = (props: { // tslint:disable-line
+const IssueDependencies = (props: {
+  // tslint:disable-line
   currentProjectName: string;
   issues: Issue[];
 }) => {
@@ -38,7 +39,7 @@ const IssueDependencies = (props: { // tslint:disable-line
       {issueLinks.map((a, i) => (
         <span key={i}>
           {a}
-          <span>{' '}</span>
+          <span> </span>
         </span>
       ))}
       {lastLink}
@@ -46,48 +47,63 @@ const IssueDependencies = (props: { // tslint:disable-line
   );
 };
 
-const LabelDependencies = (props: {// tslint:disable-line
+const LabelDependencies = (props: {
+  // tslint:disable-line
   currentProjectName: string;
-  dependLabel: IDependLabel;
+  dependLabelName: string;
+  dependIssues: Issue[];
 }) => {
   return (
     <span>
-      {props.dependLabel.Label.Name}(
+      {props.dependLabelName}(
       <IssueDependencies
         currentProjectName={props.currentProjectName}
-        issues={props.dependLabel.RelatedIssues}
+        issues={props.dependIssues}
       />
       )
     </span>
   );
 };
 
-export const IssueTableIssueAndLabelDependenciesRow = (props: {// tslint:disable-line
-  currentProjectName: string;
-  deps: IDependencies;
-  labelDeps: IDependLabel[];
+export const IssueTableIssueAndLabelDependenciesRow = (props: {
+  // tslint:disable-line
+  work: IWork;
 }) => {
+  const dependWorks = props.work.DependWorks;
+  const issueOfIssueDescriptionDependWorks = dependWorks.filter(
+    w => w.RelationType === 'IssueOfIssueDescription'
+  ); // FIXME
+  const labelOfIssueDescriptionDependWorks = dependWorks.filter(
+    w => w.RelationType === 'LabelOfIssueDescription'
+  ); // FIXME
+  const labelOfLabelDescriptionDependWorks = dependWorks.filter(
+    w => w.RelationType === 'LabelOfLabelDescription'
+  ); // FIXME
+
   if (
-    props.deps.Issues.length === 0 &&
-    props.deps.Labels.length === 0 &&
-    props.labelDeps.length === 0
+    issueOfIssueDescriptionDependWorks.length === 0 &&
+    labelOfIssueDescriptionDependWorks.length === 0 &&
+    labelOfLabelDescriptionDependWorks.length === 0
   ) {
     return <span>-</span>;
   }
 
-  const labels = props.deps.Labels.concat(props.labelDeps);
+  const labels = labelOfIssueDescriptionDependWorks.concat(
+    labelOfLabelDescriptionDependWorks
+  );
   const uniqueLabels = _.uniqBy(labels, l => l.Label.Name);
 
   return (
     <span>
       <IssueDependencies
-        currentProjectName={props.currentProjectName}
-        issues={props.deps.Issues}
+        currentProjectName={props.work.Issue.ProjectName}
+        issues={props.work.DependWorks.map(dw => dw.Issue)}
       />
       {uniqueLabels.map(l => (
         <LabelDependencies
-          currentProjectName={props.currentProjectName}
-          dependLabel={l}
+          currentProjectName={props.work.Issue.ProjectName}
+          dependLabelName={props.work.Label.Name}
+          dependIssues={labelOfLabelDescriptionDependWorks.map(w => w.Issue)}
           key={'LabelDependencies' + l.Label.ID}
         />
       ))}

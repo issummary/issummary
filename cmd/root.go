@@ -129,7 +129,6 @@ func init() {
 	viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
 	RootCmd.PersistentFlags().String("gid", "", "Group ID list")
 	viper.BindPFlag("gid", RootCmd.PersistentFlags().Lookup("gid"))
-	fmt.Println(viper.GetString("base-url"))
 	RootCmd.PersistentFlags().String("base-url", viper.GetString("base-url"), "GitLab base URL")
 	viper.BindPFlag("base-url", RootCmd.PersistentFlags().Lookup("base-url"))
 }

@@ -59,7 +59,6 @@ func toWork(work *issummary.Work) *Work {
 	return &Work{
 		Issue:           toIssue(work.Issue),
 		Label:           toLabel(work.Label),
-		Dependencies:    toDependencies(work.Dependencies),
 		DependWorks:     ToWorks(work.DependWorks),
 		TotalStoryPoint: work.TotalStoryPoint,
 		StoryPoint:      work.StoryPoint,
@@ -121,29 +120,15 @@ func toIssue(issue *issummary.Issue) *Issue {
 	}
 }
 
-func toIssues(issues []*issummary.Issue) (apiIssues []*Issue) {
-	apiIssues = []*Issue{}
-	for _, issue := range issues {
-		if issue == nil {
-			continue
-		}
-
-		apiIssues = append(apiIssues, toIssue(issue))
-	}
-	return
-}
-
 func toLabel(label *issummary.Label) *Label {
 	if label == nil {
 		return nil
 	}
 
 	return &Label{
-		ID:           label.GetID(),
-		Name:         label.GetName(),
-		Description:  label.GetDescription(),
-		Parent:       toLabel(label.Parent),
-		Dependencies: toDependLabels(label.Dependencies),
+		ID:          label.GetID(),
+		Name:        label.GetName(),
+		Description: label.GetDescription(),
 	}
 }
 
@@ -157,38 +142,4 @@ func toLabels(labels []*issummary.Label) (apiLabels []*Label) {
 		apiLabels = append(apiLabels, toLabel(label))
 	}
 	return
-}
-
-func toDependencies(dependencies *issummary.Dependencies) *Dependencies {
-	if dependencies == nil {
-		return nil
-	}
-
-	return &Dependencies{
-		Issues: toIssues(dependencies.Issues),
-		Labels: toDependLabels(dependencies.Labels),
-	}
-}
-
-func toDependLabels(dependLabels []*issummary.DependLabel) (apiDependLabels []*DependLabel) {
-	apiDependLabels = []*DependLabel{}
-	for _, dependLabel := range dependLabels {
-		if dependLabel == nil {
-			continue
-		}
-
-		apiDependLabels = append(apiDependLabels, toDependLabel(dependLabel))
-	}
-	return
-}
-
-func toDependLabel(dependLabel *issummary.DependLabel) *DependLabel {
-	if dependLabel == nil {
-		return nil
-	}
-
-	return &DependLabel{
-		Label:         toLabel(dependLabel.Label),
-		RelatedIssues: toIssues(dependLabel.RelatedIssues),
-	}
 }
