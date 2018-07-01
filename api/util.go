@@ -9,10 +9,17 @@ type Issue struct {
 	IID         int
 	DueDate     string
 	Title       string
-	Description string
+	Description *IssueDescription
 	URL         string
 	ProjectName string
 	Milestone   *Milestone
+}
+
+type IssueDescription struct {
+	Raw     string
+	Summary string
+	Note    string
+	Details string
 }
 
 type Milestone struct {
@@ -27,28 +34,16 @@ type Milestone struct {
 type Work struct {
 	Issue           *Issue
 	Label           *Label
-	Dependencies    *Dependencies
 	DependWorks     []*Work
 	TotalStoryPoint int
 	StoryPoint      int
 }
 
-type Dependencies struct {
-	Issues []*Issue
-	Labels []*DependLabel
-}
-
 type Label struct {
-	ID           int64
-	Name         string
-	Description  string
-	Parent       *Label
-	Dependencies []*DependLabel
-}
-
-type DependLabel struct {
-	Label         *Label
-	RelatedIssues []*Issue
+	ID          int64
+	Name        string
+	Description string
+	Parent      *Label
 }
 
 func toWork(work *issummary.Work) *Work {
@@ -113,10 +108,19 @@ func toIssue(issue *issummary.Issue) *Issue {
 		IID:         issue.GetNumber(),
 		DueDate:     dueDateString,
 		Title:       issue.GetTitle(),
-		Description: issue.GetBody(),
+		Description: toIssueDescription(issue.Description),
 		URL:         issue.GetHTMLURL(),
 		ProjectName: issue.ProjectName,
 		Milestone:   toMilestone(issue.GetMilestone()),
+	}
+}
+
+func toIssueDescription(description *issummary.IssueDescription) *IssueDescription {
+	return &IssueDescription{
+		Raw:     description.Raw,
+		Summary: description.Summary,
+		Note:    description.Note,
+		Details: description.Details,
 	}
 }
 
