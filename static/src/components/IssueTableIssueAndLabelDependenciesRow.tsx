@@ -112,7 +112,7 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
     <span>
       <IssueDependencies
         currentProjectName={props.work.Issue.ProjectName}
-        issues={props.work.DependWorks.map(dw => dw.Issue)}
+        issues={issueOfIssueDescriptionDependWorks.map(iw => iw.Issue)}
       />
       {labelDependenciesDOMs.length > 0 ? ' ' : null}
       {labelDependenciesDOMs}
