@@ -13,7 +13,7 @@ type WorkGraph struct {
 	g           *simple.DirectedGraph
 	gMap        map[int64]*WorkNode
 	workNodeMap map[int]*WorkNode
-	edgeMap     map[graph.Edge]string
+	edgeMap     map[graph.Edge]*WorkRelation
 }
 
 type WorkNode struct {
@@ -122,7 +122,7 @@ func (w *WorkGraph) convertNodesToWorks(nodes []graph.Node) (works []*Work) {
 	return
 }
 
-func (w *WorkGraph) SetEdge(aWork, bWork *Work, edgeName string) error {
+func (w *WorkGraph) SetEdge(aWork, bWork *Work, relation *WorkRelation) error {
 	aWorkNode, ok := w.toWorkNode(aWork)
 	if !ok {
 		return fmt.Errorf("work %v not found", aWork)
@@ -135,7 +135,7 @@ func (w *WorkGraph) SetEdge(aWork, bWork *Work, edgeName string) error {
 
 	edge := w.g.NewEdge(aWorkNode.node, bWorkNode.node)
 	w.g.SetEdge(edge)
-	w.edgeMap[edge] = edgeName
+	w.edgeMap[edge] = relation
 	return nil
 }
 
@@ -146,7 +146,7 @@ func (w *WorkGraph) getRelatedWorksByNodeID(id int64) (works []*Work) {
 	for _, node := range nodes {
 		if work, ok := w.getWorkByNodeID(node.ID()); ok {
 			if edge := w.g.Edge(beforeWorkNode.node.ID(), node.ID()); edge != nil {
-				work.WorkRelationType = NewWorkRelationTypeFromString(w.edgeMap[edge])
+				work.Relation = w.edgeMap[edge]
 			}
 			works = append(works, work)
 		}

@@ -4,45 +4,20 @@ import (
 	"github.com/mpppk/gitany"
 )
 
-type WorkRelationType int
+type WorkRelation struct {
+	LabelName string
+	Type      WorkRelationType
+}
+
+type WorkRelationType string
 
 const (
-	NoneRelation WorkRelationType = iota
-	IssueOfIssueDescriptionRelation
-	LabelOfIssueDescriptionRelation
-	LabelOfLabelDescriptionRelation
-	UnknownRelation
+	NoneRelation                    WorkRelationType = "None"
+	IssueOfIssueDescriptionRelation                  = "IssueOfIssueDescription"
+	LabelOfIssueDescriptionRelation                  = "LabelOfIssueDescription"
+	LabelOfLabelDescriptionRelation                  = "LabelOfLabelDescription"
+	UnknownRelation                                  = "Unknown"
 )
-
-func (w WorkRelationType) String() string {
-	switch w {
-	case NoneRelation:
-		return "none"
-	case IssueOfIssueDescriptionRelation:
-		return "IssueOfIssueDescription"
-	case LabelOfIssueDescriptionRelation:
-		return "LabelOfIssueDescription"
-	case LabelOfLabelDescriptionRelation:
-		return "LabelOfLabelDescription"
-	default:
-		return "unknown"
-	}
-}
-
-func NewWorkRelationTypeFromString(str string) WorkRelationType {
-	switch str {
-	case "none":
-		return NoneRelation
-	case "IssueOfIssueDescription":
-		return IssueOfIssueDescriptionRelation
-	case "LabelOfIssueDescription":
-		return LabelOfIssueDescriptionRelation
-	case "LabelOfLabelDescription":
-		return LabelOfLabelDescriptionRelation
-	default:
-		return UnknownRelation
-	}
-}
 
 type Label struct {
 	gitany.Label
@@ -138,16 +113,16 @@ type DependIssue struct {
 }
 
 type Work struct {
-	WorkRelationType WorkRelationType
-	Repository       *Repository
-	Issue            *Issue
-	Label            *Label
-	DependWorks      []*Work
-	StoryPoint       int
-	TotalStoryPoint  int
-	ManDay           int
-	TotalManDay      int
-	RemainManDays    int
+	Relation        *WorkRelation
+	Repository      *Repository
+	Issue           *Issue
+	Label           *Label
+	DependWorks     []*Work
+	StoryPoint      int
+	TotalStoryPoint int
+	ManDay          int
+	TotalManDay     int
+	RemainManDays   int
 }
 
 func (w *Work) GetTotalStoryPoint() (totalSP int) {

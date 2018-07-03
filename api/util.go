@@ -32,6 +32,7 @@ type Milestone struct {
 }
 
 type Work struct {
+	Relation        *issummary.WorkRelation
 	Issue           *Issue
 	Label           *Label
 	DependWorks     []*Work
@@ -52,6 +53,7 @@ func toWork(work *issummary.Work) *Work {
 	}
 
 	return &Work{
+		Relation:        work.Relation,
 		Issue:           toIssue(work.Issue),
 		Label:           toLabel(work.Label),
 		DependWorks:     ToWorks(work.DependWorks),

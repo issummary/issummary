@@ -70,14 +70,15 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
   work: IWork;
 }) => {
   const dependWorks = props.work.DependWorks;
+
   const issueOfIssueDescriptionDependWorks = dependWorks.filter(
-    w => w.RelationType === 'IssueOfIssueDescription'
+    w => w.Relation.Type === 'IssueOfIssueDescription'
   ); // FIXME
   const labelOfIssueDescriptionDependWorks = dependWorks.filter(
-    w => w.RelationType === 'LabelOfIssueDescription'
+    w => w.Relation.Type === 'LabelOfIssueDescription'
   ); // FIXME
   const labelOfLabelDescriptionDependWorks = dependWorks.filter(
-    w => w.RelationType === 'LabelOfLabelDescription'
+    w => w.Relation.Type === 'LabelOfLabelDescription'
   ); // FIXME
 
   if (
@@ -88,10 +89,10 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
     return <span>-</span>;
   }
 
-  const labels = labelOfIssueDescriptionDependWorks.concat(
+  const labelWorks = labelOfIssueDescriptionDependWorks.concat(
     labelOfLabelDescriptionDependWorks
   );
-  const uniqueLabels = _.uniqBy(labels, l => l.Label.Name);
+  const uniqueLabelWorks = _.uniqBy(labelWorks, w => w.Relation.LabelName);
 
   return (
     <span>
@@ -99,12 +100,14 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
         currentProjectName={props.work.Issue.ProjectName}
         issues={props.work.DependWorks.map(dw => dw.Issue)}
       />
-      {uniqueLabels.map(l => (
+      {uniqueLabelWorks.map(w => (
+        // とりあえずここが動くようになったので、正しく表示されているかの確認から
+        // label名の後のカッコ内に何も表示されていない
         <LabelDependencies
           currentProjectName={props.work.Issue.ProjectName}
-          dependLabelName={props.work.Label.Name}
+          dependLabelName={w.Relation.LabelName}
           dependIssues={labelOfLabelDescriptionDependWorks.map(w => w.Issue)}
-          key={'LabelDependencies' + l.Label.ID}
+          key={'LabelDependencies' + w}
         />
       ))}
     </span>

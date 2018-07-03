@@ -2,12 +2,17 @@ import { Moment } from 'moment';
 import { IMilestone } from './milestone';
 
 export interface IWork {
-  RelationType: string;
+  Relation: IWorkRelation;
   Issue: Issue;
   Label: ILabel;
   DependWorks: IWork[];
   TotalStoryPoint: number;
   StoryPoint: number;
+}
+
+export interface IWorkRelation {
+  Type: string;
+  LabelName: string;
 }
 
 export interface ILabel {

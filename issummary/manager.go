@@ -19,7 +19,7 @@ func NewWorkManager() *WorkManager {
 		g:           simple.NewDirectedGraph(),
 		gMap:        map[int64]*WorkNode{},
 		workNodeMap: map[int]*WorkNode{},
-		edgeMap:     map[graph.Edge]string{},
+		edgeMap:     map[graph.Edge]*WorkRelation{},
 	}
 
 	return &WorkManager{gm}
@@ -50,7 +50,9 @@ func (wg *WorkManager) setEdgesByWork(fromWork *Work) error {
 			return fmt.Errorf("depend issue not found: %v", opt)
 		}
 
-		wg.w.SetEdge(fromWork, works[0], IssueOfIssueDescriptionRelation.String())
+		wg.w.SetEdge(fromWork, works[0], &WorkRelation{
+			Type: IssueOfIssueDescriptionRelation,
+		})
 	}
 
 	for _, labelName := range issueDependencies.LabelNames {
@@ -60,7 +62,10 @@ func (wg *WorkManager) setEdgesByWork(fromWork *Work) error {
 		works := wg.w.ListWorks(opt)
 
 		for _, work := range works {
-			wg.w.SetEdge(fromWork, work, LabelOfIssueDescriptionRelation.String())
+			wg.w.SetEdge(fromWork, work, &WorkRelation{
+				Type:      LabelOfIssueDescriptionRelation,
+				LabelName: labelName,
+			})
 		}
 	}
 
@@ -74,7 +79,10 @@ func (wg *WorkManager) setEdgesByWork(fromWork *Work) error {
 		}
 		works := wg.w.ListWorks(opt)
 		for _, work := range works {
-			wg.w.SetEdge(fromWork, work, LabelOfLabelDescriptionRelation.String())
+			wg.w.SetEdge(fromWork, work, &WorkRelation{
+				Type:      LabelOfLabelDescriptionRelation,
+				LabelName: dependLabelName,
+			})
 		}
 	}
 	return nil
