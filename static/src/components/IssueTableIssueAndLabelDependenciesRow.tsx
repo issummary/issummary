@@ -114,6 +114,7 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
         currentProjectName={props.work.Issue.ProjectName}
         issues={props.work.DependWorks.map(dw => dw.Issue)}
       />
+      {labelDependenciesDOMs.length > 0 ? ' ' : null}
       {labelDependenciesDOMs}
     </span>
   );
