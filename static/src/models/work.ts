@@ -2,7 +2,7 @@ import { Moment } from 'moment';
 import { IMilestone } from './milestone';
 
 export interface IWork {
-  Relation: IWorkRelation;
+  Relation?: IWorkRelation;
   Issue: Issue;
   Label: ILabel;
   DependWorks: IWork[];

@@ -72,13 +72,13 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
   const dependWorks = props.work.DependWorks;
 
   const issueOfIssueDescriptionDependWorks = dependWorks.filter(
-    w => w.Relation.Type === 'IssueOfIssueDescription'
+    w => w.Relation && w.Relation.Type === 'IssueOfIssueDescription'
   ); // FIXME
   const labelOfIssueDescriptionDependWorks = dependWorks.filter(
-    w => w.Relation.Type === 'LabelOfIssueDescription'
+    w => w.Relation && w.Relation.Type === 'LabelOfIssueDescription'
   ); // FIXME
   const labelOfLabelDescriptionDependWorks = dependWorks.filter(
-    w => w.Relation.Type === 'LabelOfLabelDescription'
+    w => w.Relation && w.Relation.Type === 'LabelOfLabelDescription'
   ); // FIXME
 
   if (
@@ -92,7 +92,21 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
   const labelWorks = labelOfIssueDescriptionDependWorks.concat(
     labelOfLabelDescriptionDependWorks
   );
-  const uniqueLabelWorks = _.uniqBy(labelWorks, w => w.Relation.LabelName);
+
+  const groupedWorks = _.groupBy(labelWorks, w => w.Relation!.LabelName);
+
+  const labelDependenciesDOMs = Object.keys(groupedWorks).map(labelName => {
+    const works = groupedWorks[labelName];
+    const firstWork = works[0];
+    return (
+      <LabelDependencies
+        currentProjectName={firstWork.Issue.ProjectName} // FIXME
+        dependLabelName={labelName}
+        dependIssues={works.map(lw => lw.Issue)}
+        key={'LabelDependencies' + labelName}
+      />
+    );
+  });
 
   return (
     <span>
@@ -100,16 +114,7 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
         currentProjectName={props.work.Issue.ProjectName}
         issues={props.work.DependWorks.map(dw => dw.Issue)}
       />
-      {uniqueLabelWorks.map(w => (
-        // とりあえずここが動くようになったので、正しく表示されているかの確認から
-        // label名の後のカッコ内に何も表示されていない
-        <LabelDependencies
-          currentProjectName={props.work.Issue.ProjectName}
-          dependLabelName={w.Relation.LabelName}
-          dependIssues={labelOfLabelDescriptionDependWorks.map(w => w.Issue)}
-          key={'LabelDependencies' + w}
-        />
-      ))}
+      {labelDependenciesDOMs}
     </span>
   );
 };

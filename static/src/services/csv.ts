@@ -52,10 +52,10 @@ export const worksToCSV = (
       : '1年以上先';
 
     const labelIssues = work.DependWorks.filter(
-      w => w.Relation.Type === 'LabelOfLabelDescription'
+      w => w.Relation && w.Relation.Type === 'LabelOfLabelDescription'
     ).map(w => w.Issue);
     const dependIssues = work.DependWorks.filter(
-      w => w.Relation.Type === 'IssueOfIssueDescription'
+      w => w.Relation && w.Relation.Type === 'IssueOfIssueDescription'
     ).map(w => w.Issue);
 
     const uniqLabelIssues = _.uniqBy(labelIssues, i => i.ID);
