@@ -29,7 +29,7 @@ func toLabel(rawLabel gitany.Label) (label *Label) {
 	}
 }
 
-func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitany.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
+func toWorks(org string, issues []gitany.Issue, projects []gitany.Repository, labels []gitany.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
 	for _, orgIssue := range issues {
 		issue, err := toIssue(orgIssue)
 		if err != nil {
@@ -42,6 +42,8 @@ func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitan
 
 		if project, ok := findProjectByID(projects, int64(orgIssue.GetRepositoryID())); ok {
 			work.Repository = &Repository{Repository: project}
+			work.Issue.ProjectName = project.GetName()
+			work.Issue.GroupName = org
 		}
 
 		for _, labelName := range orgIssue.GetLabels() {
