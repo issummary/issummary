@@ -50,10 +50,6 @@ func toWorks(org string, issues []gitany.Issue, projects []gitany.Repository, la
 			if strings.HasPrefix(labelName, targetLabelPrefix) {
 				if l, ok := findLabelByName(labels, labelName); ok {
 					work.Label = toLabel(l)
-					//work.Label, err = toLabel(l, labels, issues)
-					if err != nil {
-						return nil, err
-					}
 				}
 				break
 			}
