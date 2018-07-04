@@ -43,8 +43,7 @@ type Work struct {
 type Label struct {
 	ID          int64
 	Name        string
-	Description string
-	Parent      *Label
+	Description *issummary.LabelDescription
 }
 
 func toWork(work *issummary.Work) *Work {
@@ -134,7 +133,7 @@ func toLabel(label *issummary.Label) *Label {
 	return &Label{
 		ID:          label.GetID(),
 		Name:        label.GetName(),
-		Description: label.GetDescription(),
+		Description: label.Description,
 	}
 }
 

@@ -19,7 +19,6 @@ export interface ILabel {
   ID: number;
   Name: string;
   Description: ILabelDescription;
-  ParentName: string;
 }
 
 export interface ILabelDescription {
