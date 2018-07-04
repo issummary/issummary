@@ -64,8 +64,10 @@ export const worksToCSV = (
       work.Issue.ID,
       work.Issue.ProjectName,
       work.Issue.IID,
-      work.Label && work.Label.ParentName ? work.Label.ParentName : '-',
-      work.Label ? work.Label : '-',
+      work.Label && work.Label.Description.ParentName
+        ? work.Label.Description.ParentName
+        : '-',
+      work.Label ? work.Label.Name : '-',
       work.Issue.Title,
       work.Issue.Description.Summary ? work.Issue.Description.Summary : '-',
       work.StoryPoint / velocityPerManPerDay,
