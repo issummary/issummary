@@ -9,10 +9,17 @@ type Issue struct {
 	IID         int
 	DueDate     string
 	Title       string
-	Description string
+	Description *IssueDescription
 	URL         string
 	ProjectName string
 	Milestone   *Milestone
+}
+
+type IssueDescription struct {
+	Raw     string
+	Summary string
+	Note    string
+	Details string
 }
 
 type Milestone struct {
@@ -25,30 +32,18 @@ type Milestone struct {
 }
 
 type Work struct {
+	Relation        *issummary.WorkRelation
 	Issue           *Issue
 	Label           *Label
-	Dependencies    *Dependencies
 	DependWorks     []*Work
 	TotalStoryPoint int
 	StoryPoint      int
 }
 
-type Dependencies struct {
-	Issues []*Issue
-	Labels []*DependLabel
-}
-
 type Label struct {
-	ID           int64
-	Name         string
-	Description  string
-	Parent       *Label
-	Dependencies []*DependLabel
-}
-
-type DependLabel struct {
-	Label         *Label
-	RelatedIssues []*Issue
+	ID          int64
+	Name        string
+	Description *issummary.LabelDescription
 }
 
 func toWork(work *issummary.Work) *Work {
@@ -57,9 +52,9 @@ func toWork(work *issummary.Work) *Work {
 	}
 
 	return &Work{
+		Relation:        work.Relation,
 		Issue:           toIssue(work.Issue),
 		Label:           toLabel(work.Label),
-		Dependencies:    toDependencies(work.Dependencies),
 		DependWorks:     ToWorks(work.DependWorks),
 		TotalStoryPoint: work.TotalStoryPoint,
 		StoryPoint:      work.StoryPoint,
@@ -114,23 +109,20 @@ func toIssue(issue *issummary.Issue) *Issue {
 		IID:         issue.GetNumber(),
 		DueDate:     dueDateString,
 		Title:       issue.GetTitle(),
-		Description: issue.GetBody(),
+		Description: toIssueDescription(issue.Description),
 		URL:         issue.GetHTMLURL(),
 		ProjectName: issue.ProjectName,
 		Milestone:   toMilestone(issue.GetMilestone()),
 	}
 }
 
-func toIssues(issues []*issummary.Issue) (apiIssues []*Issue) {
-	apiIssues = []*Issue{}
-	for _, issue := range issues {
-		if issue == nil {
-			continue
-		}
-
-		apiIssues = append(apiIssues, toIssue(issue))
+func toIssueDescription(description *issummary.IssueDescription) *IssueDescription {
+	return &IssueDescription{
+		Raw:     description.Raw,
+		Summary: description.Summary,
+		Note:    description.Note,
+		Details: description.Details,
 	}
-	return
 }
 
 func toLabel(label *issummary.Label) *Label {
@@ -139,11 +131,9 @@ func toLabel(label *issummary.Label) *Label {
 	}
 
 	return &Label{
-		ID:           label.GetID(),
-		Name:         label.GetName(),
-		Description:  label.GetDescription(),
-		Parent:       toLabel(label.Parent),
-		Dependencies: toDependLabels(label.Dependencies),
+		ID:          label.GetID(),
+		Name:        label.GetName(),
+		Description: label.Description,
 	}
 }
 
@@ -157,38 +147,4 @@ func toLabels(labels []*issummary.Label) (apiLabels []*Label) {
 		apiLabels = append(apiLabels, toLabel(label))
 	}
 	return
-}
-
-func toDependencies(dependencies *issummary.Dependencies) *Dependencies {
-	if dependencies == nil {
-		return nil
-	}
-
-	return &Dependencies{
-		Issues: toIssues(dependencies.Issues),
-		Labels: toDependLabels(dependencies.Labels),
-	}
-}
-
-func toDependLabels(dependLabels []*issummary.DependLabel) (apiDependLabels []*DependLabel) {
-	apiDependLabels = []*DependLabel{}
-	for _, dependLabel := range dependLabels {
-		if dependLabel == nil {
-			continue
-		}
-
-		apiDependLabels = append(apiDependLabels, toDependLabel(dependLabel))
-	}
-	return
-}
-
-func toDependLabel(dependLabel *issummary.DependLabel) *DependLabel {
-	if dependLabel == nil {
-		return nil
-	}
-
-	return &DependLabel{
-		Label:         toLabel(dependLabel.Label),
-		RelatedIssues: toIssues(dependLabel.RelatedIssues),
-	}
 }

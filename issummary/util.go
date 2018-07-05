@@ -10,19 +10,6 @@ import (
 	"gopkg.in/russross/blackfriday.v2"
 )
 
-func toIssues(issues []gitany.Issue) (issummaryIssues []*Issue, err error) {
-	issummaryIssues = []*Issue{}
-	for _, issue := range issues {
-		issue, err := toIssue(issue)
-		if err != nil {
-			return nil, err
-		}
-		issummaryIssues = append(issummaryIssues, issue)
-	}
-
-	return issummaryIssues, nil
-}
-
 func toIssue(rawIssue gitany.Issue) (*Issue, error) {
 	issueDescription, err := parseIssueDescription(rawIssue.GetBody())
 	if err != nil {
@@ -35,63 +22,14 @@ func toIssue(rawIssue gitany.Issue) (*Issue, error) {
 	}, nil
 }
 
-func toDependLabel(labelName string, labels []gitany.Label, issues []gitany.Issue) (*DependLabel, error) {
-	gitlabLabel, ok := findLabelByName(labels, labelName)
-	if !ok {
-		return nil, errors.New("label name not found: " + labelName)
+func toLabel(rawLabel gitany.Label) (label *Label) {
+	return &Label{
+		Label:       rawLabel,
+		Description: parseLabelDescription(rawLabel.GetDescription()),
 	}
-
-	label, err := toLabel(gitlabLabel, labels, issues)
-	if err != nil {
-		return nil, err
-	}
-
-	relatedGitLabIssues := findIssuesByLabelName(issues, labelName)
-
-	relatedIssues, err := toIssues(relatedGitLabIssues)
-	if err != nil {
-		return nil, err
-	}
-
-	return &DependLabel{
-		RelatedIssues: relatedIssues,
-		Label:         label,
-	}, nil
 }
 
-func toLabel(rawLabel gitany.Label, otherLabels []gitany.Label, issues []gitany.Issue) (label *Label, err error) {
-	label = &Label{
-		Label:        rawLabel,
-		Description:  parseLabelDescription(rawLabel.GetDescription()),
-		Dependencies: []*DependLabel{},
-	}
-
-	if label.Description.ParentName != "" {
-		parentGitLabLabel, ok := findLabelByName(otherLabels, label.Description.ParentName)
-		if !ok {
-			return nil, fmt.Errorf("parent(%s) not found\n", label.Description.ParentName)
-		}
-		parentLabel, err := toLabel(parentGitLabLabel, otherLabels, issues)
-		if err != nil {
-			return nil, err
-		}
-		label.Parent = parentLabel
-	}
-
-	if len(label.Description.DependLabelNames) > 0 {
-		for _, dependLabelName := range label.Description.DependLabelNames {
-			dependLabel, err := toDependLabel(dependLabelName, otherLabels, issues)
-			if err != nil {
-				return nil, err
-			}
-			label.Dependencies = append(label.Dependencies, dependLabel)
-		}
-	}
-
-	return label, nil
-}
-
-func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitany.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
+func toWorks(org string, issues []gitany.Issue, projects []gitany.Repository, labels []gitany.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
 	for _, orgIssue := range issues {
 		issue, err := toIssue(orgIssue)
 		if err != nil {
@@ -100,61 +38,18 @@ func toWorks(issues []gitany.Issue, projects []gitany.Repository, labels []gitan
 
 		work := &Work{
 			Issue: issue,
-			Dependencies: &Dependencies{
-				Issues: []*Issue{},
-				Labels: []*DependLabel{},
-			},
 		}
 
 		if project, ok := findProjectByID(projects, int64(orgIssue.GetRepositoryID())); ok {
 			work.Repository = &Repository{Repository: project}
-		}
-
-		for _, depIssues := range issue.Description.Dependencies.Issues {
-			findIssue, ok := findIssueByIIDAndProjectID(issues, depIssues.IID, orgIssue.GetRepositoryID())
-			if !ok {
-				continue
-			}
-
-			is, err := toIssue(findIssue)
-
-			if err != nil {
-				return nil, err
-			}
-
-			work.Dependencies.Issues = append(work.Dependencies.Issues, is)
-		}
-
-		for _, otherIssueDep := range issue.Description.Dependencies.OtherProjectIssues {
-			if project, ok := findProjectByName(projects, otherIssueDep.ProjectName); ok {
-				if otherIssue, ok := findIssueByIIDAndProjectID(issues, otherIssueDep.IID, project.GetID()); ok {
-					ois, err := toIssue(otherIssue)
-					if err != nil {
-						return nil, err
-					}
-
-					ois.ProjectName = otherIssueDep.ProjectName
-					ois.GroupName = otherIssueDep.GroupName
-					work.Dependencies.Issues = append(work.Dependencies.Issues, ois)
-				}
-			}
-		}
-
-		for _, labelName := range issue.Description.Dependencies.LabelNames {
-			dependLabel, err := toDependLabel(labelName, labels, issues)
-			if err != nil {
-				return nil, fmt.Errorf("failed to find depend label from '%v#%v(%v)': %v", issue.ProjectName, issue.GetNumber(), issue.GetTitle(), err)
-			}
-			work.Dependencies.Labels = append(work.Dependencies.Labels, dependLabel)
+			work.Issue.ProjectName = project.GetName()
+			work.Issue.GroupName = org
 		}
 
 		for _, labelName := range orgIssue.GetLabels() {
 			if strings.HasPrefix(labelName, targetLabelPrefix) {
 				if l, ok := findLabelByName(labels, labelName); ok {
-					work.Label, err = toLabel(l, labels, issues)
-					if err != nil {
-						return nil, err
-					}
+					work.Label = toLabel(l)
 				}
 				break
 			}
@@ -224,46 +119,6 @@ func findLabelByName(labels []gitany.Label, name string) (gitany.Label, bool) {
 		}
 	}
 	return nil, false
-}
-
-func findIssuesByLabelName(issues []gitany.Issue, labelName string) (filteredIssues []gitany.Issue) {
-	for _, issue := range issues {
-		for _, issueLabelName := range issue.GetLabels() {
-			if issueLabelName == labelName {
-				filteredIssues = append(filteredIssues, issue)
-				break
-			}
-		}
-	}
-	return
-}
-
-func findIssuesByIIDs(issues []gitany.Issue, iidList []int) (filteredIssues []gitany.Issue) {
-	for _, iid := range iidList {
-		if issue, ok := findIssueByIID(issues, iid); ok {
-			filteredIssues = append(filteredIssues, issue)
-		}
-	}
-	return
-}
-
-func findIssueByIID(issues []gitany.Issue, iid int) (gitany.Issue, bool) {
-	for _, issue := range issues {
-		if issue.GetNumber() == iid {
-			return issue, true
-		}
-	}
-	return nil, false
-}
-
-func findIssueByIIDAndProjectID(issues []gitany.Issue, iid int, projectId int64) (gitany.Issue, bool) {
-	for _, issue := range issues {
-		if issue.GetNumber() == iid && issue.GetRepositoryID() == projectId {
-			return issue, true
-		}
-	}
-	return nil, false
-
 }
 
 func parseIssueDescription(description string) (*IssueDescription, error) {
@@ -352,7 +207,7 @@ func getIssueDependenciesFromMDNodes(node *blackfriday.Node) (*IssueDependencies
 					depNum, err := strconv.Atoi(trimmedDep)
 
 					depIssue := &DependIssue{
-						IID: depNum,
+						Number: depNum,
 					}
 
 					if err != nil {
@@ -396,11 +251,11 @@ func getIssueDependenciesFromMDNodes(node *blackfriday.Node) (*IssueDependencies
 
 					opIssue := &DependIssue{
 						ProjectName: projectName,
-						IID:         issueIID,
+						Number:      issueIID,
 						GroupName:   strings.Join(depStrList[:len(depStrList)-1], "/"),
 					}
 
-					issueDependencies.OtherProjectIssues = append(issueDependencies.OtherProjectIssues, opIssue)
+					issueDependencies.Issues = append(issueDependencies.Issues, opIssue)
 				}
 			}
 		}

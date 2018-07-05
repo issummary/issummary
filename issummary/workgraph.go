@@ -13,6 +13,7 @@ type WorkGraph struct {
 	g           *simple.DirectedGraph
 	gMap        map[int64]*WorkNode
 	workNodeMap map[int]*WorkNode
+	edgeMap     map[graph.Edge]*WorkRelation
 }
 
 type WorkNode struct {
@@ -21,6 +22,13 @@ type WorkNode struct {
 }
 
 type SortWorkFunc func(aWork, bWork *Work) bool
+
+type ListWorksOptions struct {
+	GroupName   string
+	ProjectName string
+	Number      int
+	LabelNames  []string
+}
 
 func (w *WorkGraph) AddWork(work *Work) {
 	node := w.g.NewNode()
@@ -36,8 +44,25 @@ func (w *WorkGraph) getWorkNodes() (workNodes []*WorkNode) {
 	return
 }
 
-func (w *WorkGraph) GetWorks() (works []*Work) {
+func (w *WorkGraph) ListWorks(opt *ListWorksOptions) (works []*Work) {
 	for _, workNode := range w.getWorkNodes() {
+		work := workNode.work
+		if opt != nil {
+			if opt.GroupName != "" && opt.GroupName != work.Issue.GroupName {
+				continue
+			}
+			if opt.ProjectName != "" && opt.ProjectName != work.Issue.ProjectName {
+				continue
+			}
+			if opt.Number != 0 && opt.Number != work.Issue.GetNumber() {
+				continue
+			}
+
+			if !work.Issue.HasAllLabels(opt.LabelNames) {
+				continue
+			}
+		}
+
 		works = append(works, workNode.work)
 	}
 	return
@@ -60,6 +85,11 @@ func (w *WorkGraph) GetSortedWorks(sortWorkFunctions []SortWorkFunc) (works []*W
 
 	works = w.convertNodesToWorks(nodes)
 	return reverseWorks(works), nil
+}
+
+func (w *WorkGraph) getWorkNodeByNodeID(id int64) (*WorkNode, bool) {
+	workNode, ok := w.gMap[id]
+	return workNode, ok
 }
 
 func (w *WorkGraph) getWorkByNodeID(id int64) (*Work, bool) {
@@ -92,7 +122,7 @@ func (w *WorkGraph) convertNodesToWorks(nodes []graph.Node) (works []*Work) {
 	return
 }
 
-func (w *WorkGraph) SetEdge(aWork, bWork *Work) error {
+func (w *WorkGraph) SetEdge(aWork, bWork *Work, relation *WorkRelation) error {
 	aWorkNode, ok := w.toWorkNode(aWork)
 	if !ok {
 		return fmt.Errorf("work %v not found", aWork)
@@ -103,14 +133,21 @@ func (w *WorkGraph) SetEdge(aWork, bWork *Work) error {
 		return fmt.Errorf("work %v not found", bWork)
 	}
 
-	w.g.SetEdge(w.g.NewEdge(aWorkNode.node, bWorkNode.node))
+	edge := w.g.NewEdge(aWorkNode.node, bWorkNode.node)
+	w.g.SetEdge(edge)
+	w.edgeMap[edge] = relation
 	return nil
 }
 
 func (w *WorkGraph) getRelatedWorksByNodeID(id int64) (works []*Work) {
 	nodes := w.g.From(id)
+
+	beforeWorkNode, _ := w.getWorkNodeByNodeID(id) // FIXME
 	for _, node := range nodes {
 		if work, ok := w.getWorkByNodeID(node.ID()); ok {
+			if edge := w.g.Edge(beforeWorkNode.node.ID(), node.ID()); edge != nil {
+				work.Relation = w.edgeMap[edge]
+			}
 			works = append(works, work)
 		}
 	}

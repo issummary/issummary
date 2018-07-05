@@ -20,25 +20,25 @@ export interface IIssueTableRowProps {
 
 const rowStyle: CSSProperties = {
   whiteSpace: 'normal',
-  wordWrap: 'break-word',
+  wordWrap: 'break-word'
 };
 
 const today = moment().format('YYYY-MM-DD');
 
-const TotalSPPoint = (props: { work: IWork; velocityPerManPerDay: number }) => (// tslint:disable-line
+// tslint:disable-next-line
+const TotalSPPoint = (props: { work: IWork; velocityPerManPerDay: number }) => (
   <span>
     <br />(+{props.work.TotalStoryPoint / props.velocityPerManPerDay})
   </span>
 );
 
-export const IssueTableRow = (props: IIssueTableRowProps) => {// tslint:disable-line
+// tslint:disable-next-line
+export const IssueTableRow = (props: IIssueTableRowProps) => {
   const totalManDay = props.totalSP / props.velocityPerManPerDay;
   const totalParallelManDay = Math.ceil(totalManDay / props.parallels);
   const bizRawDay = koyomi.addBiz(today, totalParallelManDay);
 
-  const bizDay = bizRawDay
-    ? moment(bizRawDay).format('YYYY-MM-DD')
-    : '1年以上先';
+  const bizDay = bizRawDay ? moment(bizRawDay).format('YYYY-MM-DD') : '1年以上先';
 
   return (
     <TableRow key={props.key}>
@@ -52,45 +52,26 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {// tslint:disable-
         {props.work.Issue.Milestone ? props.work.Issue.Milestone.Title : '-'}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
-        {props.work.Label && props.work.Label.Parent
-          ? props.work.Label.Parent.Name
-          : '-'}
+        {props.work.Label && props.work.Label.Description.ParentName ? props.work.Label.Description.ParentName : '-'}
       </TableRowColumn>
-      <TableRowColumn style={rowStyle}>
-        {props.work.Label ? props.work.Label.Name : '-'}
-      </TableRowColumn>
+      <TableRowColumn style={rowStyle}>{props.work.Label ? props.work.Label.Name : '-'}</TableRowColumn>
       <TableRowColumn style={rowStyle}>{props.work.Issue.Title}</TableRowColumn>
       <TableRowColumn style={{ ...rowStyle, width: 250 }}>
-        {props.work.Issue.Description.Summary
-          ? props.work.Issue.Description.Summary
-          : '-'}
+        {props.work.Issue.Description.Summary ? props.work.Issue.Description.Summary : '-'}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.work.StoryPoint / props.velocityPerManPerDay}
         {props.work.TotalStoryPoint !== 0 ? (
-          <TotalSPPoint
-            work={props.work}
-            velocityPerManPerDay={props.velocityPerManPerDay}
-          />
+          <TotalSPPoint work={props.work} velocityPerManPerDay={props.velocityPerManPerDay} />
         ) : null}
       </TableRowColumn>
+      <TableRowColumn style={rowStyle}>{props.totalSP / props.velocityPerManPerDay}</TableRowColumn>
+      {props.showTotalManDayColumn ? <TableRowColumn style={rowStyle}>{bizDay}</TableRowColumn> : null}
       <TableRowColumn style={rowStyle}>
-        {props.totalSP / props.velocityPerManPerDay}
-      </TableRowColumn>
-      {props.showTotalManDayColumn ? (
-        <TableRowColumn style={rowStyle}>{bizDay}</TableRowColumn>
-      ) : null}
-      <TableRowColumn style={rowStyle}>
-        {props.work.Issue.DueDate
-          ? props.work.Issue.DueDate.format('YYYY/MM/DD')
-          : '-'}
+        {props.work.Issue.DueDate ? props.work.Issue.DueDate.format('YYYY/MM/DD') : '-'}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
-        <IssueTableIssueAndLabelDependenciesRow
-          currentProjectName={props.work.Issue.ProjectName}
-          deps={props.work.Dependencies}
-          labelDeps={props.work.Label ? props.work.Label.Dependencies : []}
-        />
+        <IssueTableIssueAndLabelDependenciesRow work={props.work} />
       </TableRowColumn>
     </TableRow>
   );

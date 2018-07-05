@@ -60,7 +60,6 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 
 	for _, issue := range issues {
 		for _, project := range projects {
-			fmt.Printf("%#v\n", issue)
 			if issue.GetRepositoryID() == project.GetID() {
 				filteredIssues = append(filteredIssues, issue)
 				break
@@ -69,7 +68,7 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 	}
 
 	labels := <-labelsChan
-	works, err = toWorks(filteredIssues, projects, labels, prefix, spLabelPrefix)
+	works, err = toWorks(gid, filteredIssues, projects, labels, prefix, spLabelPrefix)
 	if err != nil {
 		var projectNames []string
 		for _, project := range projects {
