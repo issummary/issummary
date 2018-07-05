@@ -2,30 +2,19 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import { Issue, IWork } from '../models/work';
 
-export const IssueIIDAndProjectName = (props: {
-  // tslint:disable-line
-  currentProjectName: string;
-  issue: Issue;
-}) => (
+// tslint:disable-next-line
+export const IssueIIDAndProjectName = (props: { currentProjectName: string; issue: Issue }) => (
   <a href={props.issue.URL} target="_blank">
-    {props.issue.ProjectName &&
-    props.issue.ProjectName !== props.currentProjectName
+    {props.issue.ProjectName && props.issue.ProjectName !== props.currentProjectName
       ? props.issue.ProjectName + ' #' + props.issue.IID
       : '#' + props.issue.IID}
   </a>
 );
 
-const IssueDependencies = (props: {
-  // tslint:disable-line
-  currentProjectName: string;
-  issues: Issue[];
-}) => {
+// tslint:disable-next-line
+const IssueDependencies = (props: { currentProjectName: string; issues: Issue[] }) => {
   const issueLinks = props.issues.map(i => (
-    <IssueIIDAndProjectName
-      currentProjectName={props.currentProjectName}
-      issue={i}
-      key={i.ProjectName + i.IID}
-    />
+    <IssueIIDAndProjectName currentProjectName={props.currentProjectName} issue={i} key={i.ProjectName + i.IID} />
   ));
 
   if (issueLinks.length === 0) {
@@ -36,39 +25,25 @@ const IssueDependencies = (props: {
 
   return (
     <span>
-      {issueLinks.map((a, i) => (
-        <span key={i}>
-          {a}
-          <span> </span>
-        </span>
-      ))}
+      {issueLinks.map((a, i) => <span key={i}>{a} </span>)}
       {lastLink}
     </span>
   );
 };
 
-const LabelDependencies = (props: {
-  // tslint:disable-line
-  currentProjectName: string;
-  dependLabelName: string;
-  dependIssues: Issue[];
-}) => {
+// tslint:disable-next-line
+const LabelDependencies = (props: { currentProjectName: string; dependLabelName: string; dependIssues: Issue[] }) => {
   return (
     <span>
       {props.dependLabelName}(
-      <IssueDependencies
-        currentProjectName={props.currentProjectName}
-        issues={props.dependIssues}
-      />
+      <IssueDependencies currentProjectName={props.currentProjectName} issues={props.dependIssues} />
       )
     </span>
   );
 };
 
-export const IssueTableIssueAndLabelDependenciesRow = (props: {
-  // tslint:disable-line
-  work: IWork;
-}) => {
+// tslint:disable-next-line
+export const IssueTableIssueAndLabelDependenciesRow = (props: { work: IWork }) => {
   const dependWorks = props.work.DependWorks;
 
   const issueOfIssueDescriptionDependWorks = dependWorks.filter(
@@ -89,9 +64,7 @@ export const IssueTableIssueAndLabelDependenciesRow = (props: {
     return <span>-</span>;
   }
 
-  const labelWorks = labelOfIssueDescriptionDependWorks.concat(
-    labelOfLabelDescriptionDependWorks
-  );
+  const labelWorks = labelOfIssueDescriptionDependWorks.concat(labelOfLabelDescriptionDependWorks);
 
   const groupedWorks = _.groupBy(labelWorks, w => w.Relation!.LabelName);
 
