@@ -57,7 +57,7 @@ var RootCmd = &cobra.Command{
 		worksBodyFunc := func(body []byte) (interface{}, error) {
 			workManager := issummary.NewWorkManager()
 			for _, gid := range config.GIDs {
-				works, err := client.ListGroupWorks(ctx, gid, "LC", "S")
+				works, err := client.ListGroupWorks(ctx, gid, config.ClassLabelPrefix, config.SPLabelPrefix)
 
 				if err != nil {
 					return nil, err
@@ -129,6 +129,15 @@ func init() {
 	viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
 	RootCmd.PersistentFlags().String("gid", "", "Group ID list")
 	viper.BindPFlag("gid", RootCmd.PersistentFlags().Lookup("gid"))
+
+	spPrefix := "sp-prefix"
+	RootCmd.PersistentFlags().String(spPrefix, "", "prefix of Story Point label")
+	viper.BindPFlag(spPrefix, RootCmd.PersistentFlags().Lookup(spPrefix))
+
+	classPrefix := "class-prefix"
+	RootCmd.PersistentFlags().String(classPrefix, "", "prefix of class label")
+	viper.BindPFlag(classPrefix, RootCmd.PersistentFlags().Lookup(classPrefix))
+
 	RootCmd.PersistentFlags().String("base-url", viper.GetString("base-url"), "GitLab base URL")
 	viper.BindPFlag("base-url", RootCmd.PersistentFlags().Lookup("base-url"))
 }
@@ -151,6 +160,8 @@ func initConfig() {
 	viper.AutomaticEnv()            // read in environment variables that match
 
 	viper.Set("base-url", viper.GetString("base_url"))
+	viper.Set("sp-prefix", viper.GetString("sp_prefix"))
+	viper.Set("class-prefix", viper.GetString("class_prefix"))
 }
 
 type Config struct {
@@ -158,6 +169,8 @@ type Config struct {
 	Token             string
 	GitServiceBaseURL string
 	GIDs              []string
+	SPLabelPrefix     string
+	ClassLabelPrefix  string
 }
 
 func generateIssummaryConfig() (*Config, error) {
@@ -172,6 +185,8 @@ func generateIssummaryConfig() (*Config, error) {
 		Port:              viper.GetInt("port"),
 		Token:             viper.GetString("token"),
 		GitServiceBaseURL: viper.GetString("base-url"),
+		SPLabelPrefix:     viper.GetString("sp-prefix"),
+		ClassLabelPrefix:  viper.GetString("class-prefix"),
 		GIDs:              gids,
 	}, nil
 }
