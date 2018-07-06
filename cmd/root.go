@@ -23,6 +23,13 @@ import (
 
 var cfgFile string
 
+var classPrefixKey = "class-prefix"
+var spPrefixKey = "sp-prefix"
+var baseURLKey = "base-url"
+var tokenKey = "token"
+var portKey = "port"
+var gidKey = "gid"
+
 var RootCmd = &cobra.Command{
 	Use:   "issummary",
 	Short: "issue summary viewer",
@@ -122,24 +129,26 @@ func init() {
 	}
 
 	cobra.OnInitialize(initConfig)
+
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.issummary.yaml)")
-	RootCmd.PersistentFlags().String("token", "", "git repository service token")
-	viper.BindPFlag("token", RootCmd.PersistentFlags().Lookup("token"))
-	RootCmd.PersistentFlags().Int("port", 8080, "Listen port")
-	viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
-	RootCmd.PersistentFlags().String("gid", "", "Group ID list")
-	viper.BindPFlag("gid", RootCmd.PersistentFlags().Lookup("gid"))
 
-	spPrefix := "sp-prefix"
-	RootCmd.PersistentFlags().String(spPrefix, "", "prefix of Story Point label")
-	viper.BindPFlag(spPrefix, RootCmd.PersistentFlags().Lookup(spPrefix))
+	RootCmd.PersistentFlags().String(tokenKey, "", "git repository service token")
+	viper.BindPFlag(tokenKey, RootCmd.PersistentFlags().Lookup(tokenKey))
 
-	classPrefix := "class-prefix"
-	RootCmd.PersistentFlags().String(classPrefix, "", "prefix of class label")
-	viper.BindPFlag(classPrefix, RootCmd.PersistentFlags().Lookup(classPrefix))
+	RootCmd.PersistentFlags().Int(portKey, 8080, "Listen port")
+	viper.BindPFlag(portKey, RootCmd.PersistentFlags().Lookup(portKey))
 
-	RootCmd.PersistentFlags().String("base-url", viper.GetString("base-url"), "GitLab base URL")
-	viper.BindPFlag("base-url", RootCmd.PersistentFlags().Lookup("base-url"))
+	RootCmd.PersistentFlags().String(gidKey, "", "Group ID list")
+	viper.BindPFlag(gidKey, RootCmd.PersistentFlags().Lookup(gidKey))
+
+	RootCmd.PersistentFlags().String(spPrefixKey, "S", "prefix of Story Point label")
+	viper.BindPFlag(spPrefixKey, RootCmd.PersistentFlags().Lookup(spPrefixKey))
+
+	RootCmd.PersistentFlags().String(classPrefixKey, "C:", "prefix of class label")
+	viper.BindPFlag(classPrefixKey, RootCmd.PersistentFlags().Lookup(classPrefixKey))
+
+	RootCmd.PersistentFlags().String(baseURLKey, "https://github.com", "base URL of git service")
+	viper.BindPFlag(baseURLKey, RootCmd.PersistentFlags().Lookup(baseURLKey))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -159,9 +168,8 @@ func initConfig() {
 	viper.SetEnvPrefix("issummary") // will be uppercased automatically
 	viper.AutomaticEnv()            // read in environment variables that match
 
-	viper.Set("base-url", viper.GetString("base_url"))
-	viper.Set("sp-prefix", viper.GetString("sp_prefix"))
-	viper.Set("class-prefix", viper.GetString("class_prefix"))
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
 }
 
 type Config struct {
@@ -174,7 +182,7 @@ type Config struct {
 }
 
 func generateIssummaryConfig() (*Config, error) {
-	gidStr := viper.GetString("gid")
+	gidStr := viper.GetString(gidKey)
 	gids := strings.Split(gidStr, ",")
 
 	if len(gids) == 0 {
@@ -182,11 +190,11 @@ func generateIssummaryConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Port:              viper.GetInt("port"),
-		Token:             viper.GetString("token"),
-		GitServiceBaseURL: viper.GetString("base-url"),
-		SPLabelPrefix:     viper.GetString("sp-prefix"),
-		ClassLabelPrefix:  viper.GetString("class-prefix"),
+		Port:              viper.GetInt(portKey),
+		Token:             viper.GetString(tokenKey),
+		GitServiceBaseURL: viper.GetString(baseURLKey),
+		SPLabelPrefix:     viper.GetString(spPrefixKey),
+		ClassLabelPrefix:  viper.GetString(classPrefixKey),
 		GIDs:              gids,
 	}, nil
 }
