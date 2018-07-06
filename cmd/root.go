@@ -25,6 +25,7 @@ var cfgFile string
 
 var classPrefixKey = "class-prefix"
 var spPrefixKey = "sp-prefix"
+var gitServiceTypeKey = "git-service"
 var baseURLKey = "base-url"
 var tokenKey = "token"
 var portKey = "port"
@@ -49,7 +50,7 @@ var RootCmd = &cobra.Command{
 
 		serviceConfig := &etc.ServiceConfig{ // FIXME
 			Host:     host,
-			Type:     "gitlab",
+			Type:     config.GitServiceType,
 			Token:    config.Token,
 			Protocol: protocol,
 		}
@@ -135,6 +136,9 @@ func init() {
 	RootCmd.PersistentFlags().String(tokenKey, "", "git repository service token")
 	viper.BindPFlag(tokenKey, RootCmd.PersistentFlags().Lookup(tokenKey))
 
+	RootCmd.PersistentFlags().String(gitServiceTypeKey, "github", "git service type")
+	viper.BindPFlag(gitServiceTypeKey, RootCmd.PersistentFlags().Lookup(gitServiceTypeKey))
+
 	RootCmd.PersistentFlags().Int(portKey, 8080, "Listen port")
 	viper.BindPFlag(portKey, RootCmd.PersistentFlags().Lookup(portKey))
 
@@ -176,6 +180,7 @@ type Config struct {
 	Port              int
 	Token             string
 	GitServiceBaseURL string
+	GitServiceType    string
 	GIDs              []string
 	SPLabelPrefix     string
 	ClassLabelPrefix  string
@@ -193,6 +198,7 @@ func generateIssummaryConfig() (*Config, error) {
 		Port:              viper.GetInt(portKey),
 		Token:             viper.GetString(tokenKey),
 		GitServiceBaseURL: viper.GetString(baseURLKey),
+		GitServiceType:    viper.GetString(gitServiceTypeKey),
 		SPLabelPrefix:     viper.GetString(spPrefixKey),
 		ClassLabelPrefix:  viper.GetString(classPrefixKey),
 		GIDs:              gids,
