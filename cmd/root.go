@@ -37,7 +37,7 @@ var RootCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
-		config, err := generateIssummaryConfig()
+		config, err := generateIssummaryConfigFromViper()
 		if err != nil {
 			panic(err)
 		}
@@ -62,44 +62,6 @@ var RootCmd = &cobra.Command{
 
 		client := issummary.New(gitanyClient)
 
-		worksBodyFunc := func(body []byte) (interface{}, error) {
-			workManager := issummary.NewWorkManager()
-			for _, gid := range config.GIDs {
-				works, err := client.ListGroupWorks(ctx, gid, config.ClassLabelPrefix, config.SPLabelPrefix)
-
-				if err != nil {
-					return nil, err
-				}
-
-				workManager.AddWorks(works)
-			}
-
-			if err := workManager.ResolveDependencies(); err != nil {
-				return nil, err
-			}
-			sortedWorks, err := workManager.GetSortedWorks()
-			if err != nil {
-				return nil, err
-			}
-
-			return api.ToWorks(sortedWorks), nil
-		}
-
-		milestonesBodyFunc := func(body []byte) (interface{}, error) {
-			var allMilestones []*issummary.Milestone
-			for _, gid := range config.GIDs {
-				milestones, err := client.ListGroupMilestones(ctx, gid)
-
-				if err != nil {
-					panic(err)
-				}
-
-				allMilestones = append(allMilestones, milestones...)
-			}
-
-			return api.ToMilestones(allMilestones), nil
-		}
-
 		statikFS, err := fs.New()
 		if err != nil {
 			log.Fatal(err)
@@ -107,8 +69,8 @@ var RootCmd = &cobra.Command{
 
 		http.Handle("/", http.FileServer(statikFS))
 
-		http.HandleFunc("/api/works", api.CreateJsonHandleFunc(worksBodyFunc))
-		http.HandleFunc("/api/milestones", api.CreateJsonHandleFunc(milestonesBodyFunc))
+		http.HandleFunc("/api/works", api.GetWorksJsonHandleFunc(ctx, client, config))
+		http.HandleFunc("/api/milestones", api.GetMilestonesJsonHandleFunc(ctx, client, config))
 		err = http.ListenAndServe(fmt.Sprintf(":%v", config.Port), nil)
 		if err != nil {
 			panic(err)
@@ -176,17 +138,7 @@ func initConfig() {
 	viper.SetEnvKeyReplacer(replacer)
 }
 
-type Config struct {
-	Port              int
-	Token             string
-	GitServiceBaseURL string
-	GitServiceType    string
-	GIDs              []string
-	SPLabelPrefix     string
-	ClassLabelPrefix  string
-}
-
-func generateIssummaryConfig() (*Config, error) {
+func generateIssummaryConfigFromViper() (*issummary.Config, error) {
 	gidStr := viper.GetString(gidKey)
 	gids := strings.Split(gidStr, ",")
 
@@ -194,7 +146,7 @@ func generateIssummaryConfig() (*Config, error) {
 		return nil, errors.New("gid is empty")
 	}
 
-	return &Config{
+	return &issummary.Config{
 		Port:              viper.GetInt(portKey),
 		Token:             viper.GetString(tokenKey),
 		GitServiceBaseURL: viper.GetString(baseURLKey),
