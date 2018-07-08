@@ -11,7 +11,10 @@ import (
 )
 
 type Client struct {
-	client gitany.Client
+	client       gitany.Client
+	Repositories []*Repository
+	Issues       []*Issue
+	Labels       []*Label
 }
 
 func New(client gitany.Client) *Client {
@@ -20,7 +23,7 @@ func New(client gitany.Client) *Client {
 	}
 }
 
-func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabelPrefix string) (works []*Work, err error) {
+func (c *Client) Fetch(ctx context.Context, gid string) error {
 	eg := errgroup.Group{}
 	issuesChan := make(chan []gitany.Issue, 1)
 	repositoriesChan := make(chan []gitany.Repository, 1)
@@ -29,14 +32,14 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 	targetLabels := []string{"W"} // TODO: 外から指定できるようにする
 
 	eg.Go(func() error {
-		log.Printf("Fetch issues with %v as label from %v", targetLabels, gid)
+		log.Printf("Fetch Issues with %v as label from %v", targetLabels, gid)
 		allIssues, err := c.listAllGroupIssuesByLabel(ctx, gid, targetLabels)
 		issuesChan <- allIssues
 		return err
 	})
 
 	eg.Go(func() error {
-		log.Printf("Fetch repositories from %v", gid)
+		log.Printf("Fetch Repositories from %v", gid)
 		projects, err := c.listAllProjects(ctx, gid)
 		if err != nil {
 			return err
@@ -44,37 +47,45 @@ func (c *Client) ListGroupWorks(ctx context.Context, gid string, prefix, spLabel
 
 		repositoriesChan <- projects
 
-		log.Printf("Fetch labels from %v", gid)
+		log.Printf("Fetch Labels from %v", gid)
 		labels, err := c.listAllProjectsLabels(ctx, gid, projects)
 		labelsChan <- labels
 		return err
 	})
 
 	if err := eg.Wait(); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	projects := <-repositoriesChan
-	issues := <-issuesChan
-	var filteredIssues []gitany.Issue
+	c.Repositories = toRepositories(<-repositoriesChan)
+	issues, err := toIssues(<-issuesChan)
+	if err != nil {
+		return err
+	}
+	c.Issues = issues
 
-	for _, issue := range issues {
-		for _, project := range projects {
+	c.Labels = toLabels(<-labelsChan)
+	return nil
+}
+
+func (c *Client) ListGroupWorks(gid string, prefix, spLabelPrefix string) (works []*Work, err error) { // FIXME gid
+	var filteredIssues []*Issue
+
+	for _, issue := range c.Issues {
+		for _, project := range c.Repositories {
 			if issue.GetRepositoryID() == project.GetID() {
 				filteredIssues = append(filteredIssues, issue)
 				break
 			}
 		}
 	}
-
-	labels := <-labelsChan
-	works, err = toWorks(gid, filteredIssues, projects, labels, prefix, spLabelPrefix)
+	works, err = toWorks(gid, filteredIssues, c.Repositories, c.Labels, prefix, spLabelPrefix)
 	if err != nil {
 		var projectNames []string
-		for _, project := range projects {
+		for _, project := range c.Repositories {
 			projectNames = append(projectNames, project.GetName())
 		}
-		return nil, fmt.Errorf("failed to convert to works from %v issues(projects are %v): %v", gid, projectNames, err)
+		return nil, fmt.Errorf("failed to convert to works from %v Issues(c.Repositories are %v): %v", gid, projectNames, err)
 	}
 	return works, nil
 }
@@ -106,7 +117,7 @@ func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labe
 	var allIssues []gitany.Issue
 
 	for {
-		log.Printf("fetch issues from org:%v Page:%v", gid, issueOpt.Page)
+		log.Printf("fetch Issues from org:%v Page:%v", gid, issueOpt.Page)
 		issues, _, err := c.client.GetIssues().ListByOrg(ctx, gid, issueOpt)
 		if err != nil {
 			return nil, err
@@ -221,7 +232,7 @@ func (c *Client) listAllLabels(ctx context.Context, owner, repo string) ([]gitan
 	return allLabels, nil
 }
 
-func findProjectByID(projects []gitany.Repository, id int64) (gitany.Repository, bool) {
+func findProjectByID(projects []*Repository, id int64) (gitany.Repository, bool) {
 	for _, project := range projects {
 		if project.GetID() == id {
 			return project, true
@@ -231,7 +242,7 @@ func findProjectByID(projects []gitany.Repository, id int64) (gitany.Repository,
 	return nil, false
 }
 
-func findProjectByName(projects []gitany.Repository, name string) (gitany.Repository, bool) {
+func findProjectByName(projects []*Repository, name string) (gitany.Repository, bool) {
 	for _, project := range projects {
 		if project.GetName() == name {
 			return project, true

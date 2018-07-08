@@ -67,13 +67,17 @@ func GetWorksBodyFunc(ctx context.Context, client *issummary.Client, config *iss
 	worksBodyFunc := func(body []byte) (interface{}, error) {
 		workManager := issummary.NewWorkManager()
 		for _, gid := range config.GIDs {
-			works, err := client.ListGroupWorks(ctx, gid, config.ClassLabelPrefix, config.SPLabelPrefix)
+			if err := client.Fetch(ctx, gid); err != nil {
+				return nil, err
+			}
+			works, err := client.ListGroupWorks(gid, config.ClassLabelPrefix, config.SPLabelPrefix)
 
 			if err != nil {
 				return nil, err
 			}
 
 			workManager.AddWorks(works)
+			workManager.AddLabels(client.Labels)
 		}
 
 		if err := workManager.ResolveDependencies(); err != nil {

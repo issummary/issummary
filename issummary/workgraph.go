@@ -14,6 +14,7 @@ type WorkGraph struct {
 	gMap        map[int64]*WorkNode
 	workNodeMap map[int]*WorkNode
 	edgeMap     map[graph.Edge]*WorkRelation
+	lg          *LabelGraph
 }
 
 func NewWorkGraph() *WorkGraph {
@@ -22,6 +23,7 @@ func NewWorkGraph() *WorkGraph {
 		gMap:        map[int64]*WorkNode{},
 		workNodeMap: map[int]*WorkNode{},
 		edgeMap:     map[graph.Edge]*WorkRelation{},
+		lg:          newLabelGraph(),
 	}
 
 }
@@ -94,6 +96,19 @@ func (w *WorkGraph) GetSortedWorks(sortWorkFunctions []SortWorkFunc) (works []*W
 	}
 
 	works = w.convertNodesToWorks(nodes)
+
+	for _, work := range works {
+		if work.Label == nil {
+			continue
+		}
+
+		parentLabels, err := w.lg.listParents(work.Label)
+		if err != nil {
+			return nil, err
+		}
+		work.Label.ParentLabels = parentLabels
+	}
+
 	return reverseWorks(works), nil
 }
 
@@ -156,7 +171,7 @@ func (w *WorkGraph) getRelatedWorksByNodeID(id int64) (works []*Work) {
 	for _, node := range nodes {
 		if work, ok := w.getWorkByNodeID(node.ID()); ok {
 			if edge := w.g.Edge(beforeWorkNode.node.ID(), node.ID()); edge != nil {
-				work.Relation = w.edgeMap[edge]
+				work.Relation = w.edgeMap[edge] // FIXME no side effect
 			}
 			works = append(works, work)
 		}
