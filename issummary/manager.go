@@ -5,9 +5,7 @@ import (
 	"io/ioutil"
 	"sort"
 
-	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding/dot"
-	"gonum.org/v1/gonum/graph/simple"
 )
 
 type WorkManager struct {
@@ -15,13 +13,7 @@ type WorkManager struct {
 }
 
 func NewWorkManager() *WorkManager {
-	gm := &WorkGraph{
-		g:           simple.NewDirectedGraph(),
-		gMap:        map[int64]*WorkNode{},
-		workNodeMap: map[int]*WorkNode{},
-		edgeMap:     map[graph.Edge]*WorkRelation{},
-	}
-
+	gm := NewWorkGraph()
 	return &WorkManager{gm}
 }
 

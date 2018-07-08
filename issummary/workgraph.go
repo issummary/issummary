@@ -16,6 +16,16 @@ type WorkGraph struct {
 	edgeMap     map[graph.Edge]*WorkRelation
 }
 
+func NewWorkGraph() *WorkGraph {
+	return &WorkGraph{
+		g:           simple.NewDirectedGraph(),
+		gMap:        map[int64]*WorkNode{},
+		workNodeMap: map[int]*WorkNode{},
+		edgeMap:     map[graph.Edge]*WorkRelation{},
+	}
+
+}
+
 type WorkNode struct {
 	node graph.Node
 	work *Work
