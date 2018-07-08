@@ -1,11 +1,14 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/issummary/issummary/issummary"
 )
 
 type Input struct {
@@ -53,4 +56,59 @@ func CreateJsonHandleFunc(bodyFunc BodyFunc) http.HandlerFunc {
 		retJson = input
 	}
 	return jsonHandleFunc
+}
+
+func GetWorksJsonHandleFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) http.HandlerFunc {
+	worksBodyFunc := GetWorksBodyFunc(ctx, client, config)
+	return CreateJsonHandleFunc(worksBodyFunc)
+}
+
+func GetWorksBodyFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) func(body []byte) (interface{}, error) {
+	worksBodyFunc := func(body []byte) (interface{}, error) {
+		workManager := issummary.NewWorkManager()
+		for _, gid := range config.GIDs {
+			works, err := client.ListGroupWorks(ctx, gid, config.ClassLabelPrefix, config.SPLabelPrefix)
+
+			if err != nil {
+				return nil, err
+			}
+
+			workManager.AddWorks(works)
+		}
+
+		if err := workManager.ResolveDependencies(); err != nil {
+			return nil, err
+		}
+		sortedWorks, err := workManager.GetSortedWorks()
+		if err != nil {
+			return nil, err
+		}
+
+		return ToWorks(sortedWorks), nil
+	}
+
+	return worksBodyFunc
+}
+
+func GetMilestonesJsonHandleFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) http.HandlerFunc {
+	milestoneBodyFunc := GetMilestonesBodyFunc(ctx, client, config)
+	return CreateJsonHandleFunc(milestoneBodyFunc)
+}
+
+func GetMilestonesBodyFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) func(body []byte) (interface{}, error) {
+	milestonesBodyFunc := func(body []byte) (interface{}, error) {
+		var allMilestones []*issummary.Milestone
+		for _, gid := range config.GIDs {
+			milestones, err := client.ListGroupMilestones(ctx, gid)
+
+			if err != nil {
+				panic(err)
+			}
+
+			allMilestones = append(allMilestones, milestones...)
+		}
+
+		return ToMilestones(allMilestones), nil
+	}
+	return milestonesBodyFunc
 }

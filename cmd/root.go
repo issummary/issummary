@@ -23,13 +23,21 @@ import (
 
 var cfgFile string
 
+var classPrefixKey = "class-prefix"
+var spPrefixKey = "sp-prefix"
+var gitServiceTypeKey = "git-service"
+var baseURLKey = "base-url"
+var tokenKey = "token"
+var portKey = "port"
+var gidKey = "gid"
+
 var RootCmd = &cobra.Command{
 	Use:   "issummary",
 	Short: "issue summary viewer",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
-		config, err := generateIssummaryConfig()
+		config, err := generateIssummaryConfigFromViper()
 		if err != nil {
 			panic(err)
 		}
@@ -42,7 +50,7 @@ var RootCmd = &cobra.Command{
 
 		serviceConfig := &etc.ServiceConfig{ // FIXME
 			Host:     host,
-			Type:     "gitlab",
+			Type:     config.GitServiceType,
 			Token:    config.Token,
 			Protocol: protocol,
 		}
@@ -54,44 +62,6 @@ var RootCmd = &cobra.Command{
 
 		client := issummary.New(gitanyClient)
 
-		worksBodyFunc := func(body []byte) (interface{}, error) {
-			workManager := issummary.NewWorkManager()
-			for _, gid := range config.GIDs {
-				works, err := client.ListGroupWorks(ctx, gid, "LC", "S")
-
-				if err != nil {
-					return nil, err
-				}
-
-				workManager.AddWorks(works)
-			}
-
-			if err := workManager.ResolveDependencies(); err != nil {
-				return nil, err
-			}
-			sortedWorks, err := workManager.GetSortedWorks()
-			if err != nil {
-				return nil, err
-			}
-
-			return api.ToWorks(sortedWorks), nil
-		}
-
-		milestonesBodyFunc := func(body []byte) (interface{}, error) {
-			var allMilestones []*issummary.Milestone
-			for _, gid := range config.GIDs {
-				milestones, err := client.ListGroupMilestones(ctx, gid)
-
-				if err != nil {
-					panic(err)
-				}
-
-				allMilestones = append(allMilestones, milestones...)
-			}
-
-			return api.ToMilestones(allMilestones), nil
-		}
-
 		statikFS, err := fs.New()
 		if err != nil {
 			log.Fatal(err)
@@ -99,8 +69,8 @@ var RootCmd = &cobra.Command{
 
 		http.Handle("/", http.FileServer(statikFS))
 
-		http.HandleFunc("/api/works", api.CreateJsonHandleFunc(worksBodyFunc))
-		http.HandleFunc("/api/milestones", api.CreateJsonHandleFunc(milestonesBodyFunc))
+		http.HandleFunc("/api/works", api.GetWorksJsonHandleFunc(ctx, client, config))
+		http.HandleFunc("/api/milestones", api.GetMilestonesJsonHandleFunc(ctx, client, config))
 		err = http.ListenAndServe(fmt.Sprintf(":%v", config.Port), nil)
 		if err != nil {
 			panic(err)
@@ -122,15 +92,29 @@ func init() {
 	}
 
 	cobra.OnInitialize(initConfig)
+
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.issummary.yaml)")
-	RootCmd.PersistentFlags().String("token", "", "git repository service token")
-	viper.BindPFlag("token", RootCmd.PersistentFlags().Lookup("token"))
-	RootCmd.PersistentFlags().Int("port", 8080, "Listen port")
-	viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
-	RootCmd.PersistentFlags().String("gid", "", "Group ID list")
-	viper.BindPFlag("gid", RootCmd.PersistentFlags().Lookup("gid"))
-	RootCmd.PersistentFlags().String("base-url", viper.GetString("base-url"), "GitLab base URL")
-	viper.BindPFlag("base-url", RootCmd.PersistentFlags().Lookup("base-url"))
+
+	RootCmd.PersistentFlags().String(tokenKey, "", "git repository service token")
+	viper.BindPFlag(tokenKey, RootCmd.PersistentFlags().Lookup(tokenKey))
+
+	RootCmd.PersistentFlags().String(gitServiceTypeKey, "github", "git service type")
+	viper.BindPFlag(gitServiceTypeKey, RootCmd.PersistentFlags().Lookup(gitServiceTypeKey))
+
+	RootCmd.PersistentFlags().Int(portKey, 8080, "Listen port")
+	viper.BindPFlag(portKey, RootCmd.PersistentFlags().Lookup(portKey))
+
+	RootCmd.PersistentFlags().String(gidKey, "", "Group ID list")
+	viper.BindPFlag(gidKey, RootCmd.PersistentFlags().Lookup(gidKey))
+
+	RootCmd.PersistentFlags().String(spPrefixKey, "S", "prefix of Story Point label")
+	viper.BindPFlag(spPrefixKey, RootCmd.PersistentFlags().Lookup(spPrefixKey))
+
+	RootCmd.PersistentFlags().String(classPrefixKey, "C:", "prefix of class label")
+	viper.BindPFlag(classPrefixKey, RootCmd.PersistentFlags().Lookup(classPrefixKey))
+
+	RootCmd.PersistentFlags().String(baseURLKey, "https://github.com", "base URL of git service")
+	viper.BindPFlag(baseURLKey, RootCmd.PersistentFlags().Lookup(baseURLKey))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -150,28 +134,25 @@ func initConfig() {
 	viper.SetEnvPrefix("issummary") // will be uppercased automatically
 	viper.AutomaticEnv()            // read in environment variables that match
 
-	viper.Set("base-url", viper.GetString("base_url"))
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
 }
 
-type Config struct {
-	Port              int
-	Token             string
-	GitServiceBaseURL string
-	GIDs              []string
-}
-
-func generateIssummaryConfig() (*Config, error) {
-	gidStr := viper.GetString("gid")
+func generateIssummaryConfigFromViper() (*issummary.Config, error) {
+	gidStr := viper.GetString(gidKey)
 	gids := strings.Split(gidStr, ",")
 
 	if len(gids) == 0 {
 		return nil, errors.New("gid is empty")
 	}
 
-	return &Config{
-		Port:              viper.GetInt("port"),
-		Token:             viper.GetString("token"),
-		GitServiceBaseURL: viper.GetString("base-url"),
+	return &issummary.Config{
+		Port:              viper.GetInt(portKey),
+		Token:             viper.GetString(tokenKey),
+		GitServiceBaseURL: viper.GetString(baseURLKey),
+		GitServiceType:    viper.GetString(gitServiceTypeKey),
+		SPLabelPrefix:     viper.GetString(spPrefixKey),
+		ClassLabelPrefix:  viper.GetString(classPrefixKey),
 		GIDs:              gids,
 	}, nil
 }
