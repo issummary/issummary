@@ -7,10 +7,7 @@ interface IProjectSelectFieldProps {
   onChange: (projectName: string) => void;
 }
 
-export class ProjectSelectField extends React.Component<
-  IProjectSelectFieldProps,
-  any
-> {
+export class ProjectSelectField extends React.Component<IProjectSelectFieldProps, any> {
   public state = {
     value: 'all'
   };
@@ -23,12 +20,8 @@ export class ProjectSelectField extends React.Component<
   public render() {
     return (
       <div>
-        <SelectField
-          floatingLabelText="Frequency"
-          value={this.state.value}
-          onChange={this.handleChange}
-        >
-          <MenuItem value={'all'} primaryText="All" key={'all'} />
+        <SelectField floatingLabelText="Repository" value={this.state.value} onChange={this.handleChange}>
+          <MenuItem value={'All'} primaryText="All" key={'all'} />
           {this.props.projectNames.map(pn => {
             return <MenuItem value={pn} primaryText={pn} key={pn} />;
           })}
