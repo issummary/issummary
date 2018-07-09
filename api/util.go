@@ -131,7 +131,7 @@ func toLabel(label *issummary.Label) *Label {
 		return nil
 	}
 
-	var parentNames []string
+	parentNames := []string{}
 	for _, parentLabel := range label.ParentLabels {
 		parentNames = append(parentNames, parentLabel.GetName())
 	}
