@@ -1,28 +1,28 @@
 version: 2
 
-build_cache_key: &build_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}-build
+build_cache_key: &build_cache_key v002-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}-build
 restore_build_cache_keys: &restore_build_cache_keys
   keys:
     - *build_cache_key
-    - v1-dependencies-{{ .Branch }}-build
+    - v002-dependencies-{{ .Branch }}-build
 
-install_cache_key: &install_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}-install
+install_cache_key: &install_cache_key v002-dependencies-{{ .Branch }}-{{ checksum "./static/package.json" }}-install
 restore_install_cache_keys: &restore_install_cache_keys
   keys:
     - *install_cache_key
-    - v1-dependencies-{{ .Branch }}-install
+    - v002-dependencies-{{ .Branch }}-install
 
-server_build_cache_key: &server_build_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}-build
+server_build_cache_key: &server_build_cache_key v002-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}-build
 server_restore_build_cache_keys: &server_restore_build_cache_keys
   keys:
     - *server_build_cache_key
-    - v1-dependencies-{{ .Branch }}-build
+    - v002-dependencies-{{ .Branch }}-build
 
-server_install_cache_key: &server_install_cache_key v1-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}-install
+server_install_cache_key: &server_install_cache_key v002-dependencies-{{ .Branch }}-{{ checksum "/go/src/github.com/issummary/issummary/static/package.json" }}-install
 server_restore_install_cache_keys: &server_restore_install_cache_keys
   keys:
     - *server_install_cache_key
-    - v1-dependencies-{{ .Branch }}-install
+    - v002-dependencies-{{ .Branch }}-install
 
 workflows:
   version: 2
