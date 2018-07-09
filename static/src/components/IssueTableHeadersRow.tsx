@@ -7,29 +7,30 @@ interface IIssueTableHeadersProps {
   showTotalManDayColumn: boolean;
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
+  maxClassNum: number;
 }
 
-export const IssueTableHeadersRow = (props: IIssueTableHeadersProps) => (// tslint:disable-line
+const generateClassColumns = (classNum: number) => {
+  return Array.from(Array(classNum).keys()).map(n => (
+    <TableHeaderColumn key={'class' + n}>Class{n + 1}</TableHeaderColumn>
+  ));
+};
+
+export const IssueTableHeadersRow = (
+  // tslint:disable-line
+  props: IIssueTableHeadersProps
+) => (
   <TableRow>
     <TableHeaderColumn>Project+IID</TableHeaderColumn>
     <TableHeaderColumn>Milestone</TableHeaderColumn>
-    <TableHeaderColumn>Parent Label</TableHeaderColumn>
-    <TableHeaderColumn>Label</TableHeaderColumn>
+    {generateClassColumns(props.maxClassNum)}
     <TableHeaderColumn>Title</TableHeaderColumn>
     <TableHeaderColumn>Summary</TableHeaderColumn>
-    {props.showManDayColumn ? (
-      <TableHeaderColumn>ManDay</TableHeaderColumn>
-    ) : null}
-    {props.showTotalManDayColumn ? (
-      <TableHeaderColumn>Total MD</TableHeaderColumn>
-    ) : null}
-    {props.showTotalManDayColumn ? (
-      <TableHeaderColumn>Est. Date</TableHeaderColumn>
-    ) : null}
+    {props.showManDayColumn ? <TableHeaderColumn>ManDay</TableHeaderColumn> : null}
+    {props.showTotalManDayColumn ? <TableHeaderColumn>Total MD</TableHeaderColumn> : null}
+    {props.showTotalManDayColumn ? <TableHeaderColumn>Est. Date</TableHeaderColumn> : null}
     {props.showSPColumn ? <TableHeaderColumn>SP</TableHeaderColumn> : null}
-    {props.showSPColumn ? (
-      <TableHeaderColumn>Total SP</TableHeaderColumn>
-    ) : null}
+    {props.showSPColumn ? <TableHeaderColumn>Total SP</TableHeaderColumn> : null}
     <TableHeaderColumn>Due Date</TableHeaderColumn>
     <TableHeaderColumn>Deps</TableHeaderColumn>
   </TableRow>
