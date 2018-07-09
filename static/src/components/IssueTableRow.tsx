@@ -43,7 +43,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
 
   const dashList: string[] = new Array<string>(props.maxClassNum).fill('-');
   const label = props.work.Label;
-  let classLabelNames: string[] = props.work.Label ? label.ParentNames.concat([label.Name]) : [];
+  let classLabelNames: string[] = label ? label.ParentNames.concat([label.Name]) : [];
   classLabelNames = classLabelNames.concat(dashList).slice(0, props.maxClassNum);
 
   // tslint:disable-next-line
