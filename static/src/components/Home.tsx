@@ -35,10 +35,8 @@ interface IRefreshProps {
   isFetching: boolean;
 }
 
-const Refresh = (
-  // tslint:disable-line
-  props: IRefreshProps
-) => (
+// tslint:disable-next-line
+const Refresh = (props: IRefreshProps) => (
   <FloatingActionButton style={style} onClick={props.onClick} disabled={props.isFetching}>
     <AutoRenew />
   </FloatingActionButton>

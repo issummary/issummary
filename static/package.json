@@ -78,7 +78,7 @@
     "build:dev:libs": "webpack --config webpack.libs.config.js",
     "watch-sandbox": "webpack --watch --config webpack.sandbox.config.js",
     "run-sandbox": "node dist/sandbox.bundle.js",
-    "lint": "tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' 'test/**/*.ts' --fix",
+    "lint": "npm run pretty-quick && tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' 'test/**/*.ts' --fix",
     "test-circleci": "circleci build",
     "pretty-quick": "pretty-quick",
     "precommit": "pretty-quick --staged"
@@ -97,13 +97,6 @@
       "^.+\\.tsx?$": "ts-jest"
     },
     "testRegex": "(/test/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ]
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
   }
 }

@@ -16,10 +16,8 @@ const generateClassColumns = (classNum: number) => {
   ));
 };
 
-export const IssueTableHeadersRow = (
-  // tslint:disable-line
-  props: IIssueTableHeadersProps
-) => (
+// tslint:disable-next-line
+export const IssueTableHeadersRow = (props: IIssueTableHeadersProps) => (
   <TableRow>
     <TableHeaderColumn>Project+IID</TableHeaderColumn>
     <TableHeaderColumn>Milestone</TableHeaderColumn>
