@@ -43,6 +43,7 @@ type Work struct {
 type Label struct {
 	ID          int64
 	Name        string
+	ParentNames []string
 	Description *issummary.LabelDescription
 }
 
@@ -130,9 +131,15 @@ func toLabel(label *issummary.Label) *Label {
 		return nil
 	}
 
+	parentNames := []string{}
+	for _, parentLabel := range label.ParentLabels {
+		parentNames = append(parentNames, parentLabel.GetName())
+	}
+
 	return &Label{
 		ID:          label.GetID(),
 		Name:        label.GetName(),
+		ParentNames: parentNames,
 		Description: label.Description,
 	}
 }

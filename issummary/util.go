@@ -10,6 +10,17 @@ import (
 	"gopkg.in/russross/blackfriday.v2"
 )
 
+func toRepository(rawRepository gitany.Repository) *Repository {
+	return &Repository{Repository: rawRepository}
+}
+
+func toRepositories(rawRepositories []gitany.Repository) (repositories []*Repository) {
+	for _, rawRepository := range rawRepositories {
+		repositories = append(repositories, toRepository(rawRepository))
+	}
+	return
+}
+
 func toIssue(rawIssue gitany.Issue) (*Issue, error) {
 	issueDescription, err := parseIssueDescription(rawIssue.GetBody())
 	if err != nil {
@@ -22,6 +33,17 @@ func toIssue(rawIssue gitany.Issue) (*Issue, error) {
 	}, nil
 }
 
+func toIssues(rawIssues []gitany.Issue) (issues []*Issue, err error) {
+	for _, rawIssue := range rawIssues {
+		issue, err := toIssue(rawIssue)
+		if err != nil {
+			return nil, err
+		}
+		issues = append(issues, issue)
+	}
+	return
+}
+
 func toLabel(rawLabel gitany.Label) (label *Label) {
 	return &Label{
 		Label:       rawLabel,
@@ -29,9 +51,16 @@ func toLabel(rawLabel gitany.Label) (label *Label) {
 	}
 }
 
-func toWorks(org string, issues []gitany.Issue, projects []gitany.Repository, labels []gitany.Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
-	for _, orgIssue := range issues {
-		issue, err := toIssue(orgIssue)
+func toLabels(rawLabels []gitany.Label) (labels []*Label) {
+	for _, rawLabel := range rawLabels {
+		labels = append(labels, toLabel(rawLabel))
+	}
+	return
+}
+
+func toWorks(org string, issues []*Issue, projects []*Repository, labels []*Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
+	for _, issue := range issues {
+		//issue, err := toIssue(orgIssue)
 		if err != nil {
 			return nil, err
 		}
@@ -40,13 +69,13 @@ func toWorks(org string, issues []gitany.Issue, projects []gitany.Repository, la
 			Issue: issue,
 		}
 
-		if project, ok := findProjectByID(projects, int64(orgIssue.GetRepositoryID())); ok {
+		if project, ok := findProjectByID(projects, int64(issue.GetRepositoryID())); ok {
 			work.Repository = &Repository{Repository: project}
 			work.Issue.ProjectName = project.GetName()
 			work.Issue.GroupName = org
 		}
 
-		for _, labelName := range orgIssue.GetLabels() {
+		for _, labelName := range issue.GetLabels() {
 			if strings.HasPrefix(labelName, targetLabelPrefix) {
 				if l, ok := findLabelByName(labels, labelName); ok {
 					work.Label = toLabel(l)
@@ -55,7 +84,7 @@ func toWorks(org string, issues []gitany.Issue, projects []gitany.Repository, la
 			}
 		}
 
-		for _, labelName := range orgIssue.GetLabels() {
+		for _, labelName := range issue.GetLabels() {
 			if strings.HasPrefix(labelName, spLabelPrefix) {
 				spStr := strings.TrimPrefix(labelName, spLabelPrefix)
 				sp, err := strconv.Atoi(spStr)
@@ -68,7 +97,7 @@ func toWorks(org string, issues []gitany.Issue, projects []gitany.Repository, la
 		}
 
 		for _, project := range projects {
-			if project.GetID() == orgIssue.GetRepositoryID() {
+			if project.GetID() == issue.GetRepositoryID() {
 				work.Issue.ProjectName = project.GetName()
 			}
 			break
@@ -112,7 +141,7 @@ func parseLabelDescription(description string) *LabelDescription {
 	return ld
 }
 
-func findLabelByName(labels []gitany.Label, name string) (gitany.Label, bool) {
+func findLabelByName(labels []*Label, name string) (gitany.Label, bool) {
 	for _, label := range labels {
 		if label.GetName() == name {
 			return label, true

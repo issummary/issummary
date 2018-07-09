@@ -16,6 +16,7 @@ export interface IIssueTableRowProps {
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
   parallels: number;
+  maxClassNum: number;
 }
 
 const rowStyle: CSSProperties = {
@@ -40,6 +41,18 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
 
   const bizDay = bizRawDay ? moment(bizRawDay).format('YYYY-MM-DD') : '1年以上先';
 
+  const dashList: string[] = new Array<string>(props.maxClassNum).fill('-');
+  const label = props.work.Label;
+  let classLabelNames: string[] = label ? label.ParentNames.concat([label.Name]) : [];
+  classLabelNames = classLabelNames.concat(dashList).slice(0, props.maxClassNum);
+
+  // tslint:disable-next-line
+  const ClassColumns = classLabelNames.map(name => (
+    <TableRowColumn key={'class' + name} style={rowStyle}>
+      {name}
+    </TableRowColumn>
+  ));
+
   return (
     <TableRow key={props.key}>
       <TableRowColumn>
@@ -51,10 +64,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
       <TableRowColumn style={rowStyle}>
         {props.work.Issue.Milestone ? props.work.Issue.Milestone.Title : '-'}
       </TableRowColumn>
-      <TableRowColumn style={rowStyle}>
-        {props.work.Label && props.work.Label.Description.ParentName ? props.work.Label.Description.ParentName : '-'}
-      </TableRowColumn>
-      <TableRowColumn style={rowStyle}>{props.work.Label ? props.work.Label.Name : '-'}</TableRowColumn>
+      {ClassColumns}
       <TableRowColumn style={rowStyle}>{props.work.Issue.Title}</TableRowColumn>
       <TableRowColumn style={{ ...rowStyle, width: 250 }}>
         {props.work.Issue.Description.Summary ? props.work.Issue.Description.Summary : '-'}

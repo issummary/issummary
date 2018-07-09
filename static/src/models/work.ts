@@ -18,6 +18,7 @@ export interface IWorkRelation {
 export interface ILabel {
   ID: number;
   Name: string;
+  ParentNames: string[];
   Description: ILabelDescription;
 }
 

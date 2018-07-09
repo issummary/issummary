@@ -5,9 +5,7 @@ import (
 	"io/ioutil"
 	"sort"
 
-	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding/dot"
-	"gonum.org/v1/gonum/graph/simple"
 )
 
 type WorkManager struct {
@@ -15,13 +13,7 @@ type WorkManager struct {
 }
 
 func NewWorkManager() *WorkManager {
-	gm := &WorkGraph{
-		g:           simple.NewDirectedGraph(),
-		gMap:        map[int64]*WorkNode{},
-		workNodeMap: map[int]*WorkNode{},
-		edgeMap:     map[graph.Edge]*WorkRelation{},
-	}
-
+	gm := NewWorkGraph()
 	return &WorkManager{gm}
 }
 
@@ -31,6 +23,9 @@ func (wg *WorkManager) ResolveDependencies() error {
 	}
 
 	wg.setWorkDependencies()
+	if err := wg.w.lg.SetEdges(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -98,6 +93,16 @@ func (wg *WorkManager) AddWorks(works []*Work) {
 	}
 }
 
+func (wg *WorkManager) AddLabel(label *Label) {
+	wg.w.lg.AddLabel(label)
+}
+
+func (wg *WorkManager) AddLabels(labels []*Label) {
+	for _, label := range labels {
+		wg.w.lg.AddLabel(label)
+	}
+}
+
 func (wg *WorkManager) GetListSortedWorksByDueDate() (workNodes []*WorkNode) {
 	workNodes = wg.w.getWorkNodes()
 	sort.Slice(workNodes, func(i, j int) bool {
@@ -128,15 +133,15 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 				return false
 			}
 
-			if aWork.Label.ParentName == "" {
+			if aWork.Label.Description.ParentName == "" {
 				return true
 			}
 
-			if bWork.Label.ParentName == "" {
+			if bWork.Label.Description.ParentName == "" {
 				return false
 			}
 
-			return aWork.Label.ParentName < bWork.Label.ParentName
+			return aWork.Label.Description.ParentName < bWork.Label.Description.ParentName
 		},
 		func(aWork, bWork *Work) bool {
 			return aWork.Issue.ProjectName+string(aWork.Issue.GetNumber()) > bWork.Issue.ProjectName+string(bWork.Issue.GetNumber())

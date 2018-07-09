@@ -5,7 +5,7 @@ import TableHeader from 'material-ui/Table/TableHeader';
 import { IIssueTableActionCreators } from '../actions/issueTable';
 import { IMilestone } from '../models/milestone';
 import { IWork } from '../models/work';
-import { eachSum, filterWorksByProjectNames } from '../services/util';
+import { eachSum } from '../services/util';
 import { IssueTableHeadersRow } from './IssueTableHeadersRow';
 import { IssueTableRow } from './IssueTableRow';
 
@@ -19,6 +19,7 @@ export interface IIssueTableProps {
   velocityPerManPerDay: number;
   parallels: number;
   selectedProjectName: string;
+  maxClassNum: number;
   actions: IIssueTableActionCreators;
 }
 
@@ -28,7 +29,7 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
   }
 
   public render() {
-    console.log(this.props.works);// tslint:disable-line
+    console.log(this.props.works); // tslint:disable-line
     const totalSPs = eachSum(this.props.works.map(w => w.StoryPoint));
     return (
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
@@ -38,6 +39,7 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
             showTotalManDayColumn={this.props.showTotalManDayColumn}
             showSPColumn={this.props.showSPColumn}
             showTotalSPColumn={this.props.showTotalSPColumn}
+            maxClassNum={this.props.maxClassNum}
           />
         </TableHeader>
 
@@ -53,6 +55,7 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
               showTotalSPColumn={this.props.showTotalSPColumn}
               velocityPerManPerDay={this.props.velocityPerManPerDay}
               parallels={this.props.parallels}
+              maxClassNum={this.props.maxClassNum}
             />
           ))}
         </TableBody>

@@ -21,8 +21,8 @@ const (
 
 type Label struct {
 	gitany.Label
-	Description *LabelDescription
-	ParentName  string
+	Description  *LabelDescription
+	ParentLabels []*Label
 }
 
 type LabelDescription struct {
