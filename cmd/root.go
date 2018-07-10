@@ -29,7 +29,7 @@ var gitServiceTypeKey = "git-service"
 var baseURLKey = "base-url"
 var tokenKey = "token"
 var portKey = "port"
-var gidKey = "gid"
+var orgKey = "org"
 
 var RootCmd = &cobra.Command{
 	Use:   "issummary",
@@ -104,8 +104,8 @@ func init() {
 	RootCmd.PersistentFlags().Int(portKey, 8080, "Listen port")
 	viper.BindPFlag(portKey, RootCmd.PersistentFlags().Lookup(portKey))
 
-	RootCmd.PersistentFlags().String(gidKey, "", "Group ID list")
-	viper.BindPFlag(gidKey, RootCmd.PersistentFlags().Lookup(gidKey))
+	RootCmd.PersistentFlags().String(orgKey, "", "Group ID list")
+	viper.BindPFlag(orgKey, RootCmd.PersistentFlags().Lookup(orgKey))
 
 	RootCmd.PersistentFlags().String(spPrefixKey, "S", "prefix of Story Point label")
 	viper.BindPFlag(spPrefixKey, RootCmd.PersistentFlags().Lookup(spPrefixKey))
@@ -139,11 +139,11 @@ func initConfig() {
 }
 
 func generateIssummaryConfigFromViper() (*issummary.Config, error) {
-	gidStr := viper.GetString(gidKey)
-	gids := strings.Split(gidStr, ",")
+	orgStr := viper.GetString(orgKey)
+	organizations := strings.Split(orgStr, ",")
 
-	if len(gids) == 0 {
-		return nil, errors.New("gid is empty")
+	if len(organizations) == 0 {
+		return nil, errors.New("org is empty")
 	}
 
 	return &issummary.Config{
@@ -153,6 +153,6 @@ func generateIssummaryConfigFromViper() (*issummary.Config, error) {
 		GitServiceType:    viper.GetString(gitServiceTypeKey),
 		SPLabelPrefix:     viper.GetString(spPrefixKey),
 		ClassLabelPrefix:  viper.GetString(classPrefixKey),
-		GIDs:              gids,
+		Organizations:     organizations,
 	}, nil
 }

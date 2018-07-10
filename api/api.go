@@ -66,11 +66,11 @@ func GetWorksJsonHandleFunc(ctx context.Context, client *issummary.Client, confi
 func GetWorksBodyFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) func(body []byte) (interface{}, error) {
 	worksBodyFunc := func(body []byte) (interface{}, error) {
 		workManager := issummary.NewWorkManager()
-		for _, gid := range config.GIDs {
-			if err := client.Fetch(ctx, gid); err != nil {
+		for _, org := range config.Organizations {
+			if err := client.Fetch(ctx, org); err != nil {
 				return nil, err
 			}
-			works, err := client.ListGroupWorks(gid, config.ClassLabelPrefix, config.SPLabelPrefix)
+			works, err := client.ListGroupWorks(org, config.ClassLabelPrefix, config.SPLabelPrefix)
 
 			if err != nil {
 				return nil, err
@@ -102,8 +102,8 @@ func GetMilestonesJsonHandleFunc(ctx context.Context, client *issummary.Client, 
 func GetMilestonesBodyFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) func(body []byte) (interface{}, error) {
 	milestonesBodyFunc := func(body []byte) (interface{}, error) {
 		var allMilestones []*issummary.Milestone
-		for _, gid := range config.GIDs {
-			milestones, err := client.ListGroupMilestones(ctx, gid)
+		for _, org := range config.Organizations {
+			milestones, err := client.ListGroupMilestones(ctx, org)
 
 			if err != nil {
 				panic(err)

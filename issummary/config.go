@@ -5,7 +5,7 @@ type Config struct {
 	Token             string
 	GitServiceBaseURL string
 	GitServiceType    string
-	GIDs              []string
+	Organizations     []string
 	SPLabelPrefix     string
 	ClassLabelPrefix  string
 }

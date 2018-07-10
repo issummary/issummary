@@ -23,7 +23,7 @@ func New(client gitany.Client) *Client {
 	}
 }
 
-func (c *Client) Fetch(ctx context.Context, gid string) error {
+func (c *Client) Fetch(ctx context.Context, org string) error {
 	eg := errgroup.Group{}
 	issuesChan := make(chan []gitany.Issue, 1)
 	repositoriesChan := make(chan []gitany.Repository, 1)
@@ -32,23 +32,23 @@ func (c *Client) Fetch(ctx context.Context, gid string) error {
 	targetLabels := []string{"W"} // TODO: 外から指定できるようにする
 
 	eg.Go(func() error {
-		log.Printf("Fetch Issues with %v as label from %v", targetLabels, gid)
-		allIssues, err := c.listAllGroupIssuesByLabel(ctx, gid, targetLabels)
+		log.Printf("Fetch Issues with %v as label from %v", targetLabels, org)
+		allIssues, err := c.listAllGroupIssuesByLabel(ctx, org, targetLabels)
 		issuesChan <- allIssues
 		return err
 	})
 
 	eg.Go(func() error {
-		log.Printf("Fetch Repositories from %v", gid)
-		projects, err := c.listAllProjects(ctx, gid)
+		log.Printf("Fetch Repositories from %v", org)
+		projects, err := c.listAllProjects(ctx, org)
 		if err != nil {
 			return err
 		}
 
 		repositoriesChan <- projects
 
-		log.Printf("Fetch Labels from %v", gid)
-		labels, err := c.listAllProjectsLabels(ctx, gid, projects)
+		log.Printf("Fetch Labels from %v", org)
+		labels, err := c.listAllProjectsLabels(ctx, org, projects)
 		labelsChan <- labels
 		return err
 	})
@@ -68,7 +68,7 @@ func (c *Client) Fetch(ctx context.Context, gid string) error {
 	return nil
 }
 
-func (c *Client) ListGroupWorks(gid string, prefix, spLabelPrefix string) (works []*Work, err error) { // FIXME gid
+func (c *Client) ListGroupWorks(org string, prefix, spLabelPrefix string) (works []*Work, err error) {
 	var filteredIssues []*Issue
 
 	for _, issue := range c.Issues {
@@ -79,13 +79,13 @@ func (c *Client) ListGroupWorks(gid string, prefix, spLabelPrefix string) (works
 			}
 		}
 	}
-	works, err = toWorks(gid, filteredIssues, c.Repositories, c.Labels, prefix, spLabelPrefix)
+	works, err = toWorks(org, filteredIssues, c.Repositories, c.Labels, prefix, spLabelPrefix)
 	if err != nil {
 		var projectNames []string
 		for _, project := range c.Repositories {
 			projectNames = append(projectNames, project.GetName())
 		}
-		return nil, fmt.Errorf("failed to convert to works from %v Issues(c.Repositories are %v): %v", gid, projectNames, err)
+		return nil, fmt.Errorf("failed to convert to works from %v Issues(c.Repositories are %v): %v", org, projectNames, err)
 	}
 	return works, nil
 }
@@ -104,7 +104,7 @@ func (c *Client) listLabelsByPrefix(ctx context.Context, owner, repo, prefix str
 	return prefixLabels, nil
 }
 
-func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labels []string) ([]gitany.Issue, error) {
+func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, org string, labels []string) ([]gitany.Issue, error) {
 	issueOpt := &gitany.IssueListOptions{
 		ListOptions: gitany.ListOptions{
 			Page:    1,
@@ -117,8 +117,8 @@ func (c *Client) listAllGroupIssuesByLabel(ctx context.Context, gid string, labe
 	var allIssues []gitany.Issue
 
 	for {
-		log.Printf("fetch Issues from org:%v Page:%v", gid, issueOpt.Page)
-		issues, _, err := c.client.GetIssues().ListByOrg(ctx, gid, issueOpt)
+		log.Printf("fetch Issues from org:%v Page:%v", org, issueOpt.Page)
+		issues, _, err := c.client.GetIssues().ListByOrg(ctx, org, issueOpt)
 		if err != nil {
 			return nil, err
 		}
@@ -161,7 +161,7 @@ func (c *Client) listAllProjectIssuesByLabel(ctx context.Context, owner, repo st
 	return allIssues, nil
 }
 
-func (c *Client) listAllProjectsLabels(ctx context.Context, gid string, projects []gitany.Repository) (allLabels []gitany.Label, err error) {
+func (c *Client) listAllProjectsLabels(ctx context.Context, org string, projects []gitany.Repository) (allLabels []gitany.Label, err error) {
 	labelChan := make(chan gitany.Label, 100)
 	eg := errgroup.Group{}
 
@@ -172,7 +172,7 @@ func (c *Client) listAllProjectsLabels(ctx context.Context, gid string, projects
 	for _, project := range projects {
 		project := project
 		eg.Go(func() error {
-			labels, err := c.listAllLabels(ctx, gid, project.GetName())
+			labels, err := c.listAllLabels(ctx, org, project.GetName())
 			if err != nil {
 				return err
 			}
