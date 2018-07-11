@@ -67,7 +67,7 @@ func GetWorksBodyFunc(ctx context.Context, client *issummary.Client, config *iss
 	worksBodyFunc := func(body []byte) (interface{}, error) {
 		workManager := issummary.NewWorkManager()
 		for _, org := range config.Organizations {
-			if err := client.Fetch(ctx, org); err != nil {
+			if err := client.Fetch(ctx, org, config.TargetLabelPrefixes); err != nil {
 				return nil, err
 			}
 			works, err := client.ListGroupWorks(org, config.ClassLabelPrefix, config.SPLabelPrefix)

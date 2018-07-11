@@ -23,13 +23,11 @@ func New(client gitany.Client) *Client {
 	}
 }
 
-func (c *Client) Fetch(ctx context.Context, org string) error {
+func (c *Client) Fetch(ctx context.Context, org string, targetLabels []string) error {
 	eg := errgroup.Group{}
 	issuesChan := make(chan []gitany.Issue, 1)
 	repositoriesChan := make(chan []gitany.Repository, 1)
 	labelsChan := make(chan []gitany.Label, 1)
-
-	targetLabels := []string{"W"} // TODO: 外から指定できるようにする
 
 	eg.Go(func() error {
 		log.Printf("Fetch Issues with %v as label from %v", targetLabels, org)

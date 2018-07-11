@@ -30,6 +30,7 @@ var baseURLKey = "base-url"
 var tokenKey = "token"
 var portKey = "port"
 var orgKey = "org"
+var targetPrefixesKey = "target-prefixes"
 
 var RootCmd = &cobra.Command{
 	Use:   "issummary",
@@ -113,6 +114,9 @@ func init() {
 	RootCmd.PersistentFlags().String(classPrefixKey, "C:", "prefix of class label")
 	viper.BindPFlag(classPrefixKey, RootCmd.PersistentFlags().Lookup(classPrefixKey))
 
+	RootCmd.PersistentFlags().String(targetPrefixesKey, "W", "prefixes of target label")
+	viper.BindPFlag(targetPrefixesKey, RootCmd.PersistentFlags().Lookup(targetPrefixesKey))
+
 	RootCmd.PersistentFlags().String(baseURLKey, "https://github.com", "base URL of git service")
 	viper.BindPFlag(baseURLKey, RootCmd.PersistentFlags().Lookup(baseURLKey))
 }
@@ -146,13 +150,17 @@ func generateIssummaryConfigFromViper() (*issummary.Config, error) {
 		return nil, errors.New("org is empty")
 	}
 
+	targetPrefixesStr := viper.GetString(targetPrefixesKey)
+	targetPrefixes := strings.Split(targetPrefixesStr, ",")
+
 	return &issummary.Config{
-		Port:              viper.GetInt(portKey),
-		Token:             viper.GetString(tokenKey),
-		GitServiceBaseURL: viper.GetString(baseURLKey),
-		GitServiceType:    viper.GetString(gitServiceTypeKey),
-		SPLabelPrefix:     viper.GetString(spPrefixKey),
-		ClassLabelPrefix:  viper.GetString(classPrefixKey),
-		Organizations:     organizations,
+		Port:                viper.GetInt(portKey),
+		Token:               viper.GetString(tokenKey),
+		GitServiceBaseURL:   viper.GetString(baseURLKey),
+		GitServiceType:      viper.GetString(gitServiceTypeKey),
+		SPLabelPrefix:       viper.GetString(spPrefixKey),
+		ClassLabelPrefix:    viper.GetString(classPrefixKey),
+		TargetLabelPrefixes: targetPrefixes,
+		Organizations:       organizations,
 	}, nil
 }
