@@ -23,20 +23,21 @@ func New(client gitany.Client) *Client {
 	}
 }
 
-func (c *Client) Fetch(ctx context.Context, org string, targetLabels []string) error {
-	eg := errgroup.Group{}
+func (c *Client) getListAllGroupIssuesByLabelAsyncFunc(ctx context.Context, org string, targetLabels []string) (func() error, chan []gitany.Issue) {
 	issuesChan := make(chan []gitany.Issue, 1)
-	repositoriesChan := make(chan []gitany.Repository, 1)
-	labelsChan := make(chan []gitany.Label, 1)
-
-	eg.Go(func() error {
+	return func() error {
 		log.Printf("Fetch Issues with %v as label from %v", targetLabels, org)
 		allIssues, err := c.listAllGroupIssuesByLabel(ctx, org, targetLabels)
 		issuesChan <- allIssues
 		return err
-	})
+	}, issuesChan
+}
 
-	eg.Go(func() error {
+func (c *Client) getListAllGroupRepositoriesAndLabelsAsyncFunc(ctx context.Context, org string) (func() error, chan []gitany.Repository, chan []gitany.Label) {
+	repositoriesChan := make(chan []gitany.Repository, 1)
+	labelsChan := make(chan []gitany.Label, 1)
+
+	return func() error {
 		log.Printf("Fetch Repositories from %v", org)
 		projects, err := c.listAllProjects(ctx, org)
 		if err != nil {
@@ -45,11 +46,26 @@ func (c *Client) Fetch(ctx context.Context, org string, targetLabels []string) e
 
 		repositoriesChan <- projects
 
-		log.Printf("Fetch Labels from %v", org)
+		var projectNames []string
+		for _, project := range projects {
+			projectNames = append(projectNames, project.GetName())
+		}
+
+		log.Printf("Fetch Labels from projects of %v (%v)", org, projectNames)
 		labels, err := c.listAllProjectsLabels(ctx, org, projects)
 		labelsChan <- labels
 		return err
-	})
+	}, repositoriesChan, labelsChan
+}
+
+func (c *Client) Fetch(ctx context.Context, org string, targetLabels []string) error {
+	eg := errgroup.Group{}
+
+	f, issuesChan := c.getListAllGroupIssuesByLabelAsyncFunc(ctx, org, targetLabels)
+	eg.Go(f)
+
+	f2, repositoriesChan, labelsChan := c.getListAllGroupRepositoriesAndLabelsAsyncFunc(ctx, org)
+	eg.Go(f2)
 
 	if err := eg.Wait(); err != nil {
 		return err
