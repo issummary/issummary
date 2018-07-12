@@ -58,68 +58,6 @@ func toLabels(rawLabels []gitany.Label) (labels []*Label) {
 	return
 }
 
-func toWorks(org string, issues []*Issue, projects []*Repository, labels []*Label, targetLabelPrefix, spLabelPrefix string) (works []*Work, err error) {
-	for _, issue := range issues {
-		//issue, err := toIssue(orgIssue)
-		if err != nil {
-			return nil, err
-		}
-
-		work := &Work{
-			Issue: issue,
-		}
-
-		if project, ok := findProjectByID(projects, int64(issue.GetRepositoryID())); ok {
-			work.Repository = &Repository{Repository: project}
-			work.Issue.ProjectName = project.GetName()
-			work.Issue.GroupName = org
-		}
-
-		for _, labelName := range issue.GetLabels() {
-			if strings.HasPrefix(labelName, targetLabelPrefix) {
-				if l, ok := findLabelByName(labels, labelName); ok {
-					work.Label = toLabel(l)
-				}
-				break
-			}
-		}
-
-		for _, labelName := range issue.GetLabels() {
-			if strings.HasPrefix(labelName, spLabelPrefix) {
-				spStr := strings.TrimPrefix(labelName, spLabelPrefix)
-				sp, err := strconv.Atoi(spStr)
-				if err != nil {
-					return nil, err
-				}
-				work.StoryPoint = sp
-				break
-			}
-		}
-
-		for _, project := range projects {
-			if project.GetID() == issue.GetRepositoryID() {
-				work.Issue.ProjectName = project.GetName()
-			}
-			break
-		}
-
-		works = append(works, work)
-	}
-
-	// TODO: Set work properties
-	totalStoryPoint := 0
-	for _, work := range works {
-		totalStoryPoint += work.StoryPoint
-		work.TotalStoryPoint = totalStoryPoint
-		//work.ManDay = totalStoryPoint / velocity
-		//work.TotalManDay = totalStoryPoint / velocity
-		// work.CompletionDate = timeNow.Add(work.TotalManDay)
-		//work.RemainManDays = date.CountBusinessDay(time.Now(), work.CompletionDate)
-	}
-
-	return
-}
-
 func parseLabelDescription(description string) *LabelDescription {
 	ld := &LabelDescription{Raw: description}
 	depsKey := "deps: "     // TODO: 別の場所で定義したほうがいい気がする
@@ -141,10 +79,10 @@ func parseLabelDescription(description string) *LabelDescription {
 	return ld
 }
 
-func findLabelByName(labels []*Label, name string) (gitany.Label, bool) {
+func FindLabelByName(labels []*Label, name string) (*Label, bool) {
 	for _, label := range labels {
 		if label.GetName() == name {
-			return label, true
+			return toLabel(label), true
 		}
 	}
 	return nil, false

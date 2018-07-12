@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/issummary/issummary/issummary"
+	"github.com/issummary/issummary/usecase"
 )
 
 type Input struct {
@@ -59,25 +60,26 @@ func CreateJsonHandleFunc(bodyFunc BodyFunc) http.HandlerFunc {
 }
 
 func GetWorksJsonHandleFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) http.HandlerFunc {
-	worksBodyFunc := GetWorksBodyFunc(ctx, client, config)
+	workUseCase := &usecase.WorkUseCase{Client: client}
+	worksBodyFunc := GetWorksBodyFunc(ctx, workUseCase, config)
 	return CreateJsonHandleFunc(worksBodyFunc)
 }
 
-func GetWorksBodyFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) func(body []byte) (interface{}, error) {
+func GetWorksBodyFunc(ctx context.Context, workUseCase *usecase.WorkUseCase, config *issummary.Config) func(body []byte) (interface{}, error) {
 	worksBodyFunc := func(body []byte) (interface{}, error) {
 		workManager := issummary.NewWorkManager()
 		for _, org := range config.Organizations {
-			if err := client.Fetch(ctx, org, config.TargetLabelPrefixes); err != nil {
+			if err := workUseCase.Fetch(ctx, org, config.TargetLabelPrefixes); err != nil {
 				return nil, err
 			}
-			works, err := client.ListGroupWorks(org, config.ClassLabelPrefix, config.SPLabelPrefix)
+			works, err := workUseCase.ListGroupWorks(org, config.ClassLabelPrefix, config.SPLabelPrefix)
 
 			if err != nil {
 				return nil, err
 			}
 
 			workManager.AddWorks(works)
-			workManager.AddLabels(client.Labels)
+			workManager.AddLabels(workUseCase.Labels)
 		}
 
 		if err := workManager.ResolveDependencies(); err != nil {
