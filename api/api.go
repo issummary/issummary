@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/issummary/issummary/issummary"
+	"github.com/issummary/issummary/usecase"
 )
 
 type Input struct {
@@ -59,36 +60,15 @@ func CreateJsonHandleFunc(bodyFunc BodyFunc) http.HandlerFunc {
 }
 
 func GetWorksJsonHandleFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) http.HandlerFunc {
-	worksBodyFunc := GetWorksBodyFunc(ctx, client, config)
+	workUseCase := usecase.NewWorkUseCase(client, config)
+	worksBodyFunc := GetWorksBodyFunc(ctx, workUseCase)
 	return CreateJsonHandleFunc(worksBodyFunc)
 }
 
-func GetWorksBodyFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) func(body []byte) (interface{}, error) {
+func GetWorksBodyFunc(ctx context.Context, workUseCase *usecase.WorkUseCase) func(body []byte) (interface{}, error) {
 	worksBodyFunc := func(body []byte) (interface{}, error) {
-		workManager := issummary.NewWorkManager()
-		for _, gid := range config.GIDs {
-			if err := client.Fetch(ctx, gid); err != nil {
-				return nil, err
-			}
-			works, err := client.ListGroupWorks(gid, config.ClassLabelPrefix, config.SPLabelPrefix)
-
-			if err != nil {
-				return nil, err
-			}
-
-			workManager.AddWorks(works)
-			workManager.AddLabels(client.Labels)
-		}
-
-		if err := workManager.ResolveDependencies(); err != nil {
-			return nil, err
-		}
-		sortedWorks, err := workManager.GetSortedWorks()
-		if err != nil {
-			return nil, err
-		}
-
-		return ToWorks(sortedWorks), nil
+		sortedWorks, err := workUseCase.GetSortedWorks(ctx)
+		return ToWorks(sortedWorks), err
 	}
 
 	return worksBodyFunc
@@ -102,8 +82,8 @@ func GetMilestonesJsonHandleFunc(ctx context.Context, client *issummary.Client, 
 func GetMilestonesBodyFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) func(body []byte) (interface{}, error) {
 	milestonesBodyFunc := func(body []byte) (interface{}, error) {
 		var allMilestones []*issummary.Milestone
-		for _, gid := range config.GIDs {
-			milestones, err := client.ListGroupMilestones(ctx, gid)
+		for _, org := range config.Organizations {
+			milestones, err := client.ListGroupMilestones(ctx, org)
 
 			if err != nil {
 				panic(err)

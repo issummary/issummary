@@ -19,7 +19,7 @@ func newLabelGraph() *LabelGraph {
 		g:            simple.NewDirectedGraph(),
 		gMap:         map[int64]*labelNode{},
 		labelNodeMap: map[int64]*labelNode{},
-		labelNameMap: map[string]*labelNode{}, // FIXME labelNameMap does not work well if duplicated Labels exist beyond group
+		labelNameMap: map[string]*labelNode{}, // FIXME labelNameMap does not work well if duplicated labels exist beyond group
 	}
 }
 
@@ -77,7 +77,7 @@ func (lg *LabelGraph) setEdgeByParent(label *Label) error {
 
 	parentLabelNode, ok := lg.labelNameMap[parentLabelName]
 	if !ok {
-		return fmt.Errorf("label %q not found", parentLabelName)
+		return fmt.Errorf("parent label %q not found", parentLabelName)
 	}
 
 	parentLabel := parentLabelNode.label
@@ -138,7 +138,7 @@ func (lg *LabelGraph) list() (labels []*Label) {
 func (lg *LabelGraph) listParents(label *Label) ([]*Label, error) {
 	labelNode, ok := lg.getLabelNodeByName(label.GetName())
 	if !ok {
-		return nil, fmt.Errorf("label %v not found", label.GetName())
+		return nil, fmt.Errorf("label %q not found in graph when list parents", label.GetName())
 	}
 
 	nodes := lg.g.From(labelNode.node.ID())

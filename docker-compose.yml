@@ -6,6 +6,6 @@ services:
       - "8080:8080"
     environment:
       - ISSUMMARY_TOKEN
-      - ISSUMMARY_GID
+      - ISSUMMARY_ORG
       - ISSUMMARY_PORT
       - ISSUMMARY_TARGET_LABEL
