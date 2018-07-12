@@ -49,7 +49,7 @@ func (c *Client) ListAllGroupIssuesByLabel(ctx context.Context, org string, labe
 	var allIssues []gitany.Issue
 
 	for {
-		log.Printf("fetch Issues from org:%v Page:%v", org, issueOpt.Page)
+		log.Printf("fetch issues from org:%v Page:%v", org, issueOpt.Page)
 		issues, _, err := c.client.GetIssues().ListByOrg(ctx, org, issueOpt)
 		if err != nil {
 			return nil, err

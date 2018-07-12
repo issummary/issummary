@@ -60,37 +60,15 @@ func CreateJsonHandleFunc(bodyFunc BodyFunc) http.HandlerFunc {
 }
 
 func GetWorksJsonHandleFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) http.HandlerFunc {
-	workUseCase := &usecase.WorkUseCase{Client: client}
-	worksBodyFunc := GetWorksBodyFunc(ctx, workUseCase, config)
+	workUseCase := usecase.NewWorkUseCase(client, config)
+	worksBodyFunc := GetWorksBodyFunc(ctx, workUseCase)
 	return CreateJsonHandleFunc(worksBodyFunc)
 }
 
-func GetWorksBodyFunc(ctx context.Context, workUseCase *usecase.WorkUseCase, config *issummary.Config) func(body []byte) (interface{}, error) {
+func GetWorksBodyFunc(ctx context.Context, workUseCase *usecase.WorkUseCase) func(body []byte) (interface{}, error) {
 	worksBodyFunc := func(body []byte) (interface{}, error) {
-		workManager := issummary.NewWorkManager()
-		for _, org := range config.Organizations {
-			if err := workUseCase.Fetch(ctx, org, config.TargetLabelPrefixes); err != nil {
-				return nil, err
-			}
-			works, err := workUseCase.ListGroupWorks(org, config.ClassLabelPrefix, config.SPLabelPrefix)
-
-			if err != nil {
-				return nil, err
-			}
-
-			workManager.AddWorks(works)
-			workManager.AddLabels(workUseCase.Labels)
-		}
-
-		if err := workManager.ResolveDependencies(); err != nil {
-			return nil, err
-		}
-		sortedWorks, err := workManager.GetSortedWorks()
-		if err != nil {
-			return nil, err
-		}
-
-		return ToWorks(sortedWorks), nil
+		sortedWorks, err := workUseCase.GetSortedWorks(ctx)
+		return ToWorks(sortedWorks), err
 	}
 
 	return worksBodyFunc

@@ -8,21 +8,57 @@ import (
 	"strings"
 
 	"github.com/issummary/issummary/issummary"
-	"github.com/mpppk/gitany"
 	"golang.org/x/sync/errgroup"
 )
 
 type WorkUseCase struct {
 	Client       *issummary.Client
-	Issues       []*issummary.Issue
-	Repositories []*issummary.Repository
-	Labels       []*issummary.Label
+	Config       *issummary.Config
+	issues       []*issummary.Issue
+	repositories []*issummary.Repository
+	labels       []*issummary.Label
+}
+
+func NewWorkUseCase(client *issummary.Client, config *issummary.Config) *WorkUseCase {
+	return &WorkUseCase{
+		Client: client,
+		Config: config,
+	}
+}
+
+func (wu *WorkUseCase) GetSortedWorks(ctx context.Context) ([]*issummary.Work, error) {
+	workManager := issummary.NewWorkManager()
+
+	for _, org := range wu.Config.Organizations {
+		_, _, labels, err := wu.fetchOrgResources(ctx, org, wu.Config.TargetLabelPrefixes)
+		if err != nil {
+			return nil, err
+		}
+
+		works, err := wu.listOrgWorks(org)
+		if err != nil {
+			return nil, err
+		}
+
+		workManager.AddWorks(works)
+		workManager.AddLabels(labels)
+	}
+
+	if err := workManager.ResolveDependencies(); err != nil {
+		return nil, err
+	}
+
+	sortedWorks, err := workManager.GetSortedWorks()
+	if err != nil {
+		return nil, err
+	}
+	return sortedWorks, nil
 }
 
 func (wu *WorkUseCase) getListAllGroupIssuesByLabelAsyncFunc(ctx context.Context, org string, targetLabels []string) (func() error, chan []*issummary.Issue) {
 	issuesChan := make(chan []*issummary.Issue, 1)
 	return func() error {
-		log.Printf("Fetch Issues with %v as label from %v", targetLabels, org)
+		log.Printf("fetchOrgResources issues with %v as label from %v", targetLabels, org)
 		allIssues, err := wu.Client.ListAllGroupIssuesByLabel(ctx, org, targetLabels)
 		issuesChan <- allIssues
 		return err
@@ -34,7 +70,7 @@ func (wu *WorkUseCase) getListAllGroupRepositoriesAndLabelsAsyncFunc(ctx context
 	labelsChan := make(chan []*issummary.Label, 1)
 
 	return func() error {
-		log.Printf("Fetch Repositories from %v", org)
+		log.Printf("fetchOrgResources repositories from %v", org)
 		repositories, err := wu.Client.ListAllRepositories(ctx, org)
 		if err != nil {
 			return err
@@ -47,14 +83,14 @@ func (wu *WorkUseCase) getListAllGroupRepositoriesAndLabelsAsyncFunc(ctx context
 			projectNames = append(projectNames, project.GetName())
 		}
 
-		log.Printf("Fetch Labels from repositories of %v (%v)", org, projectNames)
+		log.Printf("fetchOrgResources labels from repositories of %v (%v)", org, projectNames)
 		labels, err := wu.Client.ListAllProjectsLabels(ctx, org, repositories)
 		labelsChan <- labels
 		return err
 	}, repositoriesChan, labelsChan
 }
 
-func (wu *WorkUseCase) Fetch(ctx context.Context, org string, targetLabels []string) error {
+func (wu *WorkUseCase) fetchOrgResources(ctx context.Context, org string, targetLabels []string) (repositories []*issummary.Repository, issues []*issummary.Issue, labels []*issummary.Label, err error) {
 	eg := errgroup.Group{}
 
 	f, issuesChan := wu.getListAllGroupIssuesByLabelAsyncFunc(ctx, org, targetLabels)
@@ -64,33 +100,37 @@ func (wu *WorkUseCase) Fetch(ctx context.Context, org string, targetLabels []str
 	eg.Go(f2)
 
 	if err := eg.Wait(); err != nil {
-		return err
+		return nil, nil, nil, err
 	}
 
-	wu.Repositories = <-repositoriesChan
-	wu.Issues = <-issuesChan
-	wu.Labels = <-labelsChan
-	return nil
+	repositories = <-repositoriesChan
+	issues = <-issuesChan
+	labels = <-labelsChan
+
+	wu.repositories = repositories
+	wu.issues = issues
+	wu.labels = labels
+	return
 }
 
-func (wu *WorkUseCase) ListGroupWorks(org string, prefix, spLabelPrefix string) (works []*issummary.Work, err error) {
+func (wu *WorkUseCase) listOrgWorks(org string) (works []*issummary.Work, err error) {
 	var filteredIssues []*issummary.Issue
 
-	for _, issue := range wu.Issues {
-		for _, project := range wu.Repositories {
+	for _, issue := range wu.issues {
+		for _, project := range wu.repositories {
 			if issue.GetRepositoryID() == project.GetID() {
 				filteredIssues = append(filteredIssues, issue)
 				break
 			}
 		}
 	}
-	works, err = toWorks(org, filteredIssues, wu.Repositories, wu.Labels, prefix, spLabelPrefix)
+	works, err = toWorks(org, filteredIssues, wu.repositories, wu.labels, wu.Config.ClassLabelPrefix, wu.Config.SPLabelPrefix)
 	if err != nil {
 		var projectNames []string
-		for _, project := range wu.Repositories {
+		for _, project := range wu.repositories {
 			projectNames = append(projectNames, project.GetName())
 		}
-		return nil, fmt.Errorf("failed to convert to works from %v Issues(wu.Repositories are %v): %v", org, projectNames, err)
+		return nil, fmt.Errorf("failed to convert to works from %v issues(wu.repositories are %v): %v", org, projectNames, err)
 	}
 	return works, nil
 }
@@ -157,14 +197,4 @@ func toWork(org, targetLabelPrefix, spLabelPrefix string, issue *issummary.Issue
 		break
 	}
 	return work, nil
-}
-
-func findProjectByID(projects []*issummary.Repository, id int64) (gitany.Repository, bool) {
-	for _, project := range projects {
-		if project.GetID() == id {
-			return project, true
-		}
-	}
-
-	return nil, false
 }
