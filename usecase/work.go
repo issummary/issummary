@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/issummary/issummary/issummary"
+	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -32,12 +33,12 @@ func (wu *WorkUseCase) GetSortedWorks(ctx context.Context) ([]*issummary.Work, e
 	for _, org := range wu.Config.Organizations {
 		_, _, labels, err := wu.fetchOrgResources(ctx, org, wu.Config.TargetLabelPrefixes)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to fetch resources(org: %v, targetLabelPrefixes: %v)\n", org, wu.Config.TargetLabelPrefixes))
 		}
 
 		works, err := wu.listOrgWorks(org)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to list works which org is %v\n", org))
 		}
 
 		workManager.AddWorks(works)
@@ -45,12 +46,12 @@ func (wu *WorkUseCase) GetSortedWorks(ctx context.Context) ([]*issummary.Work, e
 	}
 
 	if err := workManager.ResolveDependencies(); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to resolve dependencies of work graph\n"))
 	}
 
 	sortedWorks, err := workManager.GetSortedWorks()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to get sorted works from work manager\n"))
 	}
 	return sortedWorks, nil
 }
@@ -61,7 +62,7 @@ func (wu *WorkUseCase) getListAllGroupIssuesByLabelAsyncFunc(ctx context.Context
 		log.Printf("fetchOrgResources issues with %v as label from %v", targetLabels, org)
 		allIssues, err := wu.Client.ListAllGroupIssuesByLabel(ctx, org, targetLabels)
 		issuesChan <- allIssues
-		return err
+		return errors.Wrap(err, fmt.Sprintf("failed to list issues(labels: %v, org: %v)\n", targetLabels, org))
 	}, issuesChan
 }
 
@@ -73,7 +74,7 @@ func (wu *WorkUseCase) getListAllGroupRepositoriesAndLabelsAsyncFunc(ctx context
 		log.Printf("fetchOrgResources repositories from %v", org)
 		repositories, err := wu.Client.ListAllRepositories(ctx, org)
 		if err != nil {
-			return err
+			return errors.Wrap(err, fmt.Sprintf("failed to list repositories which org is %v\n", org))
 		}
 
 		repositoriesChan <- repositories
@@ -86,7 +87,7 @@ func (wu *WorkUseCase) getListAllGroupRepositoriesAndLabelsAsyncFunc(ctx context
 		log.Printf("fetchOrgResources labels from repositories of %v (%v)", org, projectNames)
 		labels, err := wu.Client.ListAllProjectsLabels(ctx, org, repositories)
 		labelsChan <- labels
-		return err
+		return errors.Wrap(err, fmt.Sprintf("failed to list labels which org is %v\n", org))
 	}, repositoriesChan, labelsChan
 }
 
@@ -100,7 +101,7 @@ func (wu *WorkUseCase) fetchOrgResources(ctx context.Context, org string, target
 	eg.Go(f2)
 
 	if err := eg.Wait(); err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to list resorces\n"))
 	}
 
 	repositories = <-repositoriesChan
@@ -130,7 +131,7 @@ func (wu *WorkUseCase) listOrgWorks(org string) (works []*issummary.Work, err er
 		for _, project := range wu.repositories {
 			projectNames = append(projectNames, project.GetName())
 		}
-		return nil, fmt.Errorf("failed to convert to works from %v issues(wu.repositories are %v): %v", org, projectNames, err)
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to convert to works from %v issues(wu.repositories are %v)", org, projectNames))
 	}
 	return works, nil
 }
@@ -139,7 +140,7 @@ func toWorks(org string, issues []*issummary.Issue, repositories []*issummary.Re
 	for _, issue := range issues {
 		work, err := toWork(org, targetLabelPrefix, spLabelPrefix, issue, repositories, labels)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to create work(org: %v, targetLabelPrefix: %v, spLabelPrefix: %v, issue: %v)\n", org, targetLabelPrefix, spLabelPrefix, issue.GetTitle()))
 		}
 		works = append(works, work)
 	}
@@ -183,7 +184,7 @@ func toWork(org, targetLabelPrefix, spLabelPrefix string, issue *issummary.Issue
 			spStr := strings.TrimPrefix(labelName, spLabelPrefix)
 			sp, err := strconv.Atoi(spStr)
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, fmt.Sprintf("failed to parse story point of label(%v)\n", labelName))
 			}
 			work.StoryPoint = sp
 			break

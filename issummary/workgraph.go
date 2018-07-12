@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
 	"gonum.org/v1/gonum/graph/topo"
@@ -92,7 +93,7 @@ func (w *WorkGraph) GetSortedWorks(sortWorkFunctions []SortWorkFunc) (works []*W
 		}
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to list sorted works from graph\n"))
 	}
 
 	works = w.convertNodesToWorks(nodes)
@@ -104,7 +105,7 @@ func (w *WorkGraph) GetSortedWorks(sortWorkFunctions []SortWorkFunc) (works []*W
 
 		parentLabels, err := w.lg.listParents(work.Label)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to list parent labels(from %v)\n", work.Label.GetName()))
 		}
 		work.Label.ParentLabels = parentLabels
 	}
@@ -150,12 +151,12 @@ func (w *WorkGraph) convertNodesToWorks(nodes []graph.Node) (works []*Work) {
 func (w *WorkGraph) SetEdge(aWork, bWork *Work, relation *WorkRelation) error {
 	aWorkNode, ok := w.toWorkNode(aWork)
 	if !ok {
-		return fmt.Errorf("work %v not found", aWork)
+		return fmt.Errorf("work %v not found in work graph", aWork)
 	}
 
 	bWorkNode, ok := w.toWorkNode(bWork)
 	if !ok {
-		return fmt.Errorf("work %v not found", bWork)
+		return fmt.Errorf("work %v not found in work graph", bWork)
 	}
 
 	edge := w.g.NewEdge(aWorkNode.node, bWorkNode.node)

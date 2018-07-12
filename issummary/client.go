@@ -2,10 +2,12 @@ package issummary
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/mpppk/gitany"
+	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -25,7 +27,7 @@ func New(client gitany.Client) *Client {
 func (c *Client) listLabelsByPrefix(ctx context.Context, owner, repo, prefix string) (prefixLabels []gitany.Label, err error) {
 	labels, err := c.listAllLabels(ctx, owner, repo)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to list labels (owner:%v repo: %v, prefix: %v)\n", owner, repo, prefix))
 	}
 
 	for _, label := range labels {
@@ -52,7 +54,7 @@ func (c *Client) ListAllGroupIssuesByLabel(ctx context.Context, org string, labe
 		log.Printf("fetch issues from org:%v Page:%v", org, issueOpt.Page)
 		issues, _, err := c.client.GetIssues().ListByOrg(ctx, org, issueOpt)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to get issues which org is %v from gitany client\n", org))
 		}
 
 		if len(issues) == 0 {
@@ -66,20 +68,16 @@ func (c *Client) ListAllGroupIssuesByLabel(ctx context.Context, org string, labe
 	return toIssues(allIssues)
 }
 
-func (c *Client) ListAllProjectsLabels(ctx context.Context, org string, projects []*Repository) (allLabels []*Label, err error) {
+func (c *Client) ListAllProjectsLabels(ctx context.Context, org string, repositories []*Repository) (allLabels []*Label, err error) {
 	labelChan := make(chan gitany.Label, 100)
 	eg := errgroup.Group{}
 
-	if err := eg.Wait(); err != nil {
-		log.Fatal(err)
-	}
-
-	for _, project := range projects {
-		project := project
+	for _, repository := range repositories {
+		repository := repository
 		eg.Go(func() error {
-			labels, err := c.listAllLabels(ctx, org, project.GetName())
+			labels, err := c.listAllLabels(ctx, org, repository.GetName())
 			if err != nil {
-				return err
+				return errors.Wrap(err, fmt.Sprintf("failed to list labels (org: %v, repo: %v)\n", org, repository.GetName()))
 			}
 
 			for _, label := range labels {
@@ -92,7 +90,7 @@ func (c *Client) ListAllProjectsLabels(ctx context.Context, org string, projects
 
 	go func() {
 		if err := eg.Wait(); err != nil {
-			log.Fatal(err)
+			log.Fatal(err) // FIXME
 		} else {
 			close(labelChan)
 		}
@@ -124,9 +122,10 @@ func (c *Client) listAllLabels(ctx context.Context, owner, repo string) ([]*Labe
 	var allLabels []gitany.Label
 
 	for {
-		labels, _, err := c.client.GetIssues().ListLabels(ctx, owner, repo, opt)
+		labels, res, err := c.client.GetIssues().ListLabels(ctx, owner, repo, opt)
 		if err != nil {
-			return nil, err
+			log.Printf("failed to get issues(owner: %v, repo: %v) from gitany client. response: %#v\n", owner, repo, res) // FIXME
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to get issues(owner: %v, repo: %v) from gitany client\n", owner, repo))
 		}
 
 		if len(labels) == 0 {
@@ -152,7 +151,7 @@ func (c *Client) ListAllRepositories(ctx context.Context, org string) ([]*Reposi
 	for {
 		repositories, _, err := c.client.GetRepositories().ListByOrg(ctx, org, opt)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to list repositories(org: %v) from gitany client: \n", org))
 		}
 
 		if len(repositories) == 0 {
@@ -179,7 +178,7 @@ func (c *Client) ListGroupMilestones(ctx context.Context, org string) ([]*Milest
 	for {
 		milestones, _, err := c.client.GetIssues().ListMilestonesByOrg(ctx, org, opt)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to list milestones(org: %v)\n", org))
 		}
 
 		if len(milestones) == 0 {

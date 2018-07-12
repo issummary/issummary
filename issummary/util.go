@@ -1,12 +1,12 @@
 package issummary
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/mpppk/gitany"
+	"github.com/pkg/errors"
 	"gopkg.in/russross/blackfriday.v2"
 )
 
@@ -24,7 +24,7 @@ func toRepositories(rawRepositories []gitany.Repository) (repositories []*Reposi
 func toIssue(rawIssue gitany.Issue) (*Issue, error) {
 	issueDescription, err := parseIssueDescription(rawIssue.GetBody())
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to parse issue description which title is %v\n", rawIssue.GetTitle()))
 	}
 
 	return &Issue{
@@ -37,7 +37,7 @@ func toIssues(rawIssues []gitany.Issue) (issues []*Issue, err error) {
 	for _, rawIssue := range rawIssues {
 		issue, err := toIssue(rawIssue)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to convert gitany issue to issummary issue which title is %v\n", issue.GetTitle()))
 		}
 		issues = append(issues, issue)
 	}
@@ -96,27 +96,27 @@ func parseIssueDescription(description string) (*IssueDescription, error) {
 
 	issueDependencies, err := getIssueDependenciesFromMDNodes(node)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to parse issue dependencies(raw text: %v)\n", description))
 	}
 
 	issueDescription.Dependencies = issueDependencies
 	summary, err := getMDContentByHeader(node, "Summary")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to parse issue summary(raw text: %v)\n", description))
 	}
 	issueDescription.Summary = summary
 
 	note, err := getMDContentByHeader(node, "Note")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to parse issue note(raw text: %v)\n", description))
 	}
 	issueDescription.Note = note
 
-	detail, err := getMDContentByHeader(node, "Details")
+	details, err := getMDContentByHeader(node, "Details")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to parse issue details(raw text: %v)\n", description))
 	}
-	issueDescription.Details = detail
+	issueDescription.Details = details
 
 	return issueDescription, nil
 }
@@ -178,7 +178,7 @@ func getIssueDependenciesFromMDNodes(node *blackfriday.Node) (*IssueDependencies
 					}
 
 					if err != nil {
-						return nil, err
+						return nil, errors.Wrap(err, fmt.Sprintf("failed to parse issue dependency(%v) to number\n", depStr))
 					}
 					issueDependencies.Issues = append(issueDependencies.Issues, depIssue)
 					continue
@@ -193,7 +193,7 @@ func getIssueDependenciesFromMDNodes(node *blackfriday.Node) (*IssueDependencies
 						}
 						j++
 						if len(dependencyStrs) <= j {
-							return nil, errors.New("invalid label syntax in dependencies header")
+							return nil, errors.New(fmt.Sprintf("invalid label syntax in dependencies header: %v\n", depStr))
 						}
 						depStr += " " + dependencyStrs[j]
 					}
@@ -212,8 +212,7 @@ func getIssueDependenciesFromMDNodes(node *blackfriday.Node) (*IssueDependencies
 					projectName := projectNameAndIssueIID[0]
 					issueIID, err := strconv.Atoi(projectNameAndIssueIID[1])
 					if err != nil {
-						return nil, fmt.Errorf("failed to parse other issue project dependency(%s): %s",
-							depStr, err)
+						return nil, errors.Wrap(err, fmt.Sprintf("failed to parse other issue project dependency(%s)", depStr))
 					}
 
 					opIssue := &DependIssue{

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"sort"
 
+	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph/encoding/dot"
 )
 
@@ -19,19 +20,20 @@ func NewWorkManager() *WorkManager {
 
 func (wg *WorkManager) ResolveDependencies() error {
 	for _, work := range wg.w.ListWorks(nil) {
-		wg.setEdgesByWork(work)
+		if err := wg.setEdgesByWork(work); err != nil {
+			return errors.Wrap(err, fmt.Sprintf("failed to set edges by work which name is %v\n", work.Issue.GetTitle()))
+		}
 	}
 
 	wg.setWorkDependencies()
 	if err := wg.w.lg.SetEdges(); err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("failed to set edges of work graph\n"))
 	}
 
 	return nil
 }
 
 func (wg *WorkManager) setEdgesByWork(fromWork *Work) error {
-
 	issueDependencies := fromWork.Issue.ListDependencies()
 	for _, issue := range issueDependencies.Issues {
 		opt := &ListWorksOptions{
@@ -185,11 +187,12 @@ func (wg *WorkManager) GetSortedWorks() (works []*Work, err error) {
 func (wg *WorkManager) MarshalGraph() error {
 	marshalGraph, err := dot.Marshal(wg.w.g, "name", "prefix", "  ", false)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("failed to marshal graph\n"))
 	}
 
-	if err = ioutil.WriteFile("test.dot", marshalGraph, 0777); err != nil {
-		return err
+	fileName := "test.dot" // FIXME
+	if err = ioutil.WriteFile(fileName, marshalGraph, 0777); err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed to write work graph to %v\n", fileName))
 	}
 	return nil
 }

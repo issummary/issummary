@@ -10,6 +10,7 @@ import (
 
 	"github.com/issummary/issummary/issummary"
 	"github.com/issummary/issummary/usecase"
+	"github.com/pkg/errors"
 )
 
 type Input struct {
@@ -68,7 +69,7 @@ func GetWorksJsonHandleFunc(ctx context.Context, client *issummary.Client, confi
 func GetWorksBodyFunc(ctx context.Context, workUseCase *usecase.WorkUseCase) func(body []byte) (interface{}, error) {
 	worksBodyFunc := func(body []byte) (interface{}, error) {
 		sortedWorks, err := workUseCase.GetSortedWorks(ctx)
-		return ToWorks(sortedWorks), err
+		return ToWorks(sortedWorks), errors.Wrap(err, fmt.Sprintf("failed to get sorted works. config: %#v\n", workUseCase.Config))
 	}
 
 	return worksBodyFunc
@@ -80,13 +81,13 @@ func GetMilestonesJsonHandleFunc(ctx context.Context, client *issummary.Client, 
 }
 
 func GetMilestonesBodyFunc(ctx context.Context, client *issummary.Client, config *issummary.Config) func(body []byte) (interface{}, error) {
-	milestonesBodyFunc := func(body []byte) (interface{}, error) {
+	milestonesBodyFunc := func(body []byte) (interface{}, error) { // FIXME Implement MilestoneUseCase
 		var allMilestones []*issummary.Milestone
 		for _, org := range config.Organizations {
 			milestones, err := client.ListGroupMilestones(ctx, org)
 
 			if err != nil {
-				panic(err)
+				return nil, errors.Wrap(err, fmt.Sprintf("failed to fetch milestones which organization is %v and config is %#v\n", org, config))
 			}
 
 			allMilestones = append(allMilestones, milestones...)
