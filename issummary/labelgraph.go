@@ -3,6 +3,7 @@ package issummary
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
 )
@@ -143,7 +144,7 @@ func (lg *LabelGraph) listParents(label *Label) ([]*Label, error) {
 
 	nodes := lg.g.From(labelNode.node.ID())
 	labels, err := lg.toLabelsFromNodes(nodes)
-	return labels, err
+	return labels, errors.Wrap(err, fmt.Sprintf("failed to get labels which depended from %v from label graph\n", label.GetName()))
 }
 
 func (lg *LabelGraph) setParents() error {
