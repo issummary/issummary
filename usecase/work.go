@@ -33,12 +33,15 @@ func (wu *WorkUseCase) GetSortedWorks(ctx context.Context) ([]*issummary.Work, e
 	for _, org := range wu.Config.Organizations {
 		_, _, labels, err := wu.fetchOrgResources(ctx, org, wu.Config.TargetLabelPrefixes)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to fetch resources(org: %v, targetLabelPrefixes: %v)\n", org, wu.Config.TargetLabelPrefixes))
+			errMsg := fmt.Sprintf("failed to fetch resources(org: %v, targetLabelPrefixes: %v)\n",
+				org, wu.Config.TargetLabelPrefixes)
+			return nil, errors.Wrap(err, errMsg)
 		}
 
 		works, err := wu.listOrgWorks(org)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to list works which org is %v\n", org))
+			errMsg := fmt.Sprintf("failed to list works which org is %v\n", org)
+			return nil, errors.Wrap(err, errMsg)
 		}
 
 		workManager.AddWorks(works)
@@ -46,12 +49,14 @@ func (wu *WorkUseCase) GetSortedWorks(ctx context.Context) ([]*issummary.Work, e
 	}
 
 	if err := workManager.ResolveDependencies(); err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to resolve dependencies of work graph\n"))
+		errMsg := fmt.Sprintf("failed to resolve dependencies of work graph\n")
+		return nil, errors.Wrap(err, errMsg)
 	}
 
 	sortedWorks, err := workManager.GetSortedWorks()
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to get sorted works from work manager\n"))
+		errMsg := fmt.Sprintf("failed to get sorted works from work manager\n")
+		return nil, errors.Wrap(err, errMsg)
 	}
 	return sortedWorks, nil
 }
@@ -62,7 +67,8 @@ func (wu *WorkUseCase) getListAllGroupIssuesByLabelAsyncFunc(ctx context.Context
 		log.Printf("fetchOrgResources issues with %v as label from %v", targetLabels, org)
 		allIssues, err := wu.Client.ListAllGroupIssuesByLabel(ctx, org, targetLabels)
 		issuesChan <- allIssues
-		return errors.Wrap(err, fmt.Sprintf("failed to list issues(labels: %v, org: %v)\n", targetLabels, org))
+		errMsg := fmt.Sprintf("failed to list issues(labels: %v, org: %v)\n", targetLabels, org)
+		return errors.Wrap(err, errMsg)
 	}, issuesChan
 }
 
@@ -74,7 +80,8 @@ func (wu *WorkUseCase) getListAllGroupRepositoriesAndLabelsAsyncFunc(ctx context
 		log.Printf("fetchOrgResources repositories from %v", org)
 		repositories, err := wu.Client.ListAllRepositories(ctx, org)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to list repositories which org is %v\n", org))
+			errMsg := fmt.Sprintf("failed to list repositories which org is %v\n", org)
+			return errors.Wrap(err, errMsg)
 		}
 
 		repositoriesChan <- repositories
@@ -87,7 +94,8 @@ func (wu *WorkUseCase) getListAllGroupRepositoriesAndLabelsAsyncFunc(ctx context
 		log.Printf("fetchOrgResources labels from repositories of %v (%v)", org, projectNames)
 		labels, err := wu.Client.ListAllProjectsLabels(ctx, org, repositories)
 		labelsChan <- labels
-		return errors.Wrap(err, fmt.Sprintf("failed to list labels which org is %v\n", org))
+		errMsg := fmt.Sprintf("failed to list labels which org is %v\n", org)
+		return errors.Wrap(err, errMsg)
 	}, repositoriesChan, labelsChan
 }
 
@@ -131,7 +139,9 @@ func (wu *WorkUseCase) listOrgWorks(org string) (works []*issummary.Work, err er
 		for _, project := range wu.repositories {
 			projectNames = append(projectNames, project.GetName())
 		}
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to convert to works from %v issues(wu.repositories are %v)", org, projectNames))
+		errMsg := fmt.Sprintf("failed to convert to works from %v issues(wu.repositories are %v)",
+			org, projectNames)
+		return nil, errors.Wrap(err, errMsg)
 	}
 	return works, nil
 }
@@ -140,7 +150,9 @@ func toWorks(org string, issues []*issummary.Issue, repositories []*issummary.Re
 	for _, issue := range issues {
 		work, err := toWork(org, targetLabelPrefix, spLabelPrefix, issue, repositories, labels)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to create work(org: %v, targetLabelPrefix: %v, spLabelPrefix: %v, issue: %v)\n", org, targetLabelPrefix, spLabelPrefix, issue.GetTitle()))
+			errMsg := fmt.Sprintf("failed to create work(org: %v, targetLabelPrefix: %v, spLabelPrefix: %v, issue: %v)\n",
+				org, targetLabelPrefix, spLabelPrefix, issue.GetTitle())
+			return nil, errors.Wrap(err, errMsg)
 		}
 		works = append(works, work)
 	}
