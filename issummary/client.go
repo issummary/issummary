@@ -102,7 +102,12 @@ func (c *Client) ListAllProjectsLabels(ctx context.Context, org string, reposito
 	}
 
 	labels := labelMapToSlice(labelMap)
-	return toLabels(labels), nil
+
+	convertedLabels, err := toLabels(labels)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to convert gitany labels\n"))
+	}
+	return convertedLabels, nil
 
 }
 
@@ -135,7 +140,11 @@ func (c *Client) listAllLabels(ctx context.Context, owner, repo string) ([]*Labe
 		allLabels = append(allLabels, labels...)
 		opt.Page = opt.Page + 1
 	}
-	return toLabels(allLabels), nil
+	convertedLabels, err := toLabels(allLabels)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to convert gitany labels\n"))
+	}
+	return convertedLabels, nil
 }
 
 func (c *Client) ListAllRepositories(ctx context.Context, org string) ([]*Repository, error) {
