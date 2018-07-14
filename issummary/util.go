@@ -80,15 +80,15 @@ func toLabels(rawLabels []gitany.Label) (labels []*Label, err error) {
 }
 
 func parseLabelDescription(description string) (*LabelDescription, error) {
-	labelDescription := LabelDescription{
+	labelDescription := &LabelDescription{
 		Raw:              description,
 		DependLabelNames: []string{},
 	}
 	if err := json.Unmarshal([]byte(description), labelDescription); err != nil {
-		return &labelDescription, errors.Wrap(err, fmt.Sprintf("failed to parse label description as json(description: %v)\n", description))
+		return labelDescription, errors.Wrap(err, fmt.Sprintf("failed to parse label description as json(description: %v)\n", description))
 	}
 
-	return &labelDescription, nil
+	return labelDescription, nil
 }
 
 func FindLabelByName(labels []*Label, name string) (*Label, bool) {
