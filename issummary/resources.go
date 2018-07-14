@@ -27,8 +27,8 @@ type Label struct {
 
 type LabelDescription struct {
 	Raw              string
-	DependLabelNames []string
-	ParentName       string // TODO: 複数の親を持てるようにする
+	DependLabelNames []string `json:"deps"`
+	ParentName       string   `json:"parent"` // TODO: 複数の親を持てるようにする
 }
 
 type Issue struct {

@@ -1,7 +1,10 @@
 package issummary
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -44,45 +47,54 @@ func toIssues(rawIssues []gitany.Issue) (issues []*Issue, err error) {
 	return
 }
 
-func toLabel(rawLabel gitany.Label) (label *Label) {
+func toLabel(rawLabel gitany.Label) (label *Label, err error) {
+	if rawLabel == nil {
+		return nil, nil
+	}
+
+	labelDescription, err := parseLabelDescription(rawLabel.GetDescription())
+	if err != nil {
+		switch e := errors.Cause(err).(type) {
+		case *json.SyntaxError:
+			log.Printf("failed to parse label description as json(title: %v)", rawLabel.GetName())
+		default:
+			return nil, errors.Wrap(e, fmt.Sprintf("failed to parse label description(title: %v, err: %v)\n",
+				rawLabel.GetName(), reflect.TypeOf(e)))
+		}
+	}
 	return &Label{
 		Label:       rawLabel,
-		Description: parseLabelDescription(rawLabel.GetDescription()),
-	}
+		Description: labelDescription,
+	}, nil
 }
 
-func toLabels(rawLabels []gitany.Label) (labels []*Label) {
+func toLabels(rawLabels []gitany.Label) (labels []*Label, err error) {
 	for _, rawLabel := range rawLabels {
-		labels = append(labels, toLabel(rawLabel))
+		label, err := toLabel(rawLabel)
+		if err != nil {
+			return nil, err
+		}
+		labels = append(labels, label)
 	}
 	return
 }
 
-func parseLabelDescription(description string) *LabelDescription {
-	ld := &LabelDescription{Raw: description}
-	depsKey := "deps: "     // TODO: 別の場所で定義したほうがいい気がする
-	parentKey := "parent: " // TODO: 別の場所で定義したほうがいい気がする
-	lines := strings.Split(description, ";")
-	for _, line := range lines {
-		if strings.Contains(line, depsKey) {
-			depLabelNamesStr := strings.TrimPrefix(line, depsKey)
-			depLabelNamesStr = strings.Trim(depLabelNamesStr, "\"")
-			ld.DependLabelNames = strings.Split(depLabelNamesStr, ",")
-		}
-
-		if strings.Contains(line, parentKey) {
-			parentLabelNamesStr := strings.TrimPrefix(line, parentKey)
-			ld.ParentName = strings.Split(parentLabelNamesStr, ",")[0] // FIXME
-			ld.ParentName = strings.Trim(ld.ParentName, "\"")
-		}
+func parseLabelDescription(description string) (*LabelDescription, error) {
+	labelDescription := LabelDescription{
+		Raw:              description,
+		DependLabelNames: []string{},
 	}
-	return ld
+	if err := json.Unmarshal([]byte(description), labelDescription); err != nil {
+		return &labelDescription, errors.Wrap(err, fmt.Sprintf("failed to parse label description as json(description: %v)\n", description))
+	}
+
+	return &labelDescription, nil
 }
 
 func FindLabelByName(labels []*Label, name string) (*Label, bool) {
 	for _, label := range labels {
 		if label.GetName() == name {
-			return toLabel(label), true
+			return label, true
 		}
 	}
 	return nil, false
