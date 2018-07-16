@@ -9,7 +9,7 @@ import { appActionCreators, IAppActionCreators } from '../actions/app';
 import { IRootState } from '../reducers/reducer';
 import { About } from './About';
 import { ConnectedCounter } from './Counter';
-import { ConnectedHome } from './Home';
+import { ConnectedBacklogPage } from './BacklogPage';
 
 export interface IAppProps {
   isOpenDrawer: boolean;
@@ -21,9 +21,7 @@ export interface IAppProps {
 class App extends React.Component<IAppProps, undefined> {
   constructor(props: IAppProps) {
     super(props);
-    this.handleLeftIconButtonTouchTap = this.handleLeftIconButtonTouchTap.bind(
-      this
-    );
+    this.handleLeftIconButtonTouchTap = this.handleLeftIconButtonTouchTap.bind(this);
     this.handleClose = this.handleClose.bind(this);
     this.handleRequestChange = this.handleRequestChange.bind(this);
   }
@@ -38,15 +36,10 @@ class App extends React.Component<IAppProps, undefined> {
             onLeftIconButtonClick={this.handleLeftIconButtonTouchTap}
           />
 
-          <Drawer
-            docked={false}
-            width={200}
-            open={this.props.isOpenDrawer}
-            onRequestChange={this.handleRequestChange}
-          >
+          <Drawer docked={false} width={200} open={this.props.isOpenDrawer} onRequestChange={this.handleRequestChange}>
             <MenuItem onClick={this.handleClose}>
               <Link className="menu-list" to="/">
-                Home
+                Backlog
               </Link>
             </MenuItem>
             <MenuItem onClick={this.handleClose}>
@@ -61,7 +54,7 @@ class App extends React.Component<IAppProps, undefined> {
             </MenuItem>
           </Drawer>
 
-          <Route exact={true} path="/" component={ConnectedHome} />
+          <Route exact={true} path="/" component={ConnectedBacklogPage} />
           <Route path="/about" component={About} />
           <Route path="/counter" component={ConnectedCounter} />
         </div>

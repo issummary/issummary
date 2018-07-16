@@ -6,10 +6,11 @@ import { CSSProperties } from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { ActionCreator } from 'typescript-fsa';
+import { backlogActionCreators } from '../actions/backlog';
 import { errorDialogActionCreators } from '../actions/errorDialog';
-import { homeActionCreators } from '../actions/home';
 import { issueTableActionCreators } from '../actions/issueTable';
-import { ICombinedHomeState, IRootState } from '../reducers/reducer';
+import { IBacklogPageState } from '../reducers/backlog';
+import { IRootState } from '../reducers/reducer';
 import { filterWorksByProjectNames } from '../services/util';
 import { ErrorDialog, IErrorDialogProps } from './ErrorDialog';
 import { IIssueTableProps, IssueTable } from './IssueTable';
@@ -37,7 +38,7 @@ const Refresh = (props: IRefreshProps) => (
   </FloatingActionButton>
 );
 
-interface IHomeProps {
+interface IBacklogPageProps {
   selectedProjectName: string;
   isFetchingData: boolean;
   issueTable: IIssueTableProps;
@@ -46,8 +47,8 @@ interface IHomeProps {
   requestUpdate: ActionCreator<undefined>;
 }
 
-class Home extends React.Component<IHomeProps, any> {
-  constructor(props: IHomeProps) {
+class BacklogPage extends React.Component<IBacklogPageProps, any> {
+  constructor(props: IBacklogPageProps) {
     super(props);
     this.onClickRefreshButton = this.onClickRefreshButton.bind(this);
   }
@@ -69,19 +70,19 @@ class Home extends React.Component<IHomeProps, any> {
   }
 }
 
-function mapStateToProps(state: IRootState): ICombinedHomeState {
-  return state.home;
+function mapStateToProps(state: IRootState): IBacklogPageState {
+  return state.backlogPage;
 }
 
 function mapDispatchToProps(dispatch: Dispatch<any>) {
   return {
+    backlogPage: bindActionCreators(backlogActionCreators as {}, dispatch),
     errorDialog: bindActionCreators(errorDialogActionCreators as {}, dispatch),
-    home: bindActionCreators(homeActionCreators as {}, dispatch),
     issueTable: bindActionCreators(issueTableActionCreators as {}, dispatch)
   };
 }
 
-function mergeProps(stateProps: ICombinedHomeState, dispatchProps: any, ownProps: any): IHomeProps {
+function mergeProps(stateProps: IBacklogPageState, dispatchProps: any, ownProps: any): IBacklogPageProps {
   const works =
     stateProps.global.selectedProjectName === 'All'
       ? stateProps.issueTable.works
@@ -106,10 +107,10 @@ function mergeProps(stateProps: ICombinedHomeState, dispatchProps: any, ownProps
     maxClassNum,
     parallels: global.parallels,
     selectedProjectName: global.selectedProjectName,
-    showManDayColumn: global.showManDayColumn,
-    showSPColumn: global.showSPColumn,
-    showTotalManDayColumn: global.showTotalManDayColumn,
-    showTotalSPColumn: global.showTotalSPColumn,
+    showManDayColumn: stateProps.issueTable.showManDayColumn,
+    showSPColumn: stateProps.issueTable.showSPColumn,
+    showTotalManDayColumn: stateProps.issueTable.showTotalManDayColumn,
+    showTotalSPColumn: stateProps.issueTable.showTotalSPColumn,
     velocityPerManPerDay: global.velocityPerManPerDay,
     works
   };
@@ -123,9 +124,9 @@ function mergeProps(stateProps: ICombinedHomeState, dispatchProps: any, ownProps
     .filter((pn, i, self) => self.indexOf(pn) === i);
   const issueTableConfig: IIssueTableConfigProps = {
     onChangeParallels: dispatchProps.changeParallels,
-    onChangeProjectSelectField: dispatchProps.home.changeProjectTextField,
+    onChangeProjectSelectField: dispatchProps.backlogPage.changeProjectTextField,
     onDisableManDay: dispatchProps.disableManDay,
-    onEnableManDay: dispatchProps.home.enableManDay,
+    onEnableManDay: dispatchProps.backlogPage.enableManDay,
     parallels: stateProps.global.parallels,
     projectNames,
     style: issueTableConfigStyle,
@@ -145,4 +146,4 @@ function mergeProps(stateProps: ICombinedHomeState, dispatchProps: any, ownProps
 }
 
 // tslint:disable-next-line variable-name
-export const ConnectedHome = connect(mapStateToProps, mapDispatchToProps, mergeProps)(Home as any);
+export const ConnectedBacklogPage = connect(mapStateToProps, mapDispatchToProps, mergeProps)(BacklogPage as any);
