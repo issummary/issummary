@@ -25,10 +25,6 @@ const style: CSSProperties = {
   top: 'auto'
 };
 
-const issueTableConfigStyle: CSSProperties = {
-  margin: 10
-};
-
 interface IRefreshProps {
   onClick: React.MouseEventHandler<JSX.Element | HTMLElement>;
   isFetching: boolean;
@@ -61,75 +57,44 @@ class Home extends React.Component<IHomeProps, any> {
   }
 
   public render() {
-    const works =
-      this.props.selectedProjectName === 'All'
-        ? this.props.issueTable.works
-        : filterWorksByProjectNames(this.props.issueTable.works, [this.props.selectedProjectName]);
-
     return (
       <div>
-        <ErrorDialog
-          error={this.props.errorDialog.error}
-          onRequestClose={this.props.errorDialog.onRequestClose}
-          open={this.props.errorDialog.open}
-        />
-        <IssueTableConfig
-          works={works}
-          velocityPerManPerDay={this.props.issueTable.velocityPerManPerDay}
-          parallels={this.props.issueTable.parallels}
-          style={issueTableConfigStyle}
-          onEnableManDay={this.props.issueTableConfig.onEnableManDay}
-          onDisableManDay={this.props.issueTableConfig.onDisableManDay}
-          onChangeParallels={this.props.issueTableConfig.onChangeParallels}
-          projectNames={this.props.issueTable.works
-            .map(w => w.Issue.ProjectName)
-            .filter((pn, i, self) => self.indexOf(pn) === i)}
-          onChangeProjectSelectField={this.props.issueTableConfig.onChangeProjectSelectField}
-        />
+        <ErrorDialog {...this.props.errorDialog} />
+        <IssueTableConfig {...this.props.issueTableConfig} />
         <Refresh onClick={this.onClickRefreshButton} isFetching={this.props.isFetchingData} />
-        <IssueTable
-          works={works}
-          milestones={this.props.issueTable.milestones}
-          actions={this.props.issueTable.actions}
-          showManDayColumn={this.props.issueTable.showManDayColumn}
-          showTotalManDayColumn={this.props.issueTable.showTotalManDayColumn}
-          showSPColumn={this.props.issueTable.showSPColumn}
-          showTotalSPColumn={this.props.issueTable.showTotalSPColumn}
-          velocityPerManPerDay={this.props.issueTable.velocityPerManPerDay}
-          parallels={this.props.issueTable.parallels}
-          selectedProjectName={this.props.issueTable.selectedProjectName}
-          maxClassNum={this.props.issueTable.maxClassNum}
-        />
+        <IssueTable {...this.props.issueTable} />
         <MilestoneTable milestones={this.props.issueTable.milestones} />
       </div>
     );
   }
 }
 
-function mapStateToProps(state: IRootState) {
+function mapStateToProps(state: IRootState): ICombinedHomeState {
   return state.home;
 }
 
 function mapDispatchToProps(dispatch: Dispatch<any>) {
   return {
-    actions: {
-      errorDialog: bindActionCreators(errorDialogActionCreators as {}, dispatch),
-      home: bindActionCreators(homeActionCreators as {}, dispatch),
-      issueTable: bindActionCreators(issueTableActionCreators as {}, dispatch)
-    }
+    errorDialog: bindActionCreators(errorDialogActionCreators as {}, dispatch),
+    home: bindActionCreators(homeActionCreators as {}, dispatch),
+    issueTable: bindActionCreators(issueTableActionCreators as {}, dispatch)
   };
 }
 
 function mergeProps(stateProps: ICombinedHomeState, dispatchProps: any, ownProps: any): IHomeProps {
-  const actions = dispatchProps.actions;
+  const works =
+    stateProps.global.selectedProjectName === 'All'
+      ? stateProps.issueTable.works
+      : filterWorksByProjectNames(stateProps.issueTable.works, [stateProps.global.selectedProjectName]);
+
   const global = stateProps.global;
 
   const errorDialog: IErrorDialogProps = {
     ...stateProps.errorDialog,
-    onRequestClose: actions.errorDialog.requestClosing
+    onRequestClose: dispatchProps.errorDialog.requestClosing
   };
 
-  const maxClassNumWork = _.maxBy(stateProps.issueTable.works, w => (w.Label ? w.Label.ParentNames.length : 0));
+  const maxClassNumWork = _.maxBy(works, w => (w.Label ? w.Label.ParentNames.length : 0));
   const maxClassNum =
     maxClassNumWork && maxClassNumWork.Label
       ? maxClassNumWork.Label.ParentNames.length + 1 // 1 is work own label
@@ -137,7 +102,7 @@ function mergeProps(stateProps: ICombinedHomeState, dispatchProps: any, ownProps
 
   const issueTable: IIssueTableProps = {
     ...stateProps.issueTable,
-    actions: actions.issueTable,
+    actions: dispatchProps.issueTable,
     maxClassNum,
     parallels: global.parallels,
     selectedProjectName: global.selectedProjectName,
@@ -145,20 +110,27 @@ function mergeProps(stateProps: ICombinedHomeState, dispatchProps: any, ownProps
     showSPColumn: global.showSPColumn,
     showTotalManDayColumn: global.showTotalManDayColumn,
     showTotalSPColumn: global.showTotalSPColumn,
-    velocityPerManPerDay: global.velocityPerManPerDay
+    velocityPerManPerDay: global.velocityPerManPerDay,
+    works
   };
 
+  const issueTableConfigStyle: CSSProperties = {
+    margin: 10
+  };
+
+  const projectNames = stateProps.issueTable.works
+    .map(w => w.Issue.ProjectName)
+    .filter((pn, i, self) => self.indexOf(pn) === i);
   const issueTableConfig: IIssueTableConfigProps = {
-    onChangeParallels: actions.changeParallels,
-    onChangeProjectSelectField: actions.home.changeProjectTextField,
-    onDisableManDay: actions.disableManDay,
-    onEnableManDay: actions.home.enableManDay,
+    onChangeParallels: dispatchProps.changeParallels,
+    onChangeProjectSelectField: dispatchProps.home.changeProjectTextField,
+    onDisableManDay: dispatchProps.disableManDay,
+    onEnableManDay: dispatchProps.home.enableManDay,
     parallels: stateProps.global.parallels,
-    projectNames: stateProps.issueTable.works
-      .map(w => w.Issue.ProjectName)
-      .filter((pn, i, self) => self.indexOf(pn) === i),
+    projectNames,
+    style: issueTableConfigStyle,
     velocityPerManPerDay: stateProps.global.velocityPerManPerDay,
-    works: stateProps.issueTable.works
+    works
   };
 
   return {
@@ -167,7 +139,7 @@ function mergeProps(stateProps: ICombinedHomeState, dispatchProps: any, ownProps
     isFetchingData: stateProps.global.isFetchingData,
     issueTable,
     issueTableConfig,
-    requestUpdate: actions.issueTable.requestUpdate,
+    requestUpdate: dispatchProps.issueTable.requestUpdate,
     selectedProjectName: stateProps.global.selectedProjectName
   };
 }
