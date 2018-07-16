@@ -20,7 +20,7 @@ export interface IIssueTableProps {
   parallels: number;
   selectedProjectName: string;
   maxClassNum: number;
-  actions: IIssueTableActionCreators;
+  actions: IIssueTableActionCreators; // FIXME convert to onXXX methods
 }
 
 export class IssueTable extends React.Component<IIssueTableProps, any> {
@@ -31,6 +31,7 @@ export class IssueTable extends React.Component<IIssueTableProps, any> {
   public render() {
     console.log(this.props.works); // tslint:disable-line
     const totalSPs = eachSum(this.props.works.map(w => w.StoryPoint));
+
     return (
       <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
         <TableHeader displaySelectAll={false} adjustForCheckbox={false}>

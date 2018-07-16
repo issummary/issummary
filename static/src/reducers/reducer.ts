@@ -1,15 +1,21 @@
 import { combineReducers } from 'redux';
-import { IIssueTableProps } from '../components/IssueTable';
 import { appReducer, IAppState } from './app';
 import { counterReducer, ICounterState } from './counter';
-import { homeReducer } from './home';
+import { IErrorDialogState } from './errorDialog';
+import { homeReducer, IHomeState } from './home';
+import { IIssueTableState } from './issueTable';
+
+export interface ICombinedHomeState {
+  // FIXME name
+  errorDialog: IErrorDialogState;
+  global: IHomeState;
+  issueTable: IIssueTableState;
+}
 
 export interface IRootState {
   app: IAppState;
   counter: ICounterState;
-  home: {
-    issueTable: IIssueTableProps;
-  };
+  home: ICombinedHomeState;
 }
 
 export const reducer = combineReducers({
