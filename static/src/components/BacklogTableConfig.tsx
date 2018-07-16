@@ -8,7 +8,7 @@ import { IWork } from '../models/work';
 import { worksToCSV } from '../services/csv';
 import { ProjectSelectField } from './ProjectSelectField';
 
-export interface IIssueTableConfigProps {
+export interface IBacklogTableConfigProps {
   works: IWork[];
   velocityPerManPerDay: number;
   parallels: number;
@@ -21,7 +21,7 @@ export interface IIssueTableConfigProps {
 }
 
 // tslint:disable-next-line
-export const IssueTableConfig = (props: IIssueTableConfigProps) => {
+export const BacklogTableConfig = (props: IBacklogTableConfigProps) => {
   const handleToggle = (event: object, isInputChecked: boolean) => {
     if (isInputChecked) {
       props.onEnableManDay();

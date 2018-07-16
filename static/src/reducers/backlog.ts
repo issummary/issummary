@@ -1,9 +1,9 @@
 import { combineReducers } from 'redux';
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
 import { backlogActionCreators } from '../actions/backlog';
-import { issueTableActionCreators, issueTableAsyncActionCreators } from '../actions/issueTable';
+import { backlogTableActionCreators, backlogTableAsyncActionCreators } from '../actions/backlogTable';
+import { backlogTableReducer, IBacklogTableState } from './backlogTable';
 import { errorDialogReducer, IErrorDialogState } from './errorDialog';
-import { IIssueTableState, issueTableReducer } from './issueTable';
 
 export interface IBacklogState {
   isFetchingData: boolean;
@@ -20,15 +20,15 @@ const backlogInitialState: IBacklogState = {
 };
 
 const backlogReducer = reducerWithInitialState(backlogInitialState)
-  .case(issueTableActionCreators.requestUpdate, state => ({
+  .case(backlogTableActionCreators.requestUpdate, state => ({
     ...state,
     isFetchingData: true
   }))
-  .case(issueTableAsyncActionCreators.requestNewDataFetching.done, state => ({
+  .case(backlogTableAsyncActionCreators.requestNewDataFetching.done, state => ({
     ...state,
     isFetchingData: false
   }))
-  .case(issueTableAsyncActionCreators.requestNewDataFetching.failed, state => ({
+  .case(backlogTableAsyncActionCreators.requestNewDataFetching.failed, state => ({
     ...state,
     isFetchingData: false
   }))
@@ -44,11 +44,11 @@ const backlogReducer = reducerWithInitialState(backlogInitialState)
 export interface IBacklogPageState {
   errorDialog: IErrorDialogState;
   global: IBacklogState;
-  issueTable: IIssueTableState;
+  backlogTable: IBacklogTableState;
 }
 
 export const backlogPageReducer = combineReducers({
+  backlogTable: backlogTableReducer,
   errorDialog: errorDialogReducer,
-  global: backlogReducer,
-  issueTable: issueTableReducer
+  global: backlogReducer
 });

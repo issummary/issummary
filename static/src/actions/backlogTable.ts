@@ -4,11 +4,11 @@ import { IWork } from '../models/work';
 
 const actionCreator = actionCreatorFactory('ISSUE_TABLE');
 
-export interface IIssueTableActionCreators {
+export interface IBacklogTableActionCreators {
   requestUpdate: ActionCreator<undefined>;
 }
 
-export const issueTableActionCreators: IIssueTableActionCreators = {
+export const backlogTableActionCreators: IBacklogTableActionCreators = {
   requestUpdate: actionCreator<undefined>('REQUEST_UPDATE')
 };
 
@@ -17,10 +17,6 @@ export interface IRequestNewDataFetchingPayload {
   milestones: IMilestone[];
 }
 
-export const issueTableAsyncActionCreators = {
-  requestNewDataFetching: actionCreator.async<
-    null,
-    IRequestNewDataFetchingPayload,
-    null
-  >('REQUEST_NEW_DATA_FETCHING') // FIXME
+export const backlogTableAsyncActionCreators = {
+  requestNewDataFetching: actionCreator.async<null, IRequestNewDataFetchingPayload, null>('REQUEST_NEW_DATA_FETCHING') // FIXME
 };

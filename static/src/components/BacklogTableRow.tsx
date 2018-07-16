@@ -5,8 +5,8 @@ import * as moment from 'moment';
 import * as React from 'react';
 import { CSSProperties } from 'react';
 import { IWork } from '../models/work';
-import { IssueTableIssueAndLabelDependenciesRow } from './IssueTableIssueAndLabelDependenciesRow';
-export interface IIssueTableRowProps {
+import { BacklogTableIssueAndLabelDependenciesRow } from './BacklogTableIssueAndLabelDependenciesRow';
+export interface IBacklogTableRowProps {
   work: IWork;
   key: string;
   totalSP: number;
@@ -34,7 +34,7 @@ const TotalSPPoint = (props: { work: IWork; velocityPerManPerDay: number }) => (
 );
 
 // tslint:disable-next-line
-export const IssueTableRow = (props: IIssueTableRowProps) => {
+export const BacklogTableRow = (props: IBacklogTableRowProps) => {
   const totalManDay = props.totalSP / props.velocityPerManPerDay;
   const totalParallelManDay = Math.ceil(totalManDay / props.parallels);
   const bizRawDay = koyomi.addBiz(today, totalParallelManDay);
@@ -81,7 +81,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
         {props.work.Issue.DueDate ? props.work.Issue.DueDate.format('YYYY/MM/DD') : '-'}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
-        <IssueTableIssueAndLabelDependenciesRow work={props.work} />
+        <BacklogTableIssueAndLabelDependenciesRow work={props.work} />
       </TableRowColumn>
     </TableRow>
   );

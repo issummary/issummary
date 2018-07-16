@@ -8,8 +8,8 @@ import { bindActionCreators } from 'redux';
 import { appActionCreators, IAppActionCreators } from '../actions/app';
 import { IRootState } from '../reducers/reducer';
 import { About } from './About';
-import { ConnectedCounter } from './Counter';
 import { ConnectedBacklogPage } from './BacklogPage';
+import { ConnectedCounter } from './Counter';
 
 export interface IAppProps {
   isOpenDrawer: boolean;

@@ -2,7 +2,7 @@ import TableHeaderColumn from 'material-ui/Table/TableHeaderColumn';
 import TableRow from 'material-ui/Table/TableRow';
 import * as React from 'react';
 
-interface IIssueTableHeadersProps {
+interface IBacklogTableHeadersProps {
   showManDayColumn: boolean;
   showTotalManDayColumn: boolean;
   showSPColumn: boolean;
@@ -17,7 +17,7 @@ const generateClassColumns = (classNum: number) => {
 };
 
 // tslint:disable-next-line
-export const IssueTableHeadersRow = (props: IIssueTableHeadersProps) => (
+export const BacklogTableHeadersRow = (props: IBacklogTableHeadersProps) => (
   <TableRow>
     <TableHeaderColumn>Project+IID</TableHeaderColumn>
     <TableHeaderColumn>Milestone</TableHeaderColumn>

@@ -1,10 +1,10 @@
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
 import { backlogActionCreators } from '../actions/backlog';
-import { issueTableAsyncActionCreators } from '../actions/issueTable';
+import { backlogTableAsyncActionCreators } from '../actions/backlogTable';
 import { IMilestone } from '../models/milestone';
 import { IWork } from '../models/work';
 
-export interface IIssueTableState {
+export interface IBacklogTableState {
   works: IWork[];
   milestones: IMilestone[];
   showManDayColumn: boolean;
@@ -13,7 +13,7 @@ export interface IIssueTableState {
   showTotalSPColumn: boolean;
 }
 
-const issueTableInitialState: IIssueTableState = {
+const backlogTableInitialState: IBacklogTableState = {
   milestones: [],
   showManDayColumn: false,
   showSPColumn: true,
@@ -22,8 +22,8 @@ const issueTableInitialState: IIssueTableState = {
   works: []
 };
 
-export const issueTableReducer = reducerWithInitialState(issueTableInitialState)
-  .case(issueTableAsyncActionCreators.requestNewDataFetching.done, (state, payload) => ({
+export const backlogTableReducer = reducerWithInitialState(backlogTableInitialState)
+  .case(backlogTableAsyncActionCreators.requestNewDataFetching.done, (state, payload) => ({
     ...state,
     milestones: payload.result.milestones,
     works: payload.result.works

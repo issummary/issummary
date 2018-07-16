@@ -7,14 +7,14 @@ import { connect, Dispatch } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { ActionCreator } from 'typescript-fsa';
 import { backlogActionCreators } from '../actions/backlog';
+import { backlogTableActionCreators } from '../actions/backlogTable';
 import { errorDialogActionCreators } from '../actions/errorDialog';
-import { issueTableActionCreators } from '../actions/issueTable';
 import { IBacklogPageState } from '../reducers/backlog';
 import { IRootState } from '../reducers/reducer';
 import { filterWorksByProjectNames } from '../services/util';
+import { BacklogTable, IBacklogTableProps } from './BacklogTable';
+import { BacklogTableConfig, IBacklogTableConfigProps } from './BacklogTableConfig';
 import { ErrorDialog, IErrorDialogProps } from './ErrorDialog';
-import { IIssueTableProps, IssueTable } from './IssueTable';
-import { IIssueTableConfigProps, IssueTableConfig } from './IssueTableConfig';
 import { MilestoneTable } from './milestoneTable';
 
 const style: CSSProperties = {
@@ -41,8 +41,8 @@ const Refresh = (props: IRefreshProps) => (
 interface IBacklogPageProps {
   selectedProjectName: string;
   isFetchingData: boolean;
-  issueTable: IIssueTableProps;
-  issueTableConfig: IIssueTableConfigProps;
+  backlogTable: IBacklogTableProps;
+  backlogTableConfig: IBacklogTableConfigProps;
   errorDialog: IErrorDialogProps;
   requestUpdate: ActionCreator<undefined>;
 }
@@ -61,10 +61,10 @@ class BacklogPage extends React.Component<IBacklogPageProps, any> {
     return (
       <div>
         <ErrorDialog {...this.props.errorDialog} />
-        <IssueTableConfig {...this.props.issueTableConfig} />
+        <BacklogTableConfig {...this.props.backlogTableConfig} />
         <Refresh onClick={this.onClickRefreshButton} isFetching={this.props.isFetchingData} />
-        <IssueTable {...this.props.issueTable} />
-        <MilestoneTable milestones={this.props.issueTable.milestones} />
+        <BacklogTable {...this.props.backlogTable} />
+        <MilestoneTable milestones={this.props.backlogTable.milestones} />
       </div>
     );
   }
@@ -77,16 +77,16 @@ function mapStateToProps(state: IRootState): IBacklogPageState {
 function mapDispatchToProps(dispatch: Dispatch<any>) {
   return {
     backlogPage: bindActionCreators(backlogActionCreators as {}, dispatch),
-    errorDialog: bindActionCreators(errorDialogActionCreators as {}, dispatch),
-    issueTable: bindActionCreators(issueTableActionCreators as {}, dispatch)
+    backlogTable: bindActionCreators(backlogTableActionCreators as {}, dispatch),
+    errorDialog: bindActionCreators(errorDialogActionCreators as {}, dispatch)
   };
 }
 
 function mergeProps(stateProps: IBacklogPageState, dispatchProps: any, ownProps: any): IBacklogPageProps {
   const works =
     stateProps.global.selectedProjectName === 'All'
-      ? stateProps.issueTable.works
-      : filterWorksByProjectNames(stateProps.issueTable.works, [stateProps.global.selectedProjectName]);
+      ? stateProps.backlogTable.works
+      : filterWorksByProjectNames(stateProps.backlogTable.works, [stateProps.global.selectedProjectName]);
 
   const global = stateProps.global;
 
@@ -101,46 +101,46 @@ function mergeProps(stateProps: IBacklogPageState, dispatchProps: any, ownProps:
       ? maxClassNumWork.Label.ParentNames.length + 1 // 1 is work own label
       : 0;
 
-  const issueTable: IIssueTableProps = {
-    ...stateProps.issueTable,
-    actions: dispatchProps.issueTable,
+  const backlogTable: IBacklogTableProps = {
+    ...stateProps.backlogTable,
+    actions: dispatchProps.backlogTable,
     maxClassNum,
     parallels: global.parallels,
     selectedProjectName: global.selectedProjectName,
-    showManDayColumn: stateProps.issueTable.showManDayColumn,
-    showSPColumn: stateProps.issueTable.showSPColumn,
-    showTotalManDayColumn: stateProps.issueTable.showTotalManDayColumn,
-    showTotalSPColumn: stateProps.issueTable.showTotalSPColumn,
+    showManDayColumn: stateProps.backlogTable.showManDayColumn,
+    showSPColumn: stateProps.backlogTable.showSPColumn,
+    showTotalManDayColumn: stateProps.backlogTable.showTotalManDayColumn,
+    showTotalSPColumn: stateProps.backlogTable.showTotalSPColumn,
     velocityPerManPerDay: global.velocityPerManPerDay,
     works
   };
 
-  const issueTableConfigStyle: CSSProperties = {
+  const backlogTableConfigStyle: CSSProperties = {
     margin: 10
   };
 
-  const projectNames = stateProps.issueTable.works
+  const projectNames = stateProps.backlogTable.works
     .map(w => w.Issue.ProjectName)
     .filter((pn, i, self) => self.indexOf(pn) === i);
-  const issueTableConfig: IIssueTableConfigProps = {
+  const backlogTableConfig: IBacklogTableConfigProps = {
     onChangeParallels: dispatchProps.changeParallels,
     onChangeProjectSelectField: dispatchProps.backlogPage.changeProjectTextField,
     onDisableManDay: dispatchProps.disableManDay,
     onEnableManDay: dispatchProps.backlogPage.enableManDay,
     parallels: stateProps.global.parallels,
     projectNames,
-    style: issueTableConfigStyle,
+    style: backlogTableConfigStyle,
     velocityPerManPerDay: stateProps.global.velocityPerManPerDay,
     works
   };
 
   return {
     ...ownProps,
+    backlogTable,
+    backlogTableConfig,
     errorDialog,
     isFetchingData: stateProps.global.isFetchingData,
-    issueTable,
-    issueTableConfig,
-    requestUpdate: dispatchProps.issueTable.requestUpdate,
+    requestUpdate: dispatchProps.backlogTable.requestUpdate,
     selectedProjectName: stateProps.global.selectedProjectName
   };
 }

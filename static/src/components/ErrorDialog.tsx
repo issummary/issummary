@@ -10,7 +10,7 @@ export interface IErrorDialogProps {
 
 export class ErrorDialog extends React.Component<IErrorDialogProps, any> {
   public render() {
-    const actions = [<FlatButton key="OK" label="OK" primary={true} onClick={this.props.onRequestClose} />];
+    const actions = [<FlatButton key="OK" label="OK" primary={true} onClick={this.props.onRequestClose} />]; // FIXME
 
     return (
       <Dialog

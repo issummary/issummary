@@ -43,7 +43,7 @@ const LabelDependencies = (props: { currentProjectName: string; dependLabelName:
 };
 
 // tslint:disable-next-line
-export const IssueTableIssueAndLabelDependenciesRow = (props: { work: IWork }) => {
+export const BacklogTableIssueAndLabelDependenciesRow = (props: { work: IWork }) => {
   const dependWorks = props.work.DependWorks;
 
   const issueOfIssueDescriptionDependWorks = dependWorks.filter(
