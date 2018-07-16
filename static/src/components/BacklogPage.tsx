@@ -1,8 +1,9 @@
 import * as _ from 'lodash';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import AutoRenew from 'material-ui/svg-icons/action/autorenew';
-import * as React from 'react';
+import * as moment from 'moment';
 import { CSSProperties } from 'react';
+import * as React from 'react';
 import { connect, Dispatch } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { ActionCreator } from 'typescript-fsa';
@@ -11,6 +12,7 @@ import { backlogTableActionCreators } from '../actions/backlogTable';
 import { errorDialogActionCreators } from '../actions/errorDialog';
 import { IBacklogPageState } from '../reducers/backlog';
 import { IRootState } from '../reducers/reducer';
+import { worksToCSV } from '../services/csv';
 import { filterWorksByProjectNames } from '../services/util';
 import { BacklogTable, IBacklogTableProps } from './BacklogTable';
 import { BacklogTableConfig, IBacklogTableConfigProps } from './BacklogTableConfig';
@@ -122,7 +124,18 @@ function mergeProps(stateProps: IBacklogPageState, dispatchProps: any, ownProps:
   const projectNames = stateProps.backlogTable.works
     .map(w => w.Issue.ProjectName)
     .filter((pn, i, self) => self.indexOf(pn) === i);
+
+  const content = worksToCSV(
+    works,
+    global.velocityPerManPerDay,
+    moment(), // FIXME
+    global.parallels
+  );
+  const blob = new Blob([content], { type: 'text/plain' });
+  const csvUrl = window.URL.createObjectURL(blob);
+
   const backlogTableConfig: IBacklogTableConfigProps = {
+    csvUrl,
     onChangeParallels: dispatchProps.changeParallels,
     onChangeProjectSelectField: dispatchProps.backlogPage.changeProjectTextField,
     onDisableManDay: dispatchProps.disableManDay,
