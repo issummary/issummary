@@ -69,6 +69,7 @@ function mapStateToProps(state: IRootState): IBacklogPageState {
 }
 
 function mapDispatchToProps(dispatch: Dispatch<any>) {
+  // FIXME add type
   return {
     backlogPage: bindActionCreators(backlogActionCreators as {}, dispatch),
     backlogTable: bindActionCreators(backlogTableActionCreators as {}, dispatch),
@@ -128,9 +129,9 @@ function mergeProps(stateProps: IBacklogPageState, dispatchProps: any, ownProps:
 
   const backlogTableConfig: IBacklogTableConfigProps = {
     csvUrl,
-    onChangeParallels: dispatchProps.changeParallels,
+    onChangeParallels: dispatchProps.backlogPage.changeParallels,
     onChangeProjectSelectField: dispatchProps.backlogPage.changeProjectTextField,
-    onDisableManDay: dispatchProps.disableManDay,
+    onDisableManDay: dispatchProps.backlogPage.disableManDay,
     onEnableManDay: dispatchProps.backlogPage.enableManDay,
     parallels: stateProps.global.parallels,
     projectNames,
