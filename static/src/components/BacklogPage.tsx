@@ -14,7 +14,7 @@ import { IBacklogPageState } from '../reducers/backlog';
 import { IRootState } from '../reducers/reducer';
 import { worksToCSV } from '../services/csv';
 import { filterWorksByProjectNames } from '../services/util';
-import { BacklogTable, IBacklogTableProps } from './BacklogTable';
+import { BacklogTableWithRequest, IBacklogTableProps } from './BacklogTable';
 import { BacklogTableConfig, IBacklogTableConfigProps } from './BacklogTableConfig';
 import { ErrorDialog, IErrorDialogProps } from './ErrorDialog';
 import { MilestoneTable } from './milestoneTable';
@@ -58,7 +58,7 @@ const BacklogPage = (props: IBacklogPageProps) => {
       <ErrorDialog {...props.errorDialog} />
       <BacklogTableConfig {...props.backlogTableConfig} />
       <Refresh onClick={handleRefreshClick} isFetching={props.isFetchingData} />
-      <BacklogTable {...props.backlogTable} />
+      <BacklogTableWithRequest {...props.backlogTable} />
       <MilestoneTable milestones={props.backlogTable.milestones} />
     </div>
   );
@@ -97,8 +97,8 @@ function mergeProps(stateProps: IBacklogPageState, dispatchProps: any, ownProps:
 
   const backlogTable: IBacklogTableProps = {
     ...stateProps.backlogTable,
-    actions: dispatchProps.backlogTable,
     maxClassNum,
+    onRequestUpdate: dispatchProps.backlogTable.requestUpdate,
     parallels: global.parallels,
     selectedProjectName: global.selectedProjectName,
     showManDayColumn: stateProps.backlogTable.showManDayColumn,

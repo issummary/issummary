@@ -2,7 +2,8 @@ import * as React from 'react';
 
 import { Table, TableBody } from 'material-ui/Table';
 import TableHeader from 'material-ui/Table/TableHeader';
-import { IBacklogTableActionCreators } from '../actions/backlogTable';
+import { lifecycle } from 'recompose';
+import { ActionCreator } from 'typescript-fsa';
 import { IMilestone } from '../models/milestone';
 import { IWork } from '../models/work';
 import { eachSum } from '../services/util';
@@ -20,47 +21,49 @@ export interface IBacklogTableProps {
   parallels: number;
   selectedProjectName: string;
   maxClassNum: number;
-  actions: IBacklogTableActionCreators; // FIXME convert to onXXX methods
+  onRequestUpdate: ActionCreator<undefined>;
 }
 
-export class BacklogTable extends React.Component<IBacklogTableProps, any> {
-  public componentDidMount() {
-    this.props.actions.requestUpdate();
-  }
+// tslint:disable-next-line variable-name
+export const BacklogTable = (props: IBacklogTableProps) => {
+  console.log(props.works); // tslint:disable-line no-console
+  const totalSPs = eachSum(props.works.map(w => w.StoryPoint));
 
-  public render() {
-    console.log(this.props.works); // tslint:disable-line
-    const totalSPs = eachSum(this.props.works.map(w => w.StoryPoint));
+  return (
+    <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
+      <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
+        <BacklogTableHeadersRow
+          showManDayColumn={props.showManDayColumn}
+          showTotalManDayColumn={props.showTotalManDayColumn}
+          showSPColumn={props.showSPColumn}
+          showTotalSPColumn={props.showTotalSPColumn}
+          maxClassNum={props.maxClassNum}
+        />
+      </TableHeader>
 
-    return (
-      <Table fixedHeader={false} style={{ tableLayout: 'auto' }}>
-        <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
-          <BacklogTableHeadersRow
-            showManDayColumn={this.props.showManDayColumn}
-            showTotalManDayColumn={this.props.showTotalManDayColumn}
-            showSPColumn={this.props.showSPColumn}
-            showTotalSPColumn={this.props.showTotalSPColumn}
-            maxClassNum={this.props.maxClassNum}
+      <TableBody displayRowCheckbox={false}>
+        {props.works.map((w, i) => (
+          <BacklogTableRow
+            work={w}
+            key={w.Issue.ProjectName + w.Issue.IID}
+            totalSP={totalSPs[i]}
+            showManDayColumn={props.showManDayColumn}
+            showTotalManDayColumn={props.showTotalManDayColumn}
+            showSPColumn={props.showSPColumn}
+            showTotalSPColumn={props.showTotalSPColumn}
+            velocityPerManPerDay={props.velocityPerManPerDay}
+            parallels={props.parallels}
+            maxClassNum={props.maxClassNum}
           />
-        </TableHeader>
+        ))}
+      </TableBody>
+    </Table>
+  );
+};
 
-        <TableBody displayRowCheckbox={false}>
-          {this.props.works.map((w, i) => (
-            <BacklogTableRow
-              work={w}
-              key={w.Issue.ProjectName + w.Issue.IID}
-              totalSP={totalSPs[i]}
-              showManDayColumn={this.props.showManDayColumn}
-              showTotalManDayColumn={this.props.showTotalManDayColumn}
-              showSPColumn={this.props.showSPColumn}
-              showTotalSPColumn={this.props.showTotalSPColumn}
-              velocityPerManPerDay={this.props.velocityPerManPerDay}
-              parallels={this.props.parallels}
-              maxClassNum={this.props.maxClassNum}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    );
+// tslint:disable-next-line variable-name
+export const BacklogTableWithRequest = lifecycle<IBacklogTableProps, undefined, {}>({
+  componentDidMount() {
+    this.props.onRequestUpdate();
   }
-}
+})(BacklogTable);
