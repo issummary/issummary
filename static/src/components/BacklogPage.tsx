@@ -49,28 +49,20 @@ interface IBacklogPageProps {
   requestUpdate: ActionCreator<undefined>;
 }
 
-class BacklogPage extends React.Component<IBacklogPageProps, any> {
-  constructor(props: IBacklogPageProps) {
-    super(props);
-    this.onClickRefreshButton = this.onClickRefreshButton.bind(this);
-  }
+// tslint:disable-next-line
+const BacklogPage = (props: IBacklogPageProps) => {
+  const handleRefreshClick = () => props.requestUpdate();
 
-  public onClickRefreshButton() {
-    this.props.requestUpdate();
-  }
-
-  public render() {
-    return (
-      <div>
-        <ErrorDialog {...this.props.errorDialog} />
-        <BacklogTableConfig {...this.props.backlogTableConfig} />
-        <Refresh onClick={this.onClickRefreshButton} isFetching={this.props.isFetchingData} />
-        <BacklogTable {...this.props.backlogTable} />
-        <MilestoneTable milestones={this.props.backlogTable.milestones} />
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <ErrorDialog {...props.errorDialog} />
+      <BacklogTableConfig {...props.backlogTableConfig} />
+      <Refresh onClick={handleRefreshClick} isFetching={props.isFetchingData} />
+      <BacklogTable {...props.backlogTable} />
+      <MilestoneTable milestones={props.backlogTable.milestones} />
+    </div>
+  );
+};
 
 function mapStateToProps(state: IRootState): IBacklogPageState {
   return state.backlogPage;
