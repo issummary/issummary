@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import { mapProps } from 'recompose';
+import { compose, mapProps } from 'recompose';
 import { Issue, IWork } from '../models/work';
 
 interface IBaseProjectNameAndIssueNumberProps {
@@ -18,45 +18,48 @@ const BaseProjectNameAndIssueNumber = ({ projectName, issueURL, issueNumber }: I
 
 interface IProjectNameAndIssueNumberProps {
   currentProjectName: string;
-  issueProjectName: string;
-  issueURL: string;
-  issueNumber: number;
+  issue: Issue;
 }
 
 // tslint:disable-next-line
-const ProjectNameAndIssueNumber = mapProps(
-  ({ issueProjectName, currentProjectName, issueNumber, issueURL }: IProjectNameAndIssueNumberProps) => ({
-    issueNumber,
-    issueURL,
-    projectName: issueProjectName !== currentProjectName ? issueProjectName : null
-  })
+const ProjectNameAndIssueNumber = compose<IBaseProjectNameAndIssueNumberProps, IProjectNameAndIssueNumberProps>(
+  mapProps(({ currentProjectName, issue }: IProjectNameAndIssueNumberProps) => ({
+    issueNumber: issue.IID,
+    issueProjectName: issue.ProjectName,
+    issueURL: issue.URL,
+    projectName: issue.ProjectName !== currentProjectName ? issue.ProjectName : null
+  }))
 )(BaseProjectNameAndIssueNumber);
 
+interface IIssueDependencies {
+  currentProjectName: string;
+  issues: Issue[];
+}
+
+interface IBaseIssueDependencies extends IIssueDependencies {
+  lastIssue: Issue;
+}
+
 // tslint:disable-next-line
-const IssueDependencies = (props: { currentProjectName: string; issues: Issue[] }) => {
+const BaseIssueDependencies = (props: IBaseIssueDependencies) => {
   const issueLinks = props.issues.map(i => (
-    <ProjectNameAndIssueNumber
-      currentProjectName={props.currentProjectName}
-      issueProjectName={i.ProjectName}
-      issueURL={i.URL}
-      issueNumber={i.IID} // FIXME
-      key={i.ProjectName + i.IID}
-    />
+    <ProjectNameAndIssueNumber currentProjectName={props.currentProjectName} issue={i} />
   ));
-
-  if (issueLinks.length === 0) {
-    return null;
-  }
-
-  const lastLink = issueLinks.pop();
 
   return (
     <span>
       {issueLinks.map((a, i) => <span key={i}>{a} </span>)}
-      {lastLink}
+      <ProjectNameAndIssueNumber currentProjectName={props.currentProjectName} issue={props.lastIssue} />
     </span>
   );
 };
+
+// tslint:disable-next-line
+const IssueDependencies = mapProps(({ currentProjectName, issues }: IIssueDependencies) => ({
+  currentProjectName,
+  issues: issues.slice(0, issues.length - 1),
+  lastIssue: issues[issues.length - 1]
+}))(BaseIssueDependencies);
 
 // tslint:disable-next-line
 const LabelDependencies = (props: { currentProjectName: string; dependLabelName: string; dependIssues: Issue[] }) => {
