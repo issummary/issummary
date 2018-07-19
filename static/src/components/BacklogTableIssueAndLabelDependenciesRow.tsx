@@ -1,20 +1,47 @@
 import * as _ from 'lodash';
 import * as React from 'react';
+import { mapProps } from 'recompose';
 import { Issue, IWork } from '../models/work';
 
+interface IBaseProjectNameAndIssueNumberProps {
+  projectName: string;
+  issueURL: string;
+  issueNumber: number;
+}
+
 // tslint:disable-next-line
-export const IssueIIDAndProjectName = (props: { currentProjectName: string; issue: Issue }) => (
-  <a href={props.issue.URL} target="_blank">
-    {props.issue.ProjectName && props.issue.ProjectName !== props.currentProjectName
-      ? props.issue.ProjectName + ' #' + props.issue.IID
-      : '#' + props.issue.IID}
+const BaseProjectNameAndIssueNumber = ({ projectName, issueURL, issueNumber }: IBaseProjectNameAndIssueNumberProps) => (
+  <a href={issueURL} target="_blank">
+    {projectName}#{issueNumber}
   </a>
 );
+
+interface IProjectNameAndIssueNumberProps {
+  currentProjectName: string;
+  issueProjectName: string;
+  issueURL: string;
+  issueNumber: number;
+}
+
+// tslint:disable-next-line
+const ProjectNameAndIssueNumber = mapProps(
+  ({ issueProjectName, currentProjectName, issueNumber, issueURL }: IProjectNameAndIssueNumberProps) => ({
+    issueNumber,
+    issueURL,
+    projectName: issueProjectName !== currentProjectName ? issueProjectName : null
+  })
+)(BaseProjectNameAndIssueNumber);
 
 // tslint:disable-next-line
 const IssueDependencies = (props: { currentProjectName: string; issues: Issue[] }) => {
   const issueLinks = props.issues.map(i => (
-    <IssueIIDAndProjectName currentProjectName={props.currentProjectName} issue={i} key={i.ProjectName + i.IID} />
+    <ProjectNameAndIssueNumber
+      currentProjectName={props.currentProjectName}
+      issueProjectName={i.ProjectName}
+      issueURL={i.URL}
+      issueNumber={i.IID} // FIXME
+      key={i.ProjectName + i.IID}
+    />
   ));
 
   if (issueLinks.length === 0) {
