@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import { compose, mapProps } from 'recompose';
+import { branch, compose, mapProps, renderComponent } from 'recompose';
 import { Issue, IWork } from '../models/work';
 
 interface IBaseProjectNameAndIssueNumberProps {
@@ -61,8 +61,14 @@ const IssueDependencies = mapProps(({ currentProjectName, issues }: IIssueDepend
   lastIssue: issues[issues.length - 1]
 }))(BaseIssueDependencies);
 
+interface ILabelDependenciesProps {
+  currentProjectName: string;
+  dependLabelName: string;
+  dependIssues: Issue[];
+}
+
 // tslint:disable-next-line
-const LabelDependencies = (props: { currentProjectName: string; dependLabelName: string; dependIssues: Issue[] }) => {
+const LabelDependencies = (props: ILabelDependenciesProps) => {
   return (
     <span>
       {props.dependLabelName}(
@@ -72,30 +78,16 @@ const LabelDependencies = (props: { currentProjectName: string; dependLabelName:
   );
 };
 
+interface IBaseBacklogTableIssueAndLabelDependenciesRowProps {
+  currentProjectName: string;
+  issueOfIssueDescriptionDependWorks: IWork[];
+  labelOfIssueDescriptionDependWorks: IWork[];
+  labelOfLabelDescriptionDependWorks: IWork[];
+}
+
 // tslint:disable-next-line
-export const BacklogTableIssueAndLabelDependenciesRow = (props: { work: IWork }) => {
-  const dependWorks = props.work.DependWorks;
-
-  const issueOfIssueDescriptionDependWorks = dependWorks.filter(
-    w => w.Relation && w.Relation.Type === 'IssueOfIssueDescription'
-  ); // FIXME
-  const labelOfIssueDescriptionDependWorks = dependWorks.filter(
-    w => w.Relation && w.Relation.Type === 'LabelOfIssueDescription'
-  ); // FIXME
-  const labelOfLabelDescriptionDependWorks = dependWorks.filter(
-    w => w.Relation && w.Relation.Type === 'LabelOfLabelDescription'
-  ); // FIXME
-
-  if (
-    issueOfIssueDescriptionDependWorks.length === 0 &&
-    labelOfIssueDescriptionDependWorks.length === 0 &&
-    labelOfLabelDescriptionDependWorks.length === 0
-  ) {
-    return <span>-</span>;
-  }
-
-  const labelWorks = labelOfIssueDescriptionDependWorks.concat(labelOfLabelDescriptionDependWorks);
-
+const BaseBacklogTableIssueAndLabelDependenciesRow = (props: IBaseBacklogTableIssueAndLabelDependenciesRowProps) => {
+  const labelWorks = props.labelOfIssueDescriptionDependWorks.concat(props.labelOfLabelDescriptionDependWorks);
   const groupedWorks = _.groupBy(labelWorks, w => w.Relation!.LabelName);
 
   const labelDependenciesDOMs = Object.keys(groupedWorks).map(labelName => {
@@ -114,11 +106,51 @@ export const BacklogTableIssueAndLabelDependenciesRow = (props: { work: IWork })
   return (
     <span>
       <IssueDependencies
-        currentProjectName={props.work.Issue.ProjectName}
-        issues={issueOfIssueDescriptionDependWorks.map(iw => iw.Issue)}
+        currentProjectName={props.currentProjectName}
+        issues={props.issueOfIssueDescriptionDependWorks.map(iw => iw.Issue)}
       />
       {labelDependenciesDOMs.length > 0 ? ' ' : null}
       {labelDependenciesDOMs}
     </span>
   );
 };
+
+interface IBacklogTableIssueAndLabelDependenciesRowProps {
+  work: IWork;
+}
+
+// tslint:disable-next-line
+export const BacklogTableIssueAndLabelDependenciesRow = compose<
+  IBaseBacklogTableIssueAndLabelDependenciesRowProps,
+  IBacklogTableIssueAndLabelDependenciesRowProps
+>(
+  mapProps(({ work }: IBacklogTableIssueAndLabelDependenciesRowProps) => {
+    const dependWorks = work.DependWorks;
+
+    const issueOfIssueDescriptionDependWorks = dependWorks.filter(
+      w => w.Relation && w.Relation.Type === 'IssueOfIssueDescription'
+    );
+    const labelOfIssueDescriptionDependWorks = dependWorks.filter(
+      w => w.Relation && w.Relation.Type === 'LabelOfIssueDescription'
+    );
+    const labelOfLabelDescriptionDependWorks = dependWorks.filter(
+      w => w.Relation && w.Relation.Type === 'LabelOfLabelDescription'
+    );
+
+    return {
+      currentProjectName: work.Issue.ProjectName,
+      issueOfIssueDescriptionDependWorks,
+      labelOfIssueDescriptionDependWorks,
+      labelOfLabelDescriptionDependWorks
+    };
+  }),
+  branch(
+    (
+      props: IBaseBacklogTableIssueAndLabelDependenciesRowProps // FIXME extract to method
+    ) =>
+      props.issueOfIssueDescriptionDependWorks.length === 0 &&
+      props.labelOfIssueDescriptionDependWorks.length === 0 &&
+      props.labelOfLabelDescriptionDependWorks.length === 0,
+    renderComponent(() => <span>-</span>)
+  )
+)(BaseBacklogTableIssueAndLabelDependenciesRow);
