@@ -40,7 +40,7 @@ func toIssues(rawIssues []gitany.Issue) (issues []*Issue, err error) {
 	for _, rawIssue := range rawIssues {
 		issue, err := toIssue(rawIssue)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to convert gitany issue to issummary issue which title is %v\n", issue.GetTitle()))
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to convert gitany issue to issummary issue which title is %v\n", rawIssue.GetTitle()))
 		}
 		issues = append(issues, issue)
 	}
