@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"sort"
 
+	"log"
+
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph/encoding/dot"
 )
@@ -44,7 +46,8 @@ func (wg *WorkManager) setEdgesByWork(fromWork *Work) error {
 		works := wg.w.ListWorks(opt)
 
 		if len(works) == 0 {
-			return fmt.Errorf("depend issue not found: %v", opt)
+			log.Printf("depend issue not found: %v", fmt.Sprintf("%#v", opt))
+			return nil
 		}
 
 		wg.w.SetEdge(fromWork, works[0], &WorkRelation{
