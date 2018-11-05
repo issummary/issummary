@@ -69,7 +69,7 @@ class Home extends React.Component<IHomeProps, any> {
         ? this.props.issueTable.works
         : filterWorksByProjectNames(this.props.issueTable.works, [this.props.global.selectedProjectName]);
 
-    const maxClassNumWork = _.maxBy(works, w => (w.Label ? w.Label.ParentNames.length : 0));
+    const maxClassNumWork = _.maxBy(works, w => (w.Label ? w.Label.ParentNames.length + 1 : 0));
     const maxClassNum =
       maxClassNumWork && maxClassNumWork.Label
         ? maxClassNumWork.Label.ParentNames.length + 1 // 1 is work own label
