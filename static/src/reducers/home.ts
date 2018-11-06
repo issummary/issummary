@@ -15,13 +15,13 @@ export interface IHomeState {
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
   velocityPerManPerDay: number;
-  parallels: number;
+  velocityPerWeek: number;
   selectedProjectName: string;
 }
 
 const homeInitialState: IHomeState = {
   isFetchingData: false,
-  parallels: 2,
+  velocityPerWeek: 2,
   selectedProjectName: 'All',
   showManDayColumn: false,
   showSPColumn: true,
@@ -59,9 +59,9 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
     showTotalSPColumn: true,
     velocityPerManPerDay: 1
   }))
-  .case(homeActionCreators.changeParallels, (state, payload) => ({
+  .case(homeActionCreators.changeVelocityPerWeek, (state, payload) => ({
     ...state,
-    parallels: payload
+    velocityPerWeek: payload
   }))
   .case(homeActionCreators.changeProjectTextField, (state, payload) => ({
     ...state,
