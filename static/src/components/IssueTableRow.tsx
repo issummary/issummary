@@ -68,9 +68,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
         ) : null}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>{props.totalSP / props.velocityPerManPerDay}</TableRowColumn>
-      {props.showTotalManDayColumn ? (
-        <TableRowColumn style={rowStyle}>{calcBizDayAsStr(props.totalSP, props.velocityPerWeek)}</TableRowColumn>
-      ) : null}
+      <TableRowColumn style={rowStyle}>{calcBizDayAsStr(props.totalSP, props.velocityPerWeek)}</TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.work.Issue.DueDate ? props.work.Issue.DueDate.format('YYYY/MM/DD') : '-'}
       </TableRowColumn>
