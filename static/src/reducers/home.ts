@@ -24,7 +24,7 @@ const homeInitialState: IHomeState = {
   showTotalManDayColumn: false,
   showTotalSPColumn: true,
   velocityPerManPerDay: 1,
-  velocityPerWeek: 2
+  velocityPerWeek: 15
 };
 
 const homeGlobalReducer = reducerWithInitialState(homeInitialState)

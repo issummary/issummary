@@ -48,7 +48,7 @@ export const IssueTableConfig = (props: IIssueTableConfigProps) => {
 
   return (
     <div style={props.style}>
-      <TextField defaultValue="2" floatingLabelText="Velocity/w" onChange={handleVelocityPerWeekChanging} />
+      <TextField defaultValue={props.velocityPerWeek} floatingLabelText="Velocity/w" onChange={handleVelocityPerWeekChanging} />
       <br />
       <Toggle label="ManDay" onToggle={handleToggle} />
       <ProjectSelectField projectNames={props.projectNames} onChange={props.onChangeProjectSelectField} />
