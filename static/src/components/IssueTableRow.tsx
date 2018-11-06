@@ -1,10 +1,10 @@
 import TableRow from 'material-ui/Table/TableRow';
 import TableRowColumn from 'material-ui/Table/TableRowColumn';
 import * as React from 'react';
-import {CSSProperties} from 'react';
-import {IWork} from '../models/work';
-import {IssueTableIssueAndLabelDependenciesRow} from './IssueTableIssueAndLabelDependenciesRow';
-import {calcBizDayAsStr} from "../services/util";
+import { CSSProperties } from 'react';
+import { IWork } from '../models/work';
+import { calcBizDayAsStr } from '../services/util';
+import { IssueTableIssueAndLabelDependenciesRow } from './IssueTableIssueAndLabelDependenciesRow';
 
 export interface IIssueTableRowProps {
   work: IWork;
@@ -24,11 +24,10 @@ const rowStyle: CSSProperties = {
   wordWrap: 'break-word'
 };
 
-
 // tslint:disable-next-line
 const TotalSPPoint = (props: { work: IWork; velocityPerManPerDay: number }) => (
   <span>
-    <br/>(+{props.work.TotalStoryPoint / props.velocityPerManPerDay})
+    <br />(+{props.work.TotalStoryPoint / props.velocityPerManPerDay})
   </span>
 );
 
@@ -59,24 +58,24 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
       </TableRowColumn>
       {ClassColumns}
       <TableRowColumn style={rowStyle}>{props.work.Issue.Title}</TableRowColumn>
-      <TableRowColumn style={{...rowStyle, width: 250}}>
+      <TableRowColumn style={{ ...rowStyle, width: 250 }}>
         {props.work.Issue.Description.Summary ? props.work.Issue.Description.Summary : '-'}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.work.StoryPoint / props.velocityPerManPerDay}
         {props.work.TotalStoryPoint !== 0 ? (
-          <TotalSPPoint work={props.work} velocityPerManPerDay={props.velocityPerManPerDay}/>
+          <TotalSPPoint work={props.work} velocityPerManPerDay={props.velocityPerManPerDay} />
         ) : null}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>{props.totalSP / props.velocityPerManPerDay}</TableRowColumn>
-      {props.showTotalManDayColumn ?
-        <TableRowColumn style={rowStyle}>{calcBizDayAsStr(props.totalSP, props.velocityPerWeek)}</TableRowColumn> :
-        null}
+      {props.showTotalManDayColumn ? (
+        <TableRowColumn style={rowStyle}>{calcBizDayAsStr(props.totalSP, props.velocityPerWeek)}</TableRowColumn>
+      ) : null}
       <TableRowColumn style={rowStyle}>
         {props.work.Issue.DueDate ? props.work.Issue.DueDate.format('YYYY/MM/DD') : '-'}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>
-        <IssueTableIssueAndLabelDependenciesRow work={props.work}/>
+        <IssueTableIssueAndLabelDependenciesRow work={props.work} />
       </TableRowColumn>
     </TableRow>
   );

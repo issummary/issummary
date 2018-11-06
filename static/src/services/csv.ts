@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { Moment } from 'moment';
 import { IWork } from '../models/work';
-import {calcBizDayAsStr, eachSum} from './util';
+import { calcBizDayAsStr, eachSum } from './util';
 
 export const worksToCSV = (
   works: IWork[],

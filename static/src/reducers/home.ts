@@ -1,10 +1,7 @@
 import { combineReducers } from 'redux';
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
 import { homeActionCreators } from '../actions/home';
-import {
-  issueTableActionCreators,
-  issueTableAsyncActionCreators
-} from '../actions/issueTable';
+import { issueTableActionCreators, issueTableAsyncActionCreators } from '../actions/issueTable';
 import { errorDialogReducer } from './errorDialog';
 import { issueTableReducer } from './issueTable';
 
@@ -21,13 +18,13 @@ export interface IHomeState {
 
 const homeInitialState: IHomeState = {
   isFetchingData: false,
-  velocityPerWeek: 2,
   selectedProjectName: 'All',
   showManDayColumn: false,
   showSPColumn: true,
   showTotalManDayColumn: false,
   showTotalSPColumn: true,
   velocityPerManPerDay: 1,
+  velocityPerWeek: 2
 };
 
 const homeGlobalReducer = reducerWithInitialState(homeInitialState)
@@ -71,5 +68,5 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
 export const homeReducer = combineReducers({
   errorDialog: errorDialogReducer,
   global: homeGlobalReducer,
-  issueTable: issueTableReducer,
+  issueTable: issueTableReducer
 });

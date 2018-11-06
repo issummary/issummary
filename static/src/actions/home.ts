@@ -10,8 +10,8 @@ export interface IHomeActionCreators {
 }
 
 export const homeActionCreators: IHomeActionCreators = {
-  changeVelocityPerWeek: actionCreator<number>('CHANGE_VELOCITY_PER_WEEK'),
   changeProjectTextField: actionCreator<string>('CHANGE_PROJECT_TEXT_FIELD'),
+  changeVelocityPerWeek: actionCreator<number>('CHANGE_VELOCITY_PER_WEEK'),
   disableManDay: actionCreator<undefined>('DISABLE_MAN_DAY'),
-  enableManDay: actionCreator<undefined>('ENABLE_MAN_DAY'),
+  enableManDay: actionCreator<undefined>('ENABLE_MAN_DAY')
 };
