@@ -1,10 +1,7 @@
 import { combineReducers } from 'redux';
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
 import { homeActionCreators } from '../actions/home';
-import {
-  issueTableActionCreators,
-  issueTableAsyncActionCreators
-} from '../actions/issueTable';
+import { issueTableActionCreators, issueTableAsyncActionCreators } from '../actions/issueTable';
 import { errorDialogReducer } from './errorDialog';
 import { issueTableReducer } from './issueTable';
 
@@ -15,19 +12,19 @@ export interface IHomeState {
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
   velocityPerManPerDay: number;
-  parallels: number;
+  velocityPerWeek: number;
   selectedProjectName: string;
 }
 
 const homeInitialState: IHomeState = {
   isFetchingData: false,
-  parallels: 2,
   selectedProjectName: 'All',
   showManDayColumn: false,
   showSPColumn: true,
   showTotalManDayColumn: false,
   showTotalSPColumn: true,
   velocityPerManPerDay: 1,
+  velocityPerWeek: 15
 };
 
 const homeGlobalReducer = reducerWithInitialState(homeInitialState)
@@ -59,9 +56,9 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
     showTotalSPColumn: true,
     velocityPerManPerDay: 1
   }))
-  .case(homeActionCreators.changeParallels, (state, payload) => ({
+  .case(homeActionCreators.changeVelocityPerWeek, (state, payload) => ({
     ...state,
-    parallels: payload
+    velocityPerWeek: payload
   }))
   .case(homeActionCreators.changeProjectTextField, (state, payload) => ({
     ...state,
@@ -71,5 +68,5 @@ const homeGlobalReducer = reducerWithInitialState(homeInitialState)
 export const homeReducer = combineReducers({
   errorDialog: errorDialogReducer,
   global: homeGlobalReducer,
-  issueTable: issueTableReducer,
+  issueTable: issueTableReducer
 });

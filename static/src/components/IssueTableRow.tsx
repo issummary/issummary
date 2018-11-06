@@ -1,11 +1,11 @@
-import koyomi = require('koyomi');
 import TableRow from 'material-ui/Table/TableRow';
 import TableRowColumn from 'material-ui/Table/TableRowColumn';
-import * as moment from 'moment';
 import * as React from 'react';
 import { CSSProperties } from 'react';
 import { IWork } from '../models/work';
+import { calcBizDayAsStr } from '../services/util';
 import { IssueTableIssueAndLabelDependenciesRow } from './IssueTableIssueAndLabelDependenciesRow';
+
 export interface IIssueTableRowProps {
   work: IWork;
   key: string;
@@ -15,7 +15,7 @@ export interface IIssueTableRowProps {
   showTotalManDayColumn: boolean;
   showSPColumn: boolean;
   showTotalSPColumn: boolean;
-  parallels: number;
+  velocityPerWeek: number;
   maxClassNum: number;
 }
 
@@ -23,8 +23,6 @@ const rowStyle: CSSProperties = {
   whiteSpace: 'normal',
   wordWrap: 'break-word'
 };
-
-const today = moment().format('YYYY-MM-DD');
 
 // tslint:disable-next-line
 const TotalSPPoint = (props: { work: IWork; velocityPerManPerDay: number }) => (
@@ -35,12 +33,6 @@ const TotalSPPoint = (props: { work: IWork; velocityPerManPerDay: number }) => (
 
 // tslint:disable-next-line
 export const IssueTableRow = (props: IIssueTableRowProps) => {
-  const totalManDay = props.totalSP / props.velocityPerManPerDay;
-  const totalParallelManDay = Math.ceil(totalManDay / props.parallels);
-  const bizRawDay = koyomi.addBiz(today, totalParallelManDay);
-
-  const bizDay = bizRawDay ? moment(bizRawDay).format('YYYY-MM-DD') : '1年以上先';
-
   const dashList: string[] = new Array<string>(props.maxClassNum).fill('-');
   const label = props.work.Label;
   let classLabelNames: string[] = label ? label.ParentNames.concat([label.Name]) : [];
@@ -76,7 +68,7 @@ export const IssueTableRow = (props: IIssueTableRowProps) => {
         ) : null}
       </TableRowColumn>
       <TableRowColumn style={rowStyle}>{props.totalSP / props.velocityPerManPerDay}</TableRowColumn>
-      {props.showTotalManDayColumn ? <TableRowColumn style={rowStyle}>{bizDay}</TableRowColumn> : null}
+      <TableRowColumn style={rowStyle}>{calcBizDayAsStr(props.totalSP, props.velocityPerWeek)}</TableRowColumn>
       <TableRowColumn style={rowStyle}>
         {props.work.Issue.DueDate ? props.work.Issue.DueDate.format('YYYY/MM/DD') : '-'}
       </TableRowColumn>

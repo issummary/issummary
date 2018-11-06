@@ -1,26 +1,13 @@
-import koyomi = require('koyomi');
 import * as _ from 'lodash';
-import * as moment from 'moment';
 import { Moment } from 'moment';
 import { IWork } from '../models/work';
-import { eachSum } from './util';
-
-export const calcBizDay = (
-  totalSP: number,
-  velocityPerManPerDay: number,
-  baseDay: Moment,
-  parallels: number
-): Date | undefined => {
-  const totalManDay = totalSP / velocityPerManPerDay;
-  const totalParallelManDay = Math.ceil(totalManDay / parallels);
-  return koyomi.addBiz(baseDay.format('YYYY-MM-DD'), totalParallelManDay);
-};
+import { calcBizDayAsStr, eachSum } from './util';
 
 export const worksToCSV = (
   works: IWork[],
   velocityPerManPerDay: number,
   baseDay: Moment,
-  parallels: number
+  velocityPerWeek: number
 ): string => {
   const totalSPs = eachSum(works.map(w => w.StoryPoint));
 
@@ -41,9 +28,7 @@ export const worksToCSV = (
     'LabelDepIIDs'
   ];
   const lines = works.map((work, index) => {
-    const bizRawDay = calcBizDay(totalSPs[index], velocityPerManPerDay, baseDay, parallels);
-    const bizDayStr = bizRawDay ? moment(bizRawDay).format('YYYY-MM-DD') : '1年以上先';
-
+    const bizDayStr = calcBizDayAsStr(totalSPs[index], velocityPerWeek, baseDay);
     const labelIssues = work.DependWorks.filter(w => w.Relation && w.Relation.Type === 'LabelOfLabelDescription').map(
       w => w.Issue
     );

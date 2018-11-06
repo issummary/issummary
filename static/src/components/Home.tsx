@@ -85,11 +85,11 @@ class Home extends React.Component<IHomeProps, any> {
         <IssueTableConfig
           works={works}
           velocityPerManPerDay={this.props.global.velocityPerManPerDay}
-          parallels={this.props.global.parallels}
+          velocityPerWeek={this.props.global.velocityPerWeek}
           style={issueTableConfigStyle}
           onEnableManDay={this.props.actions.home.enableManDay}
           onDisableManDay={this.props.actions.home.disableManDay}
-          onChangeParallels={this.props.actions.home.changeParallels}
+          onChangeVelocityPerWeek={this.props.actions.home.changeVelocityPerWeek}
           projectNames={this.props.issueTable.works
             .map(w => w.Issue.ProjectName)
             .filter((pn, i, self) => self.indexOf(pn) === i)}
@@ -105,7 +105,7 @@ class Home extends React.Component<IHomeProps, any> {
           showSPColumn={this.props.global.showSPColumn}
           showTotalSPColumn={this.props.global.showTotalSPColumn}
           velocityPerManPerDay={this.props.global.velocityPerManPerDay}
-          parallels={this.props.global.parallels}
+          velocityPerWeek={this.props.global.velocityPerWeek}
           selectedProjectName={this.props.global.selectedProjectName}
           maxClassNum={maxClassNum}
         />

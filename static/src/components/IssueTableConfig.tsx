@@ -11,16 +11,17 @@ import { ProjectSelectField } from './ProjectSelectField';
 interface IIssueTableConfigProps {
   works: IWork[];
   velocityPerManPerDay: number;
-  parallels: number;
+  velocityPerWeek: number;
   style: CSSProperties;
   onEnableManDay: () => void;
   onDisableManDay: () => void;
-  onChangeParallels: (parallels: number) => void;
+  onChangeVelocityPerWeek: (velocityPerWeek: number) => void;
   projectNames: string[];
   onChangeProjectSelectField: (p: string) => void;
 }
 
-export const IssueTableConfig = (props: IIssueTableConfigProps) => {// tslint:disable-line
+// tslint:disable-next-line
+export const IssueTableConfig = (props: IIssueTableConfigProps) => {
   const handleToggle = (event: object, isInputChecked: boolean) => {
     if (isInputChecked) {
       props.onEnableManDay();
@@ -29,10 +30,10 @@ export const IssueTableConfig = (props: IIssueTableConfigProps) => {// tslint:di
     }
   };
 
-  const handleParallelsChanging = (event: object, newParallels: string) => {
-    const parallels = parseInt(newParallels, 10);
-    if (!Number.isNaN(parallels)) {
-      props.onChangeParallels(parallels);
+  const handleVelocityPerWeekChanging = (event: object, newVelocity: string) => {
+    const velocityPerWeek = parseInt(newVelocity, 10);
+    if (!Number.isNaN(velocityPerWeek)) {
+      props.onChangeVelocityPerWeek(velocityPerWeek);
     }
   };
 
@@ -40,24 +41,17 @@ export const IssueTableConfig = (props: IIssueTableConfigProps) => {// tslint:di
     props.works,
     props.velocityPerManPerDay,
     moment(), // FIXME
-    props.parallels
+    props.velocityPerWeek
   );
   const blob = new Blob([content], { type: 'text/plain' });
   const csvUrl = window.URL.createObjectURL(blob);
 
   return (
     <div style={props.style}>
-      <TextField
-        defaultValue="2"
-        floatingLabelText="Parallels"
-        onChange={handleParallelsChanging}
-      />
+      <TextField defaultValue={props.velocityPerWeek} floatingLabelText="Velocity/w" onChange={handleVelocityPerWeekChanging} />
       <br />
       <Toggle label="ManDay" onToggle={handleToggle} />
-      <ProjectSelectField
-        projectNames={props.projectNames}
-        onChange={props.onChangeProjectSelectField}
-      />
+      <ProjectSelectField projectNames={props.projectNames} onChange={props.onChangeProjectSelectField} />
       <a href={csvUrl} download="test.csv">
         <RaisedButton label="Export CSV" />
       </a>
